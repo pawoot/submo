@@ -129,19 +129,31 @@ export function AddSubscriptionWizard({
 
   // Handle template selection
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
-    setSelectedTemplate(template);
+    // Fill form with template data but stay on step 1
     setValue("name", template.name);
-    setValue("category_id", template.category_id || "");
-    setValue("amount", template.amount || 0);
-    setValue("currency", template.currency || preferredCurrency);
-    setValue("billing_cycle", (template.billing_cycle as FormValues["billing_cycle"]) || "monthly");
-    setValue("icon_url", template.icon_url || "");
-    setValue("template_id", template.id);
+    // setValue("category", template.categories?.name || ""); // Removed: category is not a form field, we use category_id
+    setValue("category_id", template.category_id);
+    setValue("amount", template.amount); // Fixed: price -> amount
+    setValue("currency", template.currency);
+    setValue("billing_cycle", template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly");
     
-    // Auto-advance to step 2
-    if (step === 1) {
-      setStep(2);
+    // Set icon/website URL
+    if (template.website_url) {
+      // Use favicon service
+      try {
+        const domain = new URL(template.website_url).hostname;
+        const iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+        setValue("icon_url", iconUrl); // Fixed: icon -> icon_url
+      } catch (e) {
+        // Fallback
+        setValue("icon_url", ""); // Fixed: icon -> icon_url
+      }
+    } else if (template.icon_url) {
+      setValue("icon_url", template.icon_url); // Fixed: icon -> icon_url
     }
+    
+    // Clear custom styling when template selected
+    setSelectedTemplate(template); // Fixed: setSelectedTemplateId -> setSelectedTemplate
   };
 
   // Handle form submission

@@ -129,15 +129,36 @@ export function SubscriptionTemplateBrowser({
               onClick={() => handleSelect(template)}
             >
               <CardContent className="p-4 flex items-center gap-4">
-                <SubscriptionIcon 
-                  name={template.name}
-                  iconUrl={template.icon_url}
-                  size="lg"
-                />
-                <div className="flex-1 min-w-0">
-                  <h4 className="font-semibold truncate">{template.name}</h4>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 capitalize">
-                    {template.categories?.name_en || template.categories?.slug || "Other"}
+                <div 
+                  className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mb-3 overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700"
+                  style={{ backgroundColor: `${template.categories?.color}20` || "#f1f5f9" }}
+                >
+                  {template.website_url ? (
+                    <img 
+                      src={`https://www.google.com/s2/favicons?domain=${new URL(template.website_url).hostname}&sz=128`}
+                      alt={template.name}
+                      className="w-full h-full object-cover"
+                      onError={(e) => {
+                        const target = e.target as HTMLImageElement;
+                        target.style.display = "none";
+                        const parent = target.parentElement;
+                        if (parent) {
+                          parent.style.backgroundColor = template.categories?.color ? `${template.categories.color}20` : '#f1f5f9';
+                          parent.innerHTML = `<span style="color: ${template.categories?.color || '#64748b'}">${template.name.charAt(0).toUpperCase()}</span>`;
+                        }
+                      }}
+                    />
+                  ) : (
+                    <span style={{ color: template.categories?.color || "#64748b" }}>
+                      {template.name.charAt(0).toUpperCase()}
+                    </span>
+                  )}
+                </div>
+                
+                <div className="text-center w-full">
+                  <h4 className="font-semibold text-sm truncate w-full mb-1">{template.name}</h4>
+                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
+                    {template.categories?.name}
                   </p>
                 </div>
                 <div className="text-right">

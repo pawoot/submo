@@ -16,11 +16,7 @@ import {
   Pencil, 
   Trash2, 
   Search, 
-  Star, 
-  StarOff, 
-  ArrowLeft,
-  Eye,
-  EyeOff
+  ArrowLeft
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
@@ -30,32 +26,26 @@ import Link from "next/link";
 import {
   Pagination,
   PaginationContent,
-  PaginationEllipsis,
   PaginationItem,
-  PaginationLink,
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { SubscriptionIcon } from "@/components/SubscriptionIcon";
+import { Textarea } from "@/components/ui/textarea";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-type TemplateFormData = {
+type Category = {
+  id: string;
   name: string;
-  category: string;
-  amount: number;
-  currency: string;
-  billing_cycle: string;
-  website_url: string;
-  icon_url: string;
-  popularity_score: number;
-  is_active: boolean;
+  slug: string;
 };
 
 export default function AdminSubscriptionTemplates() {
+  const { t } = useLanguage();
   const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
   const [filteredTemplates, setFilteredTemplates] = useState<SubscriptionTemplate[]>([]);
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
-  const [categories, setCategories] = useState<string[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
@@ -63,21 +53,17 @@ export default function AdminSubscriptionTemplates() {
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
   
-  const [formData, setFormData] = useState<TemplateFormData>({
+  const [formData, setFormData] = useState({
     name: "",
-    category: "other",
-    amount: 0,
-    currency: "USD",
-    billing_cycle: "monthly",
-    website_url: "",
-    icon_url: "",
-    popularity_score: 0,
+    category_id: "",
+    amount: "",
+    currency: "THB",
+    billing_cycle: "monthly" as "monthly" | "yearly" | "quarterly" | "half-yearly",
+    website: "",
+    description: "",
     is_active: true
   });
 
-  const [logoFile, setLogoFile] = useState<File | null>(null);
-  const [logoPreview, setLogoPreview] = useState<string>("");
-  const [uploading, setUploading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
@@ -129,8 +115,19 @@ export default function AdminSubscriptionTemplates() {
 
   const loadCategories = async () => {
     try {
-      const cats = await subscriptionTemplateService.getCategories();
-      setCategories(["All", ...cats]);
+      const { data } = await supabase
+        .from("categories")
+        .select("id, name_en, slug")
+        .eq("is_active", true)
+        .order("display_order");
+        
+      if (data) {
+        setCategories(data.map(c => ({
+          id: c.id,
+          name: c.name_en,
+          slug: c.slug
+        })));
+      }
     } catch (error) {
       console.error("Error loading categories:", error);
     }
@@ -153,60 +150,17 @@ export default function AdminSubscriptionTemplates() {
     setCurrentPage(1);
   };
 
-  const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setLogoFile(file);
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        setLogoPreview(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const uploadLogo = async (): Promise<string | null> => {
-    if (!logoFile) return null;
-
-    try {
-      setUploading(true);
-      const fileExt = logoFile.name.split(".").pop();
-      const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-      const filePath = `template-logos/${fileName}`;
-
-      const { error: uploadError } = await supabase.storage
-        .from("public")
-        .upload(filePath, logoFile);
-
-      if (uploadError) throw uploadError;
-
-      const { data: { publicUrl } } = supabase.storage
-        .from("public")
-        .getPublicUrl(filePath);
-
-      return publicUrl;
-    } catch (error) {
-      console.error("Error uploading logo:", error);
-      return null;
-    } finally {
-      setUploading(false);
-    }
-  };
-
   const handleAdd = () => {
     setFormData({
       name: "",
-      category: "other",
-      amount: 0,
+      category_id: "",
+      amount: "",
       currency: "USD",
       billing_cycle: "monthly",
-      website_url: "",
-      icon_url: "",
-      popularity_score: 0,
+      website: "",
+      description: "",
       is_active: true
     });
-    setLogoFile(null);
-    setLogoPreview("");
     setShowAddDialog(true);
   };
 
@@ -214,17 +168,14 @@ export default function AdminSubscriptionTemplates() {
     setSelectedTemplate(template);
     setFormData({
       name: template.name,
-      category: template.categories?.slug || "other",
-      amount: template.amount,
-      currency: template.currency,
-      billing_cycle: template.billing_cycle,
-      website_url: template.website_url || "",
-      icon_url: template.icon_url || "",
-      popularity_score: template.popularity_score || 0,
-      is_active: template.is_active || true
+      category_id: template.category_id || "",
+      amount: template.amount?.toString() || "",
+      currency: template.currency || "THB",
+      billing_cycle: (template.billing_cycle as any) || "monthly",
+      website: template.website_url || "",
+      description: template.description || "",
+      is_active: template.is_active ?? true
     });
-    setLogoPreview(template.icon_url || "");
-    setLogoFile(null);
     setShowEditDialog(true);
   };
 
@@ -235,30 +186,26 @@ export default function AdminSubscriptionTemplates() {
 
   const confirmAdd = async () => {
     try {
-      let iconUrl = formData.icon_url;
-
-      if (logoFile) {
-        const uploadedUrl = await uploadLogo();
-        if (uploadedUrl) {
-          iconUrl = uploadedUrl;
+      // Use Google Favicon service based on website URL
+      let iconUrl = "";
+      if (formData.website) {
+        try {
+          const domain = new URL(formData.website).hostname;
+          iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+        } catch (e) {
+          // Invalid URL, ignore
         }
       }
 
-      const { data: catData } = await supabase
-        .from("categories")
-        .select("id")
-        .eq("slug", formData.category)
-        .single();
-
       await subscriptionTemplateService.createTemplate({
         name: formData.name,
-        category_id: catData?.id,
-        amount: formData.amount,
+        category_id: formData.category_id,
+        amount: parseFloat(formData.amount) || 0,
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
-        website_url: formData.website_url,
+        website_url: formData.website,
         icon_url: iconUrl,
-        popularity_score: formData.popularity_score,
+        popularity_score: 0, // Always 0 as requested
         is_active: formData.is_active,
         is_template: true
       });
@@ -284,30 +231,26 @@ export default function AdminSubscriptionTemplates() {
     if (!selectedTemplate) return;
 
     try {
-      let iconUrl = formData.icon_url;
-
-      if (logoFile) {
-        const uploadedUrl = await uploadLogo();
-        if (uploadedUrl) {
-          iconUrl = uploadedUrl;
+      // Use Google Favicon service based on website URL
+      let iconUrl = selectedTemplate.icon_url;
+      if (formData.website) {
+        try {
+          const domain = new URL(formData.website).hostname;
+          iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
+        } catch (e) {
+          // Invalid URL, ignore
         }
       }
 
-       const { data: catData } = await supabase
-       .from("categories")
-       .select("id")
-       .eq("slug", formData.category)
-       .single();
-
       await subscriptionTemplateService.updateTemplate(selectedTemplate.id, {
         name: formData.name,
-        category_id: catData?.id,
-        amount: formData.amount,
+        category_id: formData.category_id,
+        amount: parseFloat(formData.amount) || 0,
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
-        website_url: formData.website_url,
+        website_url: formData.website,
         icon_url: iconUrl,
-        popularity_score: formData.popularity_score,
+        popularity_score: 0, // Always 0
         is_active: formData.is_active
       });
 
@@ -346,29 +289,6 @@ export default function AdminSubscriptionTemplates() {
         description: "Failed to delete template",
         variant: "destructive",
       });
-    }
-  };
-
-  const togglePopular = async (template: SubscriptionTemplate) => {
-    try {
-      const newScore = (template.popularity_score || 0) >= 50 ? 0 : 100;
-      await subscriptionTemplateService.updateTemplate(template.id, {
-        popularity_score: newScore,
-      });
-      loadTemplates();
-    } catch (error) {
-      console.error("Error toggling popular:", error);
-    }
-  };
-
-  const toggleActive = async (template: SubscriptionTemplate) => {
-    try {
-      await subscriptionTemplateService.updateTemplate(template.id, {
-        is_active: !template.is_active,
-      });
-      loadTemplates();
-    } catch (error) {
-      console.error("Error toggling active:", error);
     }
   };
 
@@ -414,7 +334,7 @@ export default function AdminSubscriptionTemplates() {
                   <SelectValue placeholder="Category" />
                 </SelectTrigger>
                 <SelectContent>
-                  {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
+                  {categories.map(c => <SelectItem key={c.slug} value={c.slug}>{c.name}</SelectItem>)}
                 </SelectContent>
               </Select>
             </CardContent>
@@ -425,51 +345,85 @@ export default function AdminSubscriptionTemplates() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead>Icon</TableHead>
-                    <TableHead>Name</TableHead>
-                    <TableHead>Category</TableHead>
-                    <TableHead>Price</TableHead>
-                    <TableHead className="text-center">Popular</TableHead>
-                    <TableHead className="text-center">Active</TableHead>
-                    <TableHead className="text-right">Actions</TableHead>
+                    <TableHead className="w-[60px]">{t("admin.icon")}</TableHead>
+                    <TableHead>{t("admin.name")}</TableHead>
+                    <TableHead>{t("admin.website")}</TableHead>
+                    <TableHead>{t("admin.category")}</TableHead>
+                    <TableHead>{t("admin.defaultAmount")}</TableHead>
+                    <TableHead>{t("admin.billingCycle")}</TableHead>
+                    <TableHead className="text-right">{t("admin.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
                   {paginatedTemplates.map((template) => (
                     <TableRow key={template.id}>
                       <TableCell>
-                        <SubscriptionIcon 
-                          name={template.name} 
-                          iconUrl={template.icon_url} 
-                          className="w-8 h-8"
-                        />
+                        <div className="w-10 h-10 rounded-lg overflow-hidden bg-slate-100 dark:bg-slate-800 flex items-center justify-center">
+                          {template.website_url ? (
+                            <img
+                              src={`https://www.google.com/s2/favicons?domain=${new URL(template.website_url).hostname}&sz=128`}
+                              alt={template.name}
+                              className="w-full h-full object-cover"
+                              onError={(e) => {
+                                const target = e.target as HTMLImageElement;
+                                target.style.display = "none";
+                                const parent = target.parentElement;
+                                if (parent) {
+                                  parent.innerHTML = template.name.charAt(0).toUpperCase();
+                                  parent.className += " text-slate-600 dark:text-slate-400 font-semibold";
+                                }
+                              }}
+                            />
+                          ) : (
+                            <span className="text-slate-600 dark:text-slate-400 font-semibold">
+                              {template.name.charAt(0).toUpperCase()}
+                            </span>
+                          )}
+                        </div>
                       </TableCell>
                       <TableCell className="font-medium">{template.name}</TableCell>
-                      <TableCell><Badge variant="outline">{template.categories?.slug || "other"}</Badge></TableCell>
-                      <TableCell>{template.amount} {template.currency}</TableCell>
-                      <TableCell className="text-center">
-                        <Button variant="ghost" size="sm" onClick={() => togglePopular(template)}>
-                          {(template.popularity_score || 0) >= 50 ? 
-                            <Star className="w-4 h-4 text-yellow-500 fill-yellow-500" /> : 
-                            <StarOff className="w-4 h-4 text-gray-300" />
-                          }
-                        </Button>
+                      <TableCell>
+                        {template.website_url ? (
+                          <a
+                            href={template.website_url}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="text-indigo-600 dark:text-indigo-400 hover:underline text-sm"
+                          >
+                            {new URL(template.website_url).hostname}
+                          </a>
+                        ) : (
+                          <span className="text-slate-400 dark:text-slate-600 text-sm">-</span>
+                        )}
                       </TableCell>
-                      <TableCell className="text-center">
-                        <Button variant="ghost" size="sm" onClick={() => toggleActive(template)}>
-                          {template.is_active ? 
-                            <Eye className="w-4 h-4 text-green-500" /> : 
-                            <EyeOff className="w-4 h-4 text-gray-300" />
-                          }
-                        </Button>
+                      <TableCell>
+                        <Badge variant="outline">
+                          {categories.find((c) => c.id === template.category_id)?.name || "-"}
+                        </Badge>
                       </TableCell>
-                      <TableCell className="text-right">
-                        <Button variant="ghost" size="sm" onClick={() => handleEdit(template)}>
-                          <Pencil className="w-4 h-4" />
-                        </Button>
-                        <Button variant="ghost" size="sm" onClick={() => handleDelete(template)} className="text-red-500">
-                          <Trash2 className="w-4 h-4" />
-                        </Button>
+                      <TableCell>
+                        {template.amount
+                          ? `${template.currency} ${template.amount}`
+                          : "-"}
+                      </TableCell>
+                      <TableCell className="capitalize">{template.billing_cycle || "-"}</TableCell>
+                      <TableCell>
+                        <div className="flex items-center gap-2">
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleEdit(template)}
+                          >
+                            <Pencil className="w-4 h-4" />
+                          </Button>
+                          <Button
+                            variant="ghost"
+                            size="sm"
+                            onClick={() => handleDelete(template.id)}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
+                        </div>
                       </TableCell>
                     </TableRow>
                   ))}
@@ -508,79 +462,110 @@ export default function AdminSubscriptionTemplates() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
            <DialogHeader><DialogTitle>Add Template</DialogTitle></DialogHeader>
            <div className="grid gap-4 py-4">
-             <div className="flex items-center gap-4">
-                {logoPreview && (
-                  <img src={logoPreview} alt="Preview" className="w-16 h-16 rounded object-cover border" />
-                )}
-                <div className="flex-1">
-                  <Label>Icon</Label>
-                  <Input type="file" onChange={handleLogoChange} accept="image/*" className="mb-2" />
-                  <Input 
-                    placeholder="Or enter URL..." 
-                    value={formData.icon_url} 
-                    onChange={e => {
-                      setFormData({...formData, icon_url: e.target.value});
-                      setLogoPreview(e.target.value);
-                    }} 
-                  />
-                </div>
-             </div>
+             <div className="space-y-4">
+               <div>
+                 <Label htmlFor="name">{t("admin.templateName")} *</Label>
+                 <Input
+                   id="name"
+                   value={formData.name}
+                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                   placeholder={t("admin.enterTemplateName")}
+                 />
+               </div>
 
-             <div className="grid gap-2">
-               <Label>Name</Label>
-               <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} placeholder="e.g. Netflix" />
-             </div>
-             
-             <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Price</Label>
-                  <Input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Currency</Label>
-                  <Select value={formData.currency} onValueChange={v => setFormData({...formData, currency: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="THB">THB</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-             </div>
+               <div>
+                 <Label htmlFor="website">{t("admin.websiteUrl")}</Label>
+                 <Input
+                   id="website"
+                   type="url"
+                   value={formData.website}
+                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                   placeholder="https://example.com"
+                 />
+                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                   {t("admin.faviconAutomatic")}
+                 </p>
+               </div>
 
-             <div className="grid gap-2">
-               <Label>Billing Cycle</Label>
-                <Select value={formData.billing_cycle} onValueChange={v => setFormData({...formData, billing_cycle: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
+               <div>
+                 <Label htmlFor="category">{t("admin.category")} *</Label>
+                 <Select
+                   value={formData.category_id}
+                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                 >
+                   <SelectTrigger>
+                     <SelectValue placeholder={t("admin.selectCategory")} />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {categories.map((cat) => (
+                       <SelectItem key={cat.id} value={cat.id}>
+                         {cat.name}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+               </div>
 
-             <div className="grid gap-2">
-               <Label>Category</Label>
-               <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-             </div>
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="amount">{t("admin.defaultAmount")}</Label>
+                   <Input
+                     id="amount"
+                     type="number"
+                     step="0.01"
+                     value={formData.amount}
+                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                     placeholder="0.00"
+                   />
+                 </div>
 
-             <div className="grid gap-2">
-               <Label>Website URL</Label>
-               <Input value={formData.website_url} onChange={e => setFormData({...formData, website_url: e.target.value})} placeholder="https://..." />
-             </div>
+                 <div>
+                   <Label htmlFor="currency">{t("admin.currency")}</Label>
+                   <Select
+                     value={formData.currency}
+                     onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                   >
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="THB">THB (฿)</SelectItem>
+                       <SelectItem value="USD">USD ($)</SelectItem>
+                       <SelectItem value="EUR">EUR (€)</SelectItem>
+                       <SelectItem value="GBP">GBP (£)</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
 
-             <div className="flex items-center justify-between">
-                <Label>Popular (Score {formData.popularity_score})</Label>
-                <Switch 
-                  checked={formData.popularity_score >= 50} 
-                  onCheckedChange={c => setFormData({...formData, popularity_score: c ? 100 : 0})} 
-                />
+               <div>
+                 <Label htmlFor="billingCycle">{t("admin.billingCycle")}</Label>
+                 <Select
+                   value={formData.billing_cycle}
+                   onValueChange={(value: any) => setFormData({ ...formData, billing_cycle: value })}
+                 >
+                   <SelectTrigger>
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="monthly">{t("subscription.monthly")}</SelectItem>
+                     <SelectItem value="quarterly">{t("subscription.quarterly")}</SelectItem>
+                     <SelectItem value="half-yearly">{t("subscription.half_yearly")}</SelectItem>
+                     <SelectItem value="yearly">{t("subscription.yearly")}</SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
+
+               <div>
+                 <Label htmlFor="description">{t("admin.description")}</Label>
+                 <Textarea
+                   id="description"
+                   value={formData.description}
+                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                   placeholder={t("admin.enterDescription")}
+                   rows={3}
+                 />
+               </div>
              </div>
              
              <div className="flex items-center justify-between">
@@ -593,7 +578,7 @@ export default function AdminSubscriptionTemplates() {
            </div>
            <DialogFooter>
              <Button variant="outline" onClick={() => setShowAddDialog(false)}>Cancel</Button>
-             <Button onClick={confirmAdd} disabled={uploading}>Save</Button>
+             <Button onClick={confirmAdd} disabled={loading}>Save</Button>
            </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -602,79 +587,110 @@ export default function AdminSubscriptionTemplates() {
         <DialogContent className="max-w-xl max-h-[90vh] overflow-y-auto">
            <DialogHeader><DialogTitle>Edit Template</DialogTitle></DialogHeader>
            <div className="grid gap-4 py-4">
-             <div className="flex items-center gap-4">
-                {logoPreview && (
-                  <img src={logoPreview} alt="Preview" className="w-16 h-16 rounded object-cover border" />
-                )}
-                <div className="flex-1">
-                  <Label>Icon</Label>
-                  <Input type="file" onChange={handleLogoChange} accept="image/*" className="mb-2" />
-                  <Input 
-                    placeholder="Or enter URL..." 
-                    value={formData.icon_url} 
-                    onChange={e => {
-                      setFormData({...formData, icon_url: e.target.value});
-                      setLogoPreview(e.target.value);
-                    }} 
-                  />
-                </div>
-             </div>
+             <div className="space-y-4">
+               <div>
+                 <Label htmlFor="name">{t("admin.templateName")} *</Label>
+                 <Input
+                   id="name"
+                   value={formData.name}
+                   onChange={(e) => setFormData({ ...formData, name: e.target.value })}
+                   placeholder={t("admin.enterTemplateName")}
+                 />
+               </div>
 
-             <div className="grid gap-2">
-               <Label>Name</Label>
-               <Input value={formData.name} onChange={e => setFormData({...formData, name: e.target.value})} />
-             </div>
+               <div>
+                 <Label htmlFor="website">{t("admin.websiteUrl")}</Label>
+                 <Input
+                   id="website"
+                   type="url"
+                   value={formData.website}
+                   onChange={(e) => setFormData({ ...formData, website: e.target.value })}
+                   placeholder="https://example.com"
+                 />
+                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                   {t("admin.faviconAutomatic")}
+                 </p>
+               </div>
 
-             <div className="grid grid-cols-2 gap-4">
-                <div className="grid gap-2">
-                  <Label>Price</Label>
-                  <Input type="number" value={formData.amount} onChange={e => setFormData({...formData, amount: parseFloat(e.target.value)})} />
-                </div>
-                <div className="grid gap-2">
-                  <Label>Currency</Label>
-                  <Select value={formData.currency} onValueChange={v => setFormData({...formData, currency: v})}>
-                    <SelectTrigger><SelectValue /></SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="USD">USD</SelectItem>
-                      <SelectItem value="THB">THB</SelectItem>
-                      <SelectItem value="EUR">EUR</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-             </div>
+               <div>
+                 <Label htmlFor="category">{t("admin.category")} *</Label>
+                 <Select
+                   value={formData.category_id}
+                   onValueChange={(value) => setFormData({ ...formData, category_id: value })}
+                 >
+                   <SelectTrigger>
+                     <SelectValue placeholder={t("admin.selectCategory")} />
+                   </SelectTrigger>
+                   <SelectContent>
+                     {categories.map((cat) => (
+                       <SelectItem key={cat.id} value={cat.id}>
+                         {cat.name}
+                       </SelectItem>
+                     ))}
+                   </SelectContent>
+                 </Select>
+               </div>
 
-             <div className="grid gap-2">
-               <Label>Billing Cycle</Label>
-                <Select value={formData.billing_cycle} onValueChange={v => setFormData({...formData, billing_cycle: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="monthly">Monthly</SelectItem>
-                    <SelectItem value="yearly">Yearly</SelectItem>
-                  </SelectContent>
-                </Select>
-             </div>
+               <div className="grid grid-cols-2 gap-4">
+                 <div>
+                   <Label htmlFor="amount">{t("admin.defaultAmount")}</Label>
+                   <Input
+                     id="amount"
+                     type="number"
+                     step="0.01"
+                     value={formData.amount}
+                     onChange={(e) => setFormData({ ...formData, amount: e.target.value })}
+                     placeholder="0.00"
+                   />
+                 </div>
 
-             <div className="grid gap-2">
-               <Label>Category</Label>
-               <Select value={formData.category} onValueChange={v => setFormData({...formData, category: v})}>
-                  <SelectTrigger><SelectValue /></SelectTrigger>
-                  <SelectContent>
-                    {categories.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
-                  </SelectContent>
-                </Select>
-             </div>
+                 <div>
+                   <Label htmlFor="currency">{t("admin.currency")}</Label>
+                   <Select
+                     value={formData.currency}
+                     onValueChange={(value) => setFormData({ ...formData, currency: value })}
+                   >
+                     <SelectTrigger>
+                       <SelectValue />
+                     </SelectTrigger>
+                     <SelectContent>
+                       <SelectItem value="THB">THB (฿)</SelectItem>
+                       <SelectItem value="USD">USD ($)</SelectItem>
+                       <SelectItem value="EUR">EUR (€)</SelectItem>
+                       <SelectItem value="GBP">GBP (£)</SelectItem>
+                     </SelectContent>
+                   </Select>
+                 </div>
+               </div>
 
-             <div className="grid gap-2">
-               <Label>Website URL</Label>
-               <Input value={formData.website_url} onChange={e => setFormData({...formData, website_url: e.target.value})} />
-             </div>
+               <div>
+                 <Label htmlFor="billingCycle">{t("admin.billingCycle")}</Label>
+                 <Select
+                   value={formData.billing_cycle}
+                   onValueChange={(value: any) => setFormData({ ...formData, billing_cycle: value })}
+                 >
+                   <SelectTrigger>
+                     <SelectValue />
+                   </SelectTrigger>
+                   <SelectContent>
+                     <SelectItem value="monthly">{t("subscription.monthly")}</SelectItem>
+                     <SelectItem value="quarterly">{t("subscription.quarterly")}</SelectItem>
+                     <SelectItem value="half-yearly">{t("subscription.half_yearly")}</SelectItem>
+                     <SelectItem value="yearly">{t("subscription.yearly")}</SelectItem>
+                   </SelectContent>
+                 </Select>
+               </div>
 
-             <div className="flex items-center justify-between">
-                <Label>Popular</Label>
-                <Switch 
-                  checked={formData.popularity_score >= 50} 
-                  onCheckedChange={c => setFormData({...formData, popularity_score: c ? 100 : 0})} 
-                />
+               <div>
+                 <Label htmlFor="description">{t("admin.description")}</Label>
+                 <Textarea
+                   id="description"
+                   value={formData.description}
+                   onChange={(e) => setFormData({ ...formData, description: e.target.value })}
+                   placeholder={t("admin.enterDescription")}
+                   rows={3}
+                 />
+               </div>
              </div>
              
              <div className="flex items-center justify-between">
@@ -687,7 +703,7 @@ export default function AdminSubscriptionTemplates() {
            </div>
            <DialogFooter>
              <Button variant="outline" onClick={() => setShowEditDialog(false)}>Cancel</Button>
-             <Button onClick={confirmEdit} disabled={uploading}>Update</Button>
+             <Button onClick={confirmEdit} disabled={loading}>Update</Button>
            </DialogFooter>
         </DialogContent>
       </Dialog>

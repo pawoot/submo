@@ -1755,6 +1755,60 @@ export const translations = {
     th: "การกระทำนี้ไม่สามารถย้อนกลับได้",
     en: "This action cannot be undone"
   },
+  
+  // Admin Template Management
+  "admin.name": {
+    th: "ชื่อ",
+    en: "Name"
+  },
+  "admin.website": {
+    th: "เว็บไซต์",
+    en: "Website"
+  },
+  "admin.defaultAmount": {
+    th: "ราคาเริ่มต้น",
+    en: "Default Amount"
+  },
+  "admin.billingCycle": {
+    th: "รอบบิล",
+    en: "Billing Cycle"
+  },
+  "admin.templateName": {
+    th: "ชื่อ Template",
+    en: "Template Name"
+  },
+  "admin.enterTemplateName": {
+    th: "กรอกชื่อ Template",
+    en: "Enter template name"
+  },
+  "admin.websiteUrl": {
+    th: "URL เว็บไซต์",
+    en: "Website URL"
+  },
+  "admin.faviconAutomatic": {
+    th: "รูปไอคอนจะถูกดึงอัตโนมัติจากเว็บไซต์",
+    en: "Favicon will be automatically fetched from this URL"
+  },
+  "admin.selectCategory": {
+    th: "เลือกหมวดหมู่",
+    en: "Select Category"
+  },
+  "admin.currency": {
+    th: "สกุลเงิน",
+    en: "Currency"
+  },
+  "admin.description": {
+    th: "คำอธิบาย",
+    en: "Description"
+  },
+  "admin.enterDescription": {
+    th: "คำอธิบายเพิ่มเติม...",
+    en: "Enter description..."
+  },
+  "admin.icon": {
+    th: "ไอคอน",
+    en: "Icon"
+  },
 
   // Toast Messages - Logout & Account
   "toast.logoutSuccess": {
@@ -1867,7 +1921,10 @@ export const translations = {
   "subscription.yearly_cost": {
     th: "ค่าใช้จ่ายต่อปี",
     en: "Yearly Cost"
-  }
+  },
+  "websiteUrl": "Website URL",
+  "faviconAutomatic": "Favicon will be automatically fetched from this URL",
+  "website": "Website"
 };
 
 export type TranslationKey = keyof typeof translations;

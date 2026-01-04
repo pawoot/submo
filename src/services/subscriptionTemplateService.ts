@@ -2,15 +2,25 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 // Template is now just a subscription with is_template = true
-export type SubscriptionTemplate = Database["public"]["Tables"]["subscriptions"]["Row"] & {
+export type SubscriptionTemplate = {
+  id: string;
+  name: string;
+  category_id: string;
+  amount: number;
+  currency: string;
+  billing_cycle: string;
+  website_url?: string;
+  icon_url?: string;
+  description?: string;
+  popularity_score?: number;
+  is_active?: boolean;
   categories?: {
     id: string;
+    name: string;
     slug: string;
-    name_en: string;
-    name_th: string;
-    icon: string;
     color: string;
-  } | null;
+    icon: string;
+  };
 };
 
 export const subscriptionTemplateService = {
@@ -22,26 +32,29 @@ export const subscriptionTemplateService = {
       .from("subscriptions")
       .select(`
         *,
-        categories!category_id (
+        categories (
           id,
-          slug,
           name_en,
-          name_th,
-          icon,
-          color
+          slug,
+          color,
+          icon
         )
       `)
       .eq("is_template", true)
-      .eq("is_active", true)
-      .order("popularity_score", { ascending: false })
-      .order("name", { ascending: true });
+      .order("name");
 
-    if (error) {
-      console.error("Error fetching subscription templates:", error);
-      throw error;
-    }
-
-    return data as unknown as SubscriptionTemplate[];
+    if (error) throw error;
+    
+    return data.map((item: any) => ({
+      ...item,
+      categories: item.categories ? {
+        id: item.categories.id,
+        name: item.categories.name_en,
+        slug: item.categories.slug,
+        color: item.categories.color,
+        icon: item.categories.icon
+      } : null
+    }));
   },
 
   /**
