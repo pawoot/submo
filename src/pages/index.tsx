@@ -2,9 +2,20 @@ import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
+import { useToast } from "@/hooks/use-toast";
 
 interface Subscription {
   id: number;
@@ -21,14 +32,18 @@ interface Subscription {
 
 export default function Home() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const { toast } = useToast();
 
   useEffect(() => {
-    // Load subscriptions from localStorage
+    loadSubscriptions();
+  }, []);
+
+  const loadSubscriptions = () => {
     const stored = localStorage.getItem("subscriptions");
     if (stored) {
       setSubscriptions(JSON.parse(stored));
     } else {
-      // Mock data for demonstration if no data exists
       const mockData = [
         {
           id: 1,
@@ -81,7 +96,24 @@ export default function Home() {
       ];
       setSubscriptions(mockData);
     }
-  }, []);
+  };
+
+  const handleDelete = (id: number) => {
+    const stored = localStorage.getItem("subscriptions");
+    if (stored) {
+      const subscriptions = JSON.parse(stored);
+      const filtered = subscriptions.filter((s: Subscription) => s.id !== id);
+      localStorage.setItem("subscriptions", JSON.stringify(filtered));
+      loadSubscriptions();
+      
+      toast({
+        title: "🗑️ ลบ Subscription สำเร็จ",
+        description: "รายการถูกลบออกจากระบบแล้ว",
+        duration: 3000,
+      });
+    }
+    setDeleteId(null);
+  };
 
   const totalMonthly = subscriptions.reduce((sum, sub) => {
     const cost = Number(sub.cost);
@@ -121,7 +153,6 @@ export default function Home() {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
-        {/* Header */}
         <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
@@ -144,9 +175,7 @@ export default function Home() {
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="container mx-auto px-4 py-8">
-          {/* Stats Overview */}
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
             <Card className="border-l-4 border-l-indigo-500">
               <CardHeader className="pb-3">
@@ -217,7 +246,6 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* Subscriptions List */}
           {subscriptions.length > 0 ? (
             <Card>
               <CardHeader>
@@ -272,21 +300,39 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                            ${Number(sub.cost).toFixed(2)}
+                        <div className="flex items-center gap-4">
+                          <div className="text-right">
+                            <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                              ${Number(sub.cost).toFixed(2)}
+                            </div>
+                            <div className="text-sm text-slate-500 dark:text-slate-400">
+                              {sub.billing === "monthly" && "ต่อเดือน"}
+                              {sub.billing === "yearly" && "ต่อปี"}
+                              {sub.billing === "quarterly" && "ราย 3 เดือน"}
+                              {sub.billing === "biannually" && "ราย 6 เดือน"}
+                            </div>
+                            {isUrgent && (
+                              <Badge variant="destructive" className="mt-2 text-xs">
+                                เหลือ {daysUntil} วัน
+                              </Badge>
+                            )}
                           </div>
-                          <div className="text-sm text-slate-500 dark:text-slate-400">
-                            {sub.billing === "monthly" && "ต่อเดือน"}
-                            {sub.billing === "yearly" && "ต่อปี"}
-                            {sub.billing === "quarterly" && "ราย 3 เดือน"}
-                            {sub.billing === "biannually" && "ราย 6 เดือน"}
+
+                          <div className="flex gap-2">
+                            <Link href={`/edit-subscription/${sub.id}`}>
+                              <Button variant="outline" size="icon">
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                            <Button 
+                              variant="outline" 
+                              size="icon"
+                              onClick={() => setDeleteId(sub.id)}
+                              className="hover:bg-destructive hover:text-destructive-foreground"
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
                           </div>
-                          {isUrgent && (
-                            <Badge variant="destructive" className="mt-2 text-xs">
-                              เหลือ {daysUntil} วัน
-                            </Badge>
-                          )}
                         </div>
                       </div>
                     );
@@ -313,6 +359,26 @@ export default function Home() {
           )}
         </main>
       </div>
+
+      <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>ยืนยันการลบ Subscription</AlertDialogTitle>
+            <AlertDialogDescription>
+              คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => deleteId && handleDelete(deleteId)}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              ลบ
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }
