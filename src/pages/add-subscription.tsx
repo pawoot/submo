@@ -395,6 +395,7 @@ export default function AddSubscription() {
                         onChange={setSubscriptionName}
                         onTemplateSelect={handleAutocompleteTemplateSelect}
                         disabled={isSubmitting}
+                        selectedTemplate={selectedTemplate}
                       />
                       <input
                         type="hidden"

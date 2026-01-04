@@ -25,6 +25,7 @@ interface SubscriptionNameAutocompleteProps {
   onChange: (value: string) => void;
   onTemplateSelect?: (template: SubscriptionTemplate) => void;
   disabled?: boolean;
+  selectedTemplate?: SubscriptionTemplate | null;
 }
 
 export function SubscriptionNameAutocomplete({
@@ -32,11 +33,11 @@ export function SubscriptionNameAutocomplete({
   onChange,
   onTemplateSelect,
   disabled = false,
+  selectedTemplate: externalSelectedTemplate = null,
 }: SubscriptionNameAutocompleteProps) {
   const [open, setOpen] = useState(false);
   const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
   const [loading, setLoading] = useState(false);
-  const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
 
   useEffect(() => {
     loadTemplates();
@@ -55,7 +56,6 @@ export function SubscriptionNameAutocomplete({
   };
 
   const handleSelect = (template: SubscriptionTemplate) => {
-    setSelectedTemplate(template);
     onChange(template.name);
     setOpen(false);
     if (onTemplateSelect) {
@@ -64,7 +64,6 @@ export function SubscriptionNameAutocomplete({
   };
 
   const handleCustomInput = (customValue: string) => {
-    setSelectedTemplate(null);
     onChange(customValue);
   };
 
@@ -80,11 +79,11 @@ export function SubscriptionNameAutocomplete({
             className="w-full justify-between"
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {selectedTemplate && (
+              {externalSelectedTemplate && (
                 <div className="w-6 h-6 rounded overflow-hidden bg-white shadow-sm flex-shrink-0">
                   <img
-                    src={selectedTemplate.logo_url}
-                    alt={selectedTemplate.name}
+                    src={externalSelectedTemplate.logo_url}
+                    alt={externalSelectedTemplate.name}
                     className="w-full h-full object-cover"
                   />
                 </div>
@@ -152,7 +151,7 @@ export function SubscriptionNameAutocomplete({
                         <Check
                           className={cn(
                             "ml-2 h-4 w-4 flex-shrink-0",
-                            selectedTemplate?.id === template.id
+                            externalSelectedTemplate?.id === template.id
                               ? "opacity-100"
                               : "opacity-0"
                           )}
@@ -166,13 +165,13 @@ export function SubscriptionNameAutocomplete({
         </PopoverContent>
       </Popover>
       
-      {selectedTemplate && (
+      {externalSelectedTemplate && (
         <p className="text-xs text-blue-600 dark:text-blue-400">
-          ✓ ใช้ข้อมูลจาก Template - {selectedTemplate.category}
+          ✓ ใช้ข้อมูลจาก Template - {externalSelectedTemplate.category}
         </p>
       )}
       
-      {!selectedTemplate && value && (
+      {!externalSelectedTemplate && value && (
         <p className="text-xs text-amber-600 dark:text-amber-400">
           ⚠️ ชื่อใหม่ - กรุณากรอกข้อมูลเพิ่มเติม
         </p>
