@@ -1,0 +1,340 @@
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
+import Link from "next/link";
+import SEO from "@/components/SEO";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Separator } from "@/components/ui/separator";
+import { Checkbox } from "@/components/ui/checkbox";
+import { authService } from "@/services/authService";
+import { Mail, Lock, Chrome, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
+
+export default function SignUpPage() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [googleLoading, setGoogleLoading] = useState(false);
+  const [error, setError] = useState("");
+  const [success, setSuccess] = useState(false);
+
+  useEffect(() => {
+    // Check if user is already logged in
+    const checkAuth = async () => {
+      const session = await authService.getCurrentSession();
+      if (session) {
+        router.push("/");
+      }
+    };
+    checkAuth();
+  }, [router]);
+
+  const validatePassword = () => {
+    if (password.length < 6) {
+      setError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      return false;
+    }
+    if (password !== confirmPassword) {
+      setError("รหัสผ่านไม่ตรงกัน");
+      return false;
+    }
+    return true;
+  };
+
+  const handleEmailSignUp = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setError("");
+
+    if (!acceptTerms) {
+      setError("กรุณายอมรับข้อกำหนดและเงื่อนไข");
+      return;
+    }
+
+    if (!validatePassword()) {
+      return;
+    }
+
+    setLoading(true);
+
+    try {
+      const { user, error } = await authService.signUp(email, password);
+
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "สมัครสมาชิกไม่สำเร็จ",
+          description: error.message,
+          variant: "destructive",
+        });
+      } else if (user) {
+        setSuccess(true);
+        toast({
+          title: "สมัครสมาชิกสำเร็จ!",
+          description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
+        });
+      }
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการสมัครสมาชิก");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setError("");
+    setGoogleLoading(true);
+
+    try {
+      const { error } = await authService.signInWithGoogle();
+
+      if (error) {
+        setError(error.message);
+        toast({
+          title: "สมัครสมาชิกไม่สำเร็จ",
+          description: error.message,
+          variant: "destructive",
+        });
+        setGoogleLoading(false);
+      }
+      // If successful, user will be redirected to Google OAuth
+    } catch (err) {
+      setError("เกิดข้อผิดพลาดในการสมัครสมาชิกด้วย Google");
+      setGoogleLoading(false);
+    }
+  };
+
+  if (success) {
+    return (
+      <>
+        <SEO 
+          title="ยืนยันอีเมล - Subscription Manager"
+          description="ยืนยันอีเมลเพื่อเข้าใช้งานระบบ"
+        />
+        
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+          <Card className="w-full max-w-md shadow-2xl border-0">
+            <CardContent className="pt-12 pb-8 text-center space-y-6">
+              <div className="w-20 h-20 bg-gradient-to-br from-green-400 to-green-600 rounded-full mx-auto flex items-center justify-center">
+                <CheckCircle2 className="w-10 h-10 text-white" />
+              </div>
+              
+              <div className="space-y-2">
+                <h2 className="text-2xl font-bold text-gray-900">ตรวจสอบอีเมลของคุณ</h2>
+                <p className="text-gray-600">
+                  เราได้ส่งลิงก์ยืนยันไปยัง<br />
+                  <span className="font-semibold text-indigo-600">{email}</span>
+                </p>
+              </div>
+
+              <Alert className="bg-blue-50 border-blue-200">
+                <AlertDescription className="text-sm text-gray-700">
+                  📧 กรุณาคลิกลิงก์ในอีเมลเพื่อยืนยันบัญชีของคุณ<br />
+                  <span className="text-xs text-gray-500 mt-2 block">
+                    ไม่เห็นอีเมล? ตรวจสอบในโฟลเดอร์ Spam
+                  </span>
+                </AlertDescription>
+              </Alert>
+
+              <Button
+                variant="outline"
+                className="w-full"
+                onClick={() => router.push("/auth/login")}
+              >
+                ไปหน้าเข้าสู่ระบบ
+              </Button>
+            </CardContent>
+          </Card>
+        </div>
+      </>
+    );
+  }
+
+  return (
+    <>
+      <SEO 
+        title="สมัครสมาชิก - Subscription Manager"
+        description="สมัครสมาชิกเพื่อเริ่มจัดการ Software Subscriptions"
+      />
+      
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
+        <div className="w-full max-w-md">
+          {/* Back to Home */}
+          <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 mb-6 transition-colors">
+            <ArrowLeft className="w-4 h-4" />
+            กลับหน้าแรก
+          </Link>
+
+          <Card className="shadow-2xl border-0">
+            <CardHeader className="space-y-1 text-center">
+              <div className="w-16 h-16 bg-gradient-to-br from-indigo-500 to-purple-600 rounded-2xl mx-auto mb-4 flex items-center justify-center">
+                <Mail className="w-8 h-8 text-white" />
+              </div>
+              <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
+                สมัครสมาชิก
+              </CardTitle>
+              <CardDescription className="text-base">
+                เริ่มต้นจัดการ Subscriptions ของคุณวันนี้
+              </CardDescription>
+            </CardHeader>
+
+            <CardContent className="space-y-4">
+              {error && (
+                <Alert variant="destructive">
+                  <AlertDescription>{error}</AlertDescription>
+                </Alert>
+              )}
+
+              {/* Google Sign Up */}
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-12 text-base font-medium hover:bg-gray-50 border-2"
+                onClick={handleGoogleSignUp}
+                disabled={googleLoading || loading}
+              >
+                {googleLoading ? (
+                  <>
+                    <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                    กำลังเชื่อมต่อ...
+                  </>
+                ) : (
+                  <>
+                    <Chrome className="mr-2 h-5 w-5 text-red-500" />
+                    สมัครด้วย Google
+                  </>
+                )}
+              </Button>
+
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <Separator />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-white px-2 text-gray-500">หรือ</span>
+                </div>
+              </div>
+
+              {/* Email/Password Form */}
+              <form onSubmit={handleEmailSignUp} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="email">อีเมล</Label>
+                  <div className="relative">
+                    <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="email"
+                      type="email"
+                      placeholder="your@email.com"
+                      value={email}
+                      onChange={(e) => setEmail(e.target.value)}
+                      required
+                      disabled={loading || googleLoading}
+                      className="pl-10 h-12"
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="password">รหัสผ่าน</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="password"
+                      type="password"
+                      placeholder="อย่างน้อย 6 ตัวอักษร"
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      required
+                      disabled={loading || googleLoading}
+                      className="pl-10 h-12"
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="confirmPassword">ยืนยันรหัสผ่าน</Label>
+                  <div className="relative">
+                    <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
+                    <Input
+                      id="confirmPassword"
+                      type="password"
+                      placeholder="ยืนยันรหัสผ่านอีกครั้ง"
+                      value={confirmPassword}
+                      onChange={(e) => setConfirmPassword(e.target.value)}
+                      required
+                      disabled={loading || googleLoading}
+                      className="pl-10 h-12"
+                      minLength={6}
+                    />
+                  </div>
+                </div>
+
+                <div className="flex items-center space-x-2">
+                  <Checkbox
+                    id="terms"
+                    checked={acceptTerms}
+                    onCheckedChange={(checked) => setAcceptTerms(checked === true)}
+                    disabled={loading || googleLoading}
+                  />
+                  <label
+                    htmlFor="terms"
+                    className="text-sm text-gray-600 cursor-pointer"
+                  >
+                    ฉันยอมรับ{" "}
+                    <Link href="/terms" className="text-indigo-600 hover:text-indigo-700 font-medium">
+                      ข้อกำหนดและเงื่อนไข
+                    </Link>
+                  </label>
+                </div>
+
+                <Button
+                  type="submit"
+                  className="w-full h-12 text-base font-medium bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
+                  disabled={loading || googleLoading}
+                >
+                  {loading ? (
+                    <>
+                      <Loader2 className="mr-2 h-5 w-5 animate-spin" />
+                      กำลังสมัครสมาชิก...
+                    </>
+                  ) : (
+                    "สมัครสมาชิก"
+                  )}
+                </Button>
+              </form>
+            </CardContent>
+
+            <CardFooter className="flex flex-col space-y-4">
+              <Separator />
+              <div className="text-center text-sm text-gray-600">
+                มีบัญชีอยู่แล้ว?{" "}
+                <Link 
+                  href="/auth/login" 
+                  className="text-indigo-600 hover:text-indigo-700 font-semibold"
+                >
+                  เข้าสู่ระบบ
+                </Link>
+              </div>
+            </CardFooter>
+          </Card>
+
+          {/* Info Card */}
+          <Card className="mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
+            <CardContent className="pt-6">
+              <p className="text-sm text-gray-600 text-center">
+                🔒 ข้อมูลของคุณปลอดภัยด้วย Supabase Authentication
+              </p>
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    </>
+  );
+}
