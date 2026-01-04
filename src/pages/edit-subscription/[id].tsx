@@ -27,6 +27,7 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
+type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 export default function EditSubscription() {
   const router = useRouter();
@@ -44,13 +45,14 @@ export default function EditSubscription() {
   const [nextBillingDate, setNextBillingDate] = useState<Date>();
   const [dateError, setDateError] = useState("");
   const [subscriptionName, setSubscriptionName] = useState("");
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
 
   // Validation Schema (Moved inside component to access t function)
   const subscriptionSchema = z.object({
     name: z.string()
       .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
       .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
-    category: z.string()
+    category_id: z.string()
       .min(1, t("validation.required")),
     description: z.string()
       .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
@@ -97,19 +99,6 @@ export default function EditSubscription() {
     resolver: zodResolver(subscriptionSchema),
   });
 
-  const categories = [
-    { value: "design", label: t("category.design") },
-    { value: "development", label: t("category.development") },
-    { value: "productivity", label: t("category.productivity") },
-    { value: "entertainment", label: t("category.entertainment") },
-    { value: "cloud-storage", label: t("category.cloud-storage") },
-    { value: "gaming", label: t("category.gaming") },
-    { value: "education", label: t("category.education") },
-    { value: "fitness", label: t("category.fitness") },
-    { value: "news", label: t("category.news") },
-    { value: "other", label: t("category.other") }
-  ];
-
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
     { code: "THB", symbol: "฿", name: "Thai Baht" },
@@ -133,7 +122,17 @@ export default function EditSubscription() {
     if (id) {
       loadSubscription();
     }
+    loadCategories();
   }, [id]);
+
+  const loadCategories = async () => {
+    try {
+      const cats = await subscriptionService.getCategories();
+      setDbCategories(cats);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    }
+  };
 
   const loadSubscription = async () => {
     try {
@@ -150,7 +149,7 @@ export default function EditSubscription() {
         // Set form values
         reset({
           name: data.name,
-          category: data.category,
+          category_id: data.category_id || "",
           description: data.description || "",
           cost: data.amount.toString(),
           currency: data.currency,
@@ -214,7 +213,10 @@ export default function EditSubscription() {
     
     // Auto-fill form with template data using setValue
     if (template.category) {
-      setValue("category", template.category);
+      const matchingCat = dbCategories.find(c => c.slug === template.category);
+      if (matchingCat) {
+        setValue("category_id", matchingCat.id);
+      }
     }
     if (template.default_price) {
       setValue("cost", template.default_price.toString());
@@ -264,9 +266,12 @@ export default function EditSubscription() {
     setIsSubmitting(true);
 
     try {
+      const selectedCategory = dbCategories.find(c => c.id === data.category_id);
+      
       const updateData = {
         name: subscriptionName,
-        category: data.category,
+        category_id: data.category_id,
+        category: selectedCategory?.slug || "other", // Legacy support
         description: data.description || null,
         amount: parseFloat(data.cost),
         currency: data.currency,
@@ -375,22 +380,25 @@ export default function EditSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="category">{t("addSub.category")} *</Label>
                       <Select 
-                        onValueChange={(value) => setValue("category", value)}
-                        defaultValue={subscription.category}
+                        onValueChange={(value) => setValue("category_id", value)}
+                        defaultValue={subscription.category_id}
                       >
-                        <SelectTrigger id="category" className={cn(errors.category && "border-red-500")}>
+                        <SelectTrigger id="category" className={cn(errors.category_id && "border-red-500")}>
                           <SelectValue placeholder={t("addSub.selectCategory")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat.value} value={cat.value}>
-                              {cat.label}
+                          {dbCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{cat.icon}</span>
+                                <span>{language === 'th' ? cat.name_th : cat.name_en}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.category && (
-                        <p className="text-sm text-red-500">{errors.category.message}</p>
+                      {errors.category_id && (
+                        <p className="text-sm text-red-500">{errors.category_id.message}</p>
                       )}
                     </div>
                   </div>
