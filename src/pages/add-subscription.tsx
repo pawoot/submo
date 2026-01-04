@@ -34,51 +34,51 @@ type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates
 // Validation Schema
 const subscriptionSchema = z.object({
   name: z.string()
-    .min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร")
-    .max(100, "ชื่อต้องไม่เกิน 100 ตัวอักษร"),
+    .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
+    .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
   category: z.string()
-    .min(1, "กรุณาเลือกหมวดหมู่"),
+    .min(1, t("validation.required")),
   description: z.string()
-    .max(500, "รายละเอียดต้องไม่เกิน 500 ตัวอักษร")
+    .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
     .optional()
     .nullable(),
   cost: z.string()
-    .min(1, "กรุณากรอกจำนวนเงิน")
+    .min(1, t("validation.required"))
     .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "จำนวนเงินต้องมากกว่า 0"
+      message: t("validation.positiveNumber")
     })
     .refine((val) => Number(val) <= 999999.99, {
-      message: "จำนวนเงินต้องไม่เกิน 999,999.99"
+      message: t("validation.maxLength") + " 999,999.99"
     }),
   currency: z.string()
-    .min(1, "กรุณาเลือกสกุลเงิน"),
+    .min(1, t("validation.required")),
   billing: z.string()
-    .min(1, "กรุณาเลือกรอบการชำระเงิน"),
+    .min(1, t("validation.required")),
   paymentMethod: z.string()
-    .min(1, "กรุณาเลือกวิธีการชำระเงิน"),
+    .min(1, t("validation.required")),
   cardLast4: z.string()
-    .max(4, "เลขท้ายบัตรต้องไม่เกิน 4 หลัก")
+    .max(4, t("validation.maxLength") + " 4")
     .optional()
     .nullable(),
   website: z.string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .url(t("validation.invalidUrl"))
     .optional()
     .nullable()
     .or(z.literal("")),
   notes: z.string()
-    .max(500, "หมายเหตุต้องไม่เกิน 500 ตัวอักษร")
+    .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
     .optional()
     .nullable(),
   startDate: z.date({
-    required_error: "กรุณาเลือกวันเริ่มต้น",
-    invalid_type_error: "วันที่ไม่ถูกต้อง",
+    required_error: t("validation.required"),
+    invalid_type_error: t("validation.invalidDate"),
   }),
   nextBillingDate: z.date({
-    required_error: "กรุณาเลือกวันต่ออายุถัดไป",
-    invalid_type_error: "วันที่ไม่ถูกต้อง",
+    required_error: t("validation.required"),
+    invalid_type_error: t("validation.invalidDate"),
   }),
 }).refine((data) => data.nextBillingDate > data.startDate, {
-  message: "วันต่ออายุต้องหลังวันเริ่มต้น",
+  message: t("validation.invalidDate"),
   path: ["nextBillingDate"],
 });
 
@@ -175,8 +175,8 @@ export default function AddSubscription() {
     }
 
     toast({
-      title: "✅ เลือกบริการสำเร็จ!",
-      description: `กรอกข้อมูล ${template.name} อัตโนมัติแล้ว`,
+      title: t("addSub.templateSelected"),
+      description: t("addSub.templateSelectedDesc"),
       duration: 3000,
     });
   };
@@ -203,15 +203,23 @@ export default function AddSubscription() {
     }
 
     toast({
-      title: "✅ เลือกบริการสำเร็จ!",
-      description: `กรอกข้อมูล ${template.name} อัตโนมัติแล้ว`,
+      title: t("addSub.templateSelected"),
+      description: t("addSub.templateSelectedDesc"),
       duration: 3000,
     });
   };
 
   const categories = [
-    "Design", "Development", "Productivity", "Entertainment", 
-    "Storage", "Communication", "Marketing", "Education", "Other"
+    { value: "design", label: t("category.design") },
+    { value: "development", label: t("category.development") },
+    { value: "productivity", label: t("category.productivity") },
+    { value: "entertainment", label: t("category.entertainment") },
+    { value: "cloud-storage", label: t("category.cloud-storage") },
+    { value: "gaming", label: t("category.gaming") },
+    { value: "education", label: t("category.education") },
+    { value: "fitness", label: t("category.fitness") },
+    { value: "news", label: t("category.news") },
+    { value: "other", label: t("category.other") }
   ];
 
   const currencies = [
@@ -225,25 +233,29 @@ export default function AddSubscription() {
   ];
 
   const paymentMethods = [
-    "Credit Card", "Debit Card", "PayPal", "Bank Transfer", 
-    "Google Pay", "Apple Pay", "Cryptocurrency", "Other"
+    { value: "credit-card", label: t("payment.credit-card") },
+    { value: "debit-card", label: t("payment.debit-card") },
+    { value: "paypal", label: t("payment.paypal") },
+    { value: "bank-transfer", label: t("payment.bank-transfer") },
+    { value: "promptpay", label: t("payment.promptpay") },
+    { value: "other", label: t("payment.other") }
   ];
 
   const addSharedUser = () => {
     if (!newUserEmail) {
-      setEmailError("กรุณากรอกอีเมล");
+      setEmailError(t("validation.required"));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newUserEmail)) {
-      setEmailError("รูปแบบอีเมลไม่ถูกต้อง");
+      setEmailError(t("validation.invalidEmail"));
       return;
     }
 
     if (sharedUsers.includes(newUserEmail)) {
-      setEmailError("อีเมลนี้มีอยู่ในรายการแล้ว");
+      setEmailError(t("addSub.emailInUse"));
       return;
     }
 
@@ -279,8 +291,8 @@ export default function AddSubscription() {
       await subscriptionService.create(subscriptionData);
 
       toast({
-        title: "✅ เพิ่ม Subscription สำเร็จ!",
-        description: `เพิ่ม ${subscriptionData.name} เรียบร้อยแล้ว`,
+        title: t("addSub.success"),
+        description: `${t("common.success")} - ${subscriptionData.name}`,
         duration: 3000,
       });
 
@@ -288,8 +300,8 @@ export default function AddSubscription() {
     } catch (error) {
       console.error("Error creating subscription:", error);
       toast({
-        title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถเพิ่ม Subscription ได้ กรุณาลองใหม่อีกครั้ง",
+        title: t("addSub.error"),
+        description: t("toast.createError"),
         variant: "destructive",
         duration: 3000,
       });
@@ -301,8 +313,8 @@ export default function AddSubscription() {
   return (
     <AuthGuard>
       <SEO 
-        title="เพิ่ม Subscription - Subscription Manager"
-        description="เพิ่มรายการ Subscription ใหม่ ติดตามค่าใช้จ่าย และจัดการวันหมดอายุ"
+        title={t("addSub.title") + " - Submo.ai"}
+        description={t("addSub.title") + " - " + t("home.seo.description")}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
@@ -316,8 +328,8 @@ export default function AddSubscription() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">เพิ่ม Subscription</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">กรอกข้อมูลรายการใหม่</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("addSub.title")}</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{t("addSub.title")}</p>
               </div>
             </div>
           </div>
@@ -333,7 +345,7 @@ export default function AddSubscription() {
                   <div className="flex items-center justify-between">
                     <div className="flex items-center gap-2">
                       <Sparkles className="w-5 h-5 text-blue-600" />
-                      <CardTitle className="text-blue-900 dark:text-blue-100">Quick Add</CardTitle>
+                      <CardTitle className="text-blue-900 dark:text-blue-100">{t("addSub.quickAdd")}</CardTitle>
                     </div>
                     <Button
                       type="button"
@@ -342,7 +354,7 @@ export default function AddSubscription() {
                       onClick={() => setShowBrowser(true)}
                       className="text-blue-600 border-blue-300 hover:bg-blue-100"
                     >
-                      Browse all →
+                      {t("addSub.browseAll")} →
                     </Button>
                   </div>
                 </CardHeader>
@@ -377,11 +389,11 @@ export default function AddSubscription() {
                     </div>
                   ) : (
                     <div className="text-center py-8 text-gray-500">
-                      <p>กำลังโหลดบริการยอดนิยม...</p>
+                      <p>{t("common.loading")}</p>
                     </div>
                   )}
                   <p className="text-sm text-blue-700 dark:text-blue-300 mt-4 text-center">
-                    💡 เลือกบริการที่ต้องการ หรือคลิก "Browse all" เพื่อดูทั้งหมด
+                    💡 {t("addSub.selectService")}
                   </p>
                 </CardContent>
               </Card>
@@ -389,12 +401,12 @@ export default function AddSubscription() {
               {/* Basic Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>ข้อมูลพื้นฐาน</CardTitle>
+                  <CardTitle>{t("addSub.basicInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">ชื่อ Subscription *</Label>
+                      <Label htmlFor="name">{t("addSub.name")} *</Label>
                       <SubscriptionNameAutocomplete
                         value={subscriptionName || ""}
                         onChange={(value) => setValue("name", value, { shouldValidate: true })}
@@ -406,20 +418,20 @@ export default function AddSubscription() {
                         <p className="text-sm text-red-500">{errors.name.message}</p>
                       )}
                       {subscriptionName && subscriptionName.trim().length >= 2 && !errors.name && !selectedTemplate && (
-                        <p className="text-sm text-green-600 dark:text-green-400">✓ ชื่อถูกต้อง</p>
+                        <p className="text-sm text-green-600 dark:text-green-400">✓ {t("common.success")}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="category">หมวดหมู่ *</Label>
-                      <Select {...register("category")} required>
+                      <Label htmlFor="category">{t("addSub.category")} *</Label>
+                      <Select onValueChange={(value) => setValue("category", value)} required>
                         <SelectTrigger id="category" className={cn(errors.category && "border-red-500")}>
-                          <SelectValue placeholder="เลือกหมวดหมู่" />
+                          <SelectValue placeholder={t("addSub.selectCategory")} />
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat.toLowerCase()}>
-                              {cat}
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -431,11 +443,11 @@ export default function AddSubscription() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">รายละเอียด</Label>
+                    <Label htmlFor="description">{t("addSub.notes")} {t("common.optional")}</Label>
                     <Textarea 
                       id="description"
                       {...register("description")}
-                      placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                      placeholder={t("addSub.notesPlaceholder")}
                       rows={3}
                       className={cn(errors.description && "border-red-500")}
                     />
@@ -445,12 +457,12 @@ export default function AddSubscription() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="website">เว็บไซต์</Label>
+                    <Label htmlFor="website">{t("addSub.website")} {t("common.optional")}</Label>
                     <Input 
                       id="website"
                       {...register("website")}
                       type="url"
-                      placeholder="https://example.com"
+                      placeholder={t("addSub.websitePlaceholder")}
                       className={cn(errors.website && "border-red-500")}
                     />
                     {errors.website && (
@@ -463,18 +475,18 @@ export default function AddSubscription() {
               {/* Pricing Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>ข้อมูลราคาและการชำระเงิน</CardTitle>
+                  <CardTitle>{t("addSub.pricingInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="cost">ราคา *</Label>
+                      <Label htmlFor="cost">{t("addSub.cost")} *</Label>
                       <Input 
                         id="cost"
                         {...register("cost")}
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00"
+                        placeholder={t("addSub.costPlaceholder")}
                         className={cn(errors.cost && "border-red-500")}
                         required
                       />
@@ -484,10 +496,10 @@ export default function AddSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="currency">สกุลเงิน *</Label>
-                      <Select {...register("currency")} required defaultValue="USD">
+                      <Label htmlFor="currency">{t("addSub.currency")} *</Label>
+                      <Select onValueChange={(value) => setValue("currency", value)} required defaultValue="USD">
                         <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
-                          <SelectValue placeholder="เลือกสกุลเงิน" />
+                          <SelectValue placeholder={t("addSub.selectCurrency")} />
                         </SelectTrigger>
                         <SelectContent>
                           {currencies.map((curr) => (
@@ -503,16 +515,16 @@ export default function AddSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="billing">รอบการชำระ *</Label>
-                      <Select {...register("billing")} required defaultValue="monthly">
+                      <Label htmlFor="billing">{t("addSub.billing")} *</Label>
+                      <Select onValueChange={(value) => setValue("billing", value)} required defaultValue="monthly">
                         <SelectTrigger id="billing" className={cn(errors.billing && "border-red-500")}>
-                          <SelectValue placeholder="เลือกรอบ" />
+                          <SelectValue placeholder={t("addSub.selectBilling")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="monthly">รายเดือน</SelectItem>
-                          <SelectItem value="yearly">รายปี</SelectItem>
-                          <SelectItem value="quarterly">ราย 3 เดือน</SelectItem>
-                          <SelectItem value="half-yearly">ราย 6 เดือน</SelectItem>
+                          <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
+                          <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
+                          <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                          <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
                         </SelectContent>
                       </Select>
                       {errors.billing && (
@@ -523,15 +535,15 @@ export default function AddSubscription() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="paymentMethod">ช่องทางการชำระเงิน *</Label>
-                      <Select {...register("paymentMethod")} required defaultValue="credit-card">
+                      <Label htmlFor="paymentMethod">{t("addSub.paymentMethod")} *</Label>
+                      <Select onValueChange={(value) => setValue("paymentMethod", value)} required defaultValue="credit-card">
                         <SelectTrigger id="paymentMethod" className={cn(errors.paymentMethod && "border-red-500")}>
-                          <SelectValue placeholder="เลือกช่องทาง" />
+                          <SelectValue placeholder={t("addSub.selectPayment")} />
                         </SelectTrigger>
                         <SelectContent>
                           {paymentMethods.map((method) => (
-                            <SelectItem key={method} value={method.toLowerCase().replace(/\s+/g, "-")}>
-                              {method}
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -542,11 +554,11 @@ export default function AddSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cardLast4">เลขท้าย 4 หลัก (ถ้ามี)</Label>
+                      <Label htmlFor="cardLast4">{t("addSub.cardNumber")} {t("common.optional")}</Label>
                       <Input 
                         id="cardLast4"
                         {...register("cardLast4")}
-                        placeholder="1234"
+                        placeholder={t("addSub.cardPlaceholder")}
                         maxLength={4}
                         className={cn(errors.cardLast4 && "border-red-500")}
                       />
@@ -561,12 +573,12 @@ export default function AddSubscription() {
               {/* Billing Dates */}
               <Card>
                 <CardHeader>
-                  <CardTitle>วันที่เริ่มต้นและต่ออายุ</CardTitle>
+                  <CardTitle>{t("addSub.paymentInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>วันเริ่มต้น *</Label>
+                      <Label>{t("addSub.startDate")} *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -581,7 +593,7 @@ export default function AddSubscription() {
                             {startDate ? (
                               format(startDate, "d MMMM yyyy", { locale: th })
                             ) : (
-                              <span>เลือกวันที่</span>
+                              <span>{t("common.select")}</span>
                             )}
                           </Button>
                         </PopoverTrigger>
@@ -601,7 +613,7 @@ export default function AddSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label>วันต่ออายุถัดไป *</Label>
+                      <Label>{t("addSub.nextBillingDate")} *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -616,7 +628,7 @@ export default function AddSubscription() {
                             {nextBillingDate ? (
                               format(nextBillingDate, "d MMMM yyyy", { locale: th })
                             ) : (
-                              <span>เลือกวันที่</span>
+                              <span>{t("common.select")}</span>
                             )}
                           </Button>
                         </PopoverTrigger>
@@ -638,12 +650,6 @@ export default function AddSubscription() {
                       )}
                     </div>
                   </div>
-
-                  <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
-                    <p className="text-sm text-blue-800 dark:text-blue-300">
-                      💡 <strong>คำแนะนำ:</strong> วันต่ออายุถัดไปจะถูกใช้ในการแจ้งเตือนและคำนวณค่าใช้จ่าย
-                    </p>
-                  </div>
                 </CardContent>
               </Card>
 
@@ -652,14 +658,14 @@ export default function AddSubscription() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    แบ่งปันค่าใช้จ่าย
+                    {t("addSub.sharedUsers")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Input 
-                        placeholder="อีเมลผู้ใช้งานร่วม"
+                        placeholder={t("addSub.sharedUsersPlaceholder")}
                         value={newUserEmail}
                         onChange={(e) => {
                           setNewUserEmail(e.target.value);
@@ -688,7 +694,7 @@ export default function AddSubscription() {
 
                   {sharedUsers.length > 0 && (
                     <div className="space-y-2">
-                      <Label>ผู้ใช้งานร่วม ({sharedUsers.length} คน)</Label>
+                      <Label>{t("addSub.sharedUsers")} ({sharedUsers.length})</Label>
                       <div className="flex flex-wrap gap-2">
                         {sharedUsers.map((email) => (
                           <Badge 
@@ -707,17 +713,12 @@ export default function AddSubscription() {
                           </Badge>
                         ))}
                       </div>
-                      <div className="mt-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          ค่าใช้จ่ายต่อคน: <span className="font-semibold">จะคำนวณอัตโนมัติ</span>
-                        </p>
-                      </div>
                     </div>
                   )}
 
                   {sharedUsers.length === 0 && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      ยังไม่มีผู้ใช้งานร่วม - คุณจ่ายค่าใช้จ่ายคนเดียว
+                      {t("common.optional")}
                     </p>
                   )}
                 </CardContent>
@@ -727,19 +728,19 @@ export default function AddSubscription() {
               <div className="flex gap-4 justify-end pt-4">
                 <Link href="/">
                   <Button type="button" variant="outline" size="lg" disabled={isSubmitting}>
-                    ยกเลิก
+                    {t("common.cancel")}
                   </Button>
                 </Link>
                 <Button type="submit" size="lg" className="gap-2" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      กำลังบันทึก...
+                      {t("addSub.submitting")}
                     </>
                   ) : (
                     <>
                       <Plus className="w-5 h-5" />
-                      บันทึก Subscription
+                      {t("addSub.submit")}
                     </>
                   )}
                 </Button>

@@ -174,6 +174,14 @@ export const translations = {
     th: "รายเดือน",
     en: "Monthly"
   },
+  "subscriptions.quarterly": {
+    th: "รายไตรมาส",
+    en: "Quarterly"
+  },
+  "subscriptions.halfYearly": {
+    th: "รายครึ่งปี",
+    en: "Half-yearly"
+  },
   "subscriptions.yearly": {
     th: "รายปี",
     en: "Yearly"
@@ -315,6 +323,10 @@ export const translations = {
   "addSub.sharedUsersPlaceholder": {
     th: "อีเมลของผู้ใช้ (แยกด้วยเครื่องหมายจุลภาค)",
     en: "User emails (comma-separated)"
+  },
+  "addSub.emailInUse": {
+    th: "อีเมลนี้มีอยู่ในรายการแล้ว",
+    en: "This email is already in the list"
   },
   "addSub.notes": {
     th: "หมายเหตุ",
@@ -814,6 +826,10 @@ export const translations = {
     th: "ปิด",
     en: "Close"
   },
+  "common.select": {
+    th: "เลือก",
+    en: "Select"
+  },
   "common.confirm": {
     th: "ยืนยัน",
     en: "Confirm"
@@ -877,6 +893,10 @@ export const translations = {
   "toast.deleteError": {
     th: "ลบไม่สำเร็จ",
     en: "Failed to delete"
+  },
+  "toast.deleted": {
+    th: "ลบรายการเรียบร้อยแล้ว",
+    en: "Item deleted successfully"
   },
   "toast.updateSuccess": {
     th: "อัพเดตสำเร็จ!",
