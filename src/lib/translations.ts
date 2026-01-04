@@ -1589,7 +1589,7 @@ export const translations = {
     en: "An error occurred"
   },
 
-  // Admin Panel
+  // Admin Panel (Keep only one instance)
   "admin.title": {
     th: "แอดมิน",
     en: "Admin Panel"
@@ -1731,15 +1731,86 @@ export const translations = {
     en: "Sign out from your account on this device"
   },
 
-  addSub: {
-    title: "เพิ่มรายการสมัครสมาชิก",
-    selectService: "เลือกบริการ",
-    customSub: "Custom Subscription",
-    monthlyBillingInfo: "การเรียกเก็บเงินรายเดือนเกิดขึ้นทุกเดือน",
-    yearlyBillingInfo: "การเรียกเก็บเงินรายปีเกิดขึ้นหนึ่งครั้งต่อปี"
+  "common.step": {
+    th: "ขั้นตอน",
+    en: "Step"
   },
-  "Monthly billing occurs every month": "Monthly billing occurs every month",
-  "Yearly billing occurs once per year": "Yearly billing occurs once per year"
+  "common.continue": {
+    th: "ถัดไป",
+    en: "Continue"
+  },
+  "common.days": {
+    th: "วัน",
+    en: "days"
+  },
+  "common.no_results": {
+    th: "ไม่พบผลลัพธ์",
+    en: "No results found"
+  },
+
+  // Add Subscription - Wizard specific
+  "addSub.subtitle": {
+    th: "เพิ่มรายการใหม่เพื่อติดตามค่าใช้จ่าย",
+    en: "Add a new subscription to track expenses"
+  },
+  "addSub.selectService": {
+    th: "เลือกบริการ",
+    en: "Select a Service"
+  },
+  "addSub.customSubscription": {
+    th: "Custom Subscription",
+    en: "Custom Subscription"
+  },
+  "addSub.billingPayment": {
+    th: "การเรียกเก็บเงินและการชำระเงิน",
+    en: "Billing & Payment"
+  },
+  "addSub.quickToggles": {
+    th: "การแจ้งเตือนอัตโนมัติ",
+    en: "Quick Reminders"
+  },
+  "addSub.remind3Days": {
+    th: "แจ้งเตือนก่อน 3 วัน",
+    en: "Remind me 3 days before"
+  },
+  "addSub.remind7Days": {
+    th: "แจ้งเตือนก่อน 7 วัน (แนะนำสำหรับรายปี)",
+    en: "Remind me 7 days before (recommended for yearly)"
+  },
+  "addSub.optionalContext": {
+    th: "ข้อมูลเพิ่มเติม (ไม่บังคับ)",
+    en: "Optional Context"
+  },
+  "addSub.costSummary": {
+    th: "สรุปค่าใช้จ่าย",
+    en: "Cost Summary"
+  },
+  "addSub.remindersEnabled": {
+    th: "เปิดการแจ้งเตือน",
+    en: "Reminders Enabled"
+  },
+  "addSub.beforeBilling": {
+    th: "ก่อนวันเรียกเก็บเงิน",
+    en: "before billing"
+  },
+  "addSub.yearlyBillingInfo": {
+    th: "การเรียกเก็บเงินรายปีเกิดขึ้นหนึ่งครั้งต่อปี",
+    en: "Yearly billing occurs once per year"
+  },
+  "addSub.monthlyBillingInfo": {
+    th: "การเรียกเก็บเงินรายเดือนเกิดขึ้นทุกเดือน",
+    en: "Monthly billing occurs every month"
+  },
+
+  // Subscription fields
+  "subscription.monthly_cost": {
+    th: "ค่าใช้จ่ายต่อเดือน",
+    en: "Monthly Cost"
+  },
+  "subscription.yearly_cost": {
+    th: "ค่าใช้จ่ายต่อปี",
+    en: "Yearly Cost"
+  }
 };
 
 export type TranslationKey = keyof typeof translations;

@@ -8,6 +8,7 @@ interface CurrencyContextType {
   setPreferredCurrency: (currency: string) => Promise<void>;
   convertAmount: (amount: number, fromCurrency: string) => Promise<number>;
   formatAmount: (amount: number, fromCurrency: string) => Promise<string>;
+  formatCurrency: (amount: number, currency: string) => string;
   isLoading: boolean;
 }
 
@@ -75,6 +76,10 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     return currencyService.formatAmount(convertedAmount, preferredCurrency);
   };
 
+  const formatCurrency = (amount: number, currency: string): string => {
+    return currencyService.formatAmount(amount, currency);
+  };
+
   return (
     <CurrencyContext.Provider
       value={{
@@ -82,6 +87,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
         setPreferredCurrency,
         convertAmount,
         formatAmount,
+        formatCurrency,
         isLoading
       }}
     >

@@ -59,6 +59,7 @@ export default function AddSubscription() {
         name: data.name,
         category_id: data.category_id,
         category: categories.find(c => c.id === data.category_id)?.slug || "other",
+        description: null,
         amount: data.amount,
         currency: data.currency,
         billing_cycle: data.billing_cycle,
@@ -71,11 +72,15 @@ export default function AddSubscription() {
         shared_with: data.shared_with || [],
         template_id: data.template_id,
         icon_url: data.icon_url,
+        logo_url: data.icon_url,
         is_template: false,
+        is_active: true,
         popularity_score: 0,
         remind_3_days_before: data.remind_3_days,
         remind_7_days_before: data.remind_7_days,
         usage_frequency: data.usage_frequency || null,
+        website_url: null,
+        updated_at: new Date().toISOString(),
       });
 
       toast({
