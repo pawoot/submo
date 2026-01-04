@@ -43,6 +43,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type SubscriptionTemplateInsert = Database["public"]["Tables"]["subscription_templates"]["Insert"];
@@ -630,13 +631,12 @@ export default function AdminSubscriptionTemplates() {
                       {paginatedTemplates.map((template) => (
                         <TableRow key={template.id}>
                           <TableCell>
-                            <div className="w-12 h-12 rounded-lg overflow-hidden bg-white shadow-sm">
-                              <img
-                                src={template.logo_url || "/placeholder-logo.png"}
-                                alt={template.name}
-                                className="w-full h-full object-cover"
-                              />
-                            </div>
+                            <SubscriptionIcon
+                              name={template.name}
+                              website={template.website_url}
+                              logoUrl={template.logo_url}
+                              className="w-12 h-12"
+                            />
                           </TableCell>
                           <TableCell className="font-medium">{template.name}</TableCell>
                           <TableCell>
