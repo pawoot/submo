@@ -40,7 +40,6 @@ export default function EditSubscription() {
   const { t, language } = useLanguage();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [sharedUsers, setSharedUsers] = useState<string[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
@@ -188,41 +187,10 @@ export default function EditSubscription() {
         start_date: new Date(subscription.start_date),
         next_billing_date: new Date(subscription.next_billing_date),
       });
-
-      // Pre-fill shared users
-      if (subscription.shared_with && Array.isArray(subscription.shared_with)) {
-        setSharedUsers(subscription.shared_with);
-      }
     };
 
     loadFormData();
   }, [subscription, reset]);
-
-  const addSharedUser = () => {
-    if (!newUserEmail) {
-      setEmailError(t("validation.required"));
-      return;
-    }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newUserEmail)) {
-      setEmailError(t("validation.invalidEmail"));
-      return;
-    }
-
-    if (sharedUsers.includes(newUserEmail)) {
-      setEmailError(t("addSub.emailInUse"));
-      return;
-    }
-
-    setSharedUsers([...sharedUsers, newUserEmail]);
-    setNewUserEmail("");
-    setEmailError("");
-  };
-
-  const removeSharedUser = (email: string) => {
-    setSharedUsers(sharedUsers.filter(u => u !== email));
-  };
 
   const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
     setValue("name", template.name, { shouldValidate: true });
@@ -275,7 +243,6 @@ export default function EditSubscription() {
         next_billing_date: data.next_billing_date.toISOString(),
         website_url: data.website_url || null,
         notes: data.notes || null,
-        shared_with: sharedUsers
       });
 
       toast({
@@ -377,38 +344,56 @@ export default function EditSubscription() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Name - Now with Dropdown */}
                     <div className="space-y-2">
-                      <Label htmlFor="name">{t("addSub.name")} *</Label>
-                      <Input
-                        id="name"
-                        {...register("name")}
-                        className={cn(errors.name && "border-red-500")}
+                      <Label htmlFor="name">
+                        {t("addSub.name")} <span className="text-red-500">*</span>
+                      </Label>
+                      <Controller
+                        name="name"
+                        control={control}
+                        render={({ field }) => (
+                          <SubscriptionNameAutocomplete
+                            value={field.value}
+                            onChange={field.onChange}
+                            onSelectTemplate={(template) => {
+                              field.onChange(template.name);
+                              if (template.category_id) {
+                                setValue("category_id", template.category_id);
+                              }
+                              if (template.amount) {
+                                setValue("amount", template.amount.toString());
+                              }
+                              if (template.currency) {
+                                setValue("currency", template.currency);
+                              }
+                              if (template.billing_cycle) {
+                                setValue("billing_cycle", template.billing_cycle);
+                              }
+                            }}
+                            error={errors.name?.message}
+                          />
+                        )}
                       />
-                      {errors.name && (
-                        <p className="text-sm text-red-500">{errors.name.message}</p>
-                      )}
                     </div>
 
+                    {/* Category */}
                     <div className="space-y-2">
-                      <Label htmlFor="category_id">{t("addSub.category")} *</Label>
+                      <Label htmlFor="category_id">
+                        {t("addSub.category")} <span className="text-red-500">*</span>
+                      </Label>
                       <Controller
                         name="category_id"
                         control={control}
                         render={({ field }) => (
-                          <Select 
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <SelectTrigger id="category_id" className={cn(errors.category_id && "border-red-500")}>
+                          <Select value={field.value} onValueChange={field.onChange}>
+                            <SelectTrigger>
                               <SelectValue placeholder={t("addSub.selectCategory")} />
                             </SelectTrigger>
                             <SelectContent>
                               {dbCategories.map((cat) => (
                                 <SelectItem key={cat.id} value={cat.id}>
-                                  <div className="flex items-center gap-2">
-                                    <span>{cat.icon}</span>
-                                    <span>{language === 'th' ? cat.name_th : cat.name_en}</span>
-                                  </div>
+                                  {language === 'th' ? cat.name_th : cat.name_en}
                                 </SelectItem>
                               ))}
                             </SelectContent>
@@ -421,32 +406,15 @@ export default function EditSubscription() {
                     </div>
                   </div>
 
+                  {/* Description */}
                   <div className="space-y-2">
-                    <Label htmlFor="description">{t("addSub.notes")}</Label>
-                    <Textarea 
+                    <Label htmlFor="description">{t("addSub.description")}</Label>
+                    <Textarea
                       id="description"
                       {...register("description")}
-                      placeholder={t("addSub.notesPlaceholder")}
-                      rows={3}
-                      className={cn(errors.description && "border-red-500")}
+                      placeholder={t("addSub.descriptionPlaceholder")}
+                      className="min-h-[100px]"
                     />
-                    {errors.description && (
-                      <p className="text-sm text-red-500">{errors.description.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="website_url">{t("addSub.website")}</Label>
-                    <Input 
-                      id="website_url"
-                      {...register("website_url")}
-                      type="url"
-                      placeholder={t("addSub.websitePlaceholder")}
-                      className={cn(errors.website_url && "border-red-500")}
-                    />
-                    {errors.website_url && (
-                      <p className="text-sm text-red-500">{errors.website_url.message}</p>
-                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -679,90 +647,22 @@ export default function EditSubscription() {
                 </CardContent>
               </Card>
 
-              {/* Shared Users */}
-              <Card className="border-slate-200 dark:border-slate-800">
-                <CardHeader>
-                  <CardTitle className="flex items-center gap-2">
-                    <Users className="w-5 h-5" />
-                    {t("addSub.sharedUsers")}
-                  </CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="flex gap-2">
-                    <div className="flex-1">
-                      <Input 
-                        placeholder={t("addSub.sharedUsersPlaceholder")}
-                        value={newUserEmail}
-                        onChange={(e) => {
-                          setNewUserEmail(e.target.value);
-                          setEmailError("");
-                        }}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addSharedUser();
-                          }
-                        }}
-                        className={cn(emailError && "border-red-500")}
-                      />
-                      {emailError && (
-                        <p className="text-sm text-red-500 mt-1">{emailError}</p>
-                      )}
-                    </div>
-                    <Button 
-                      type="button" 
-                      onClick={addSharedUser}
-                      variant="outline"
-                    >
-                      <Users className="w-4 h-4" />
-                    </Button>
-                  </div>
-
-                  {sharedUsers.length > 0 && (
-                    <div className="space-y-2">
-                      <Label>{t("addSub.sharedUsers")} ({sharedUsers.length})</Label>
-                      <div className="flex flex-wrap gap-2">
-                        {sharedUsers.map((email) => (
-                          <Badge 
-                            key={email} 
-                            variant="secondary"
-                            className="gap-2 px-3 py-1"
-                          >
-                            {email}
-                            <button
-                              type="button"
-                              onClick={() => removeSharedUser(email)}
-                              className="hover:text-destructive"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </CardContent>
-              </Card>
-
               {/* Action Buttons */}
-              <div className="flex gap-4 justify-end pt-4">
-                <Link href="/">
-                  <Button type="button" variant="outline" size="lg" disabled={isSubmitting}>
-                    {t("common.cancel")}
-                  </Button>
-                </Link>
-                <Button type="submit" size="lg" className="gap-2" disabled={isSubmitting}>
-                  {isSubmitting ? (
-                    <>
-                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      {t("editSub.submitting")}
-                    </>
-                  ) : (
-                    <>
-                      <Save className="w-5 h-5" />
-                      {t("editSub.submit")}
-                    </>
-                  )}
+              <div className="flex items-center justify-end gap-4 pt-6">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => router.push("/")}
+                  className="min-w-[120px]"
+                >
+                  {t("common.cancel")}
+                </Button>
+                <Button
+                  type="submit"
+                  disabled={isSubmitting}
+                  className="min-w-[120px] bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
+                >
+                  {isSubmitting ? t("common.saving") : t("common.save")}
                 </Button>
               </div>
             </div>

@@ -375,6 +375,14 @@ export const translations = {
     th: "เช่น Netflix, Spotify",
     en: "e.g. Netflix, Spotify"
   },
+  "addSub.description": {
+    th: "คำอธิบาย",
+    en: "Description"
+  },
+  "addSub.descriptionPlaceholder": {
+    th: "คำอธิบายเพิ่มเติม...",
+    en: "Additional description..."
+  },
   "addSub.category": {
     th: "หมวดหมู่",
     en: "Category"
@@ -1320,6 +1328,10 @@ export const translations = {
   "common.save": {
     th: "บันทึก",
     en: "Save"
+  },
+  "common.saving": {
+    th: "กำลังบันทึก...",
+    en: "Saving..."
   },
   "common.add": {
     th: "เพิ่ม",
