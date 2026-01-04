@@ -1,7 +1,7 @@
 import { ReactNode } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { LayoutDashboard, Users, Package, BarChart3, Settings, LogOut, Menu } from "lucide-react";
+import { LayoutDashboard, Users, Package, BarChart3, Settings, LogOut, Menu, Folder } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { authService } from "@/services/authService";
@@ -27,6 +27,11 @@ const navigation = [
     name: "จัดการ Templates",
     href: "/admin/subscription-templates",
     icon: Package,
+  },
+  {
+    name: "จัดการหมวดหมู่",
+    href: "/admin/categories",
+    icon: Folder,
   },
   {
     name: "รายงาน",
