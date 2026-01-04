@@ -97,7 +97,7 @@ export default function Home() {
         setUserEmail(user.email || "");
         
         // Load profile
-        const profileData = await profileService.getProfile(user.id);
+        const profileData = await profileService.getCurrentProfile();
         setProfile(profileData);
         
         // Check if user is admin (simple check based on email or profile role if available)
