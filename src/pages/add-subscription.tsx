@@ -21,6 +21,7 @@ import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import type { Database } from "@/integrations/supabase/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -362,13 +363,12 @@ export default function AddSubscription() {
                               : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
                           )}
                         >
-                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-white shadow-sm">
-                            <img
-                              src={template.logo_url}
-                              alt={template.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
+                          <SubscriptionIcon
+                            name={template.name}
+                            website={template.website_url}
+                            logoUrl={template.logo_url}
+                            className="w-12 h-12"
+                          />
                           <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center truncate w-full">
                             {template.name}
                           </span>
