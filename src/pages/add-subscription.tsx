@@ -6,11 +6,13 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Trash2, Users, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/router";
+import { subscriptionService } from "@/services/subscriptionService";
+import { AuthGuard } from "@/components/AuthGuard";
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
@@ -54,54 +56,49 @@ export default function AddSubscription() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
-    const subscriptionData = {
-      name: formData.get("name"),
-      category: formData.get("category"),
-      description: formData.get("description"),
-      cost: formData.get("cost"),
-      currency: formData.get("currency"),
-      billing: formData.get("billing"),
-      paymentMethod: formData.get("paymentMethod"),
-      cardLast4: formData.get("cardLast4"),
-      startDate: formData.get("startDate"),
-      nextBilling: formData.get("nextBilling"),
-      website: formData.get("website"),
-      notes: formData.get("notes"),
-      sharedWith: sharedUsers,
-    };
+    try {
+      const formData = new FormData(e.currentTarget);
+      
+      const subscriptionData = {
+        name: formData.get("name") as string,
+        category: formData.get("category") as string,
+        description: formData.get("description") as string || null,
+        amount: parseFloat(formData.get("cost") as string),
+        currency: formData.get("currency") as string,
+        billing_cycle: formData.get("billing") as string,
+        payment_method: formData.get("paymentMethod") as string,
+        card_last_4: formData.get("cardLast4") as string || null,
+        start_date: formData.get("startDate") as string,
+        next_billing_date: formData.get("nextBilling") as string,
+        website_url: formData.get("website") as string || null,
+        notes: formData.get("notes") as string || null,
+        shared_with: sharedUsers.length > 0 ? sharedUsers : null,
+      };
 
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscriptionService.create(subscriptionData);
 
-    // Store in localStorage for now
-    const existingSubscriptions = JSON.parse(localStorage.getItem("subscriptions") || "[]");
-    const newSubscription = {
-      ...subscriptionData,
-      id: Date.now(),
-      status: "active",
-      createdAt: new Date().toISOString(),
-    };
-    existingSubscriptions.push(newSubscription);
-    localStorage.setItem("subscriptions", JSON.stringify(existingSubscriptions));
+      toast({
+        title: "✅ เพิ่ม Subscription สำเร็จ!",
+        description: `เพิ่ม ${subscriptionData.name} เรียบร้อยแล้ว`,
+        duration: 3000,
+      });
 
-    setIsSubmitting(false);
-
-    // Show success toast
-    toast({
-      title: "✅ เพิ่ม Subscription สำเร็จ!",
-      description: `เพิ่ม ${subscriptionData.name} เรียบร้อยแล้ว`,
-      duration: 3000,
-    });
-
-    // Redirect to home page after 1.5 seconds
-    setTimeout(() => {
       router.push("/");
-    }, 1500);
+    } catch (error) {
+      console.error("Error creating subscription:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถเพิ่ม Subscription ได้ กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
   return (
-    <>
+    <AuthGuard>
       <SEO 
         title="เพิ่ม Subscription - Subscription Manager"
         description="เพิ่มรายการ Subscription ใหม่ ติดตามค่าใช้จ่าย และจัดการวันหมดอายุ"
@@ -196,7 +193,7 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="currency">สกุลเงิน *</Label>
-                      <Select name="currency" required>
+                      <Select name="currency" required defaultValue="USD">
                         <SelectTrigger id="currency">
                           <SelectValue placeholder="เลือกสกุลเงิน" />
                         </SelectTrigger>
@@ -212,7 +209,7 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="billing">รอบการชำระ *</Label>
-                      <Select name="billing" required>
+                      <Select name="billing" required defaultValue="monthly">
                         <SelectTrigger id="billing">
                           <SelectValue placeholder="เลือกรอบ" />
                         </SelectTrigger>
@@ -220,7 +217,7 @@ export default function AddSubscription() {
                           <SelectItem value="monthly">รายเดือน</SelectItem>
                           <SelectItem value="yearly">รายปี</SelectItem>
                           <SelectItem value="quarterly">ราย 3 เดือน</SelectItem>
-                          <SelectItem value="biannually">ราย 6 เดือน</SelectItem>
+                          <SelectItem value="half-yearly">ราย 6 เดือน</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -229,7 +226,7 @@ export default function AddSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="paymentMethod">ช่องทางการชำระเงิน *</Label>
-                      <Select name="paymentMethod" required>
+                      <Select name="paymentMethod" required defaultValue="credit-card">
                         <SelectTrigger id="paymentMethod">
                           <SelectValue placeholder="เลือกช่องทาง" />
                         </SelectTrigger>
@@ -412,6 +409,6 @@ export default function AddSubscription() {
           </form>
         </main>
       </div>
-    </>
+    </AuthGuard>
   );
 }

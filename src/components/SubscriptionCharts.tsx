@@ -9,13 +9,13 @@ import { useState } from "react";
 import Link from "next/link";
 
 interface Subscription {
-  id: number;
+  id: string;
   name: string;
-  cost: number;
+  amount: number;
   currency: string;
-  billing: string;
+  billing_cycle: string;
   category: string;
-  nextBillingDate: string;
+  next_billing_date: string;
 }
 
 interface SubscriptionChartsProps {
@@ -69,14 +69,14 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
     }
 
     // กรองตามรอบชำระ
-    if (selectedBilling !== "all" && sub.billing !== selectedBilling) {
+    if (selectedBilling !== "all" && sub.billing_cycle !== selectedBilling) {
       return false;
     }
 
     // กรองตามช่วงเวลา
     if (timeRange !== "all") {
       const today = new Date();
-      const nextBilling = new Date(sub.nextBillingDate);
+      const nextBilling = new Date(sub.next_billing_date);
       const daysDiff = Math.ceil((nextBilling.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
 
       if (timeRange === "this-month" && daysDiff > 30) return false;
@@ -91,10 +91,10 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
   // คำนวณค่าใช้จ่ายรายเดือนตามหมวดหมู่
   const categoryData = filteredSubscriptions.reduce((acc, sub) => {
     const category = categoryLabels[sub.category] || sub.category;
-    const monthlyCost = sub.billing === "monthly" ? sub.cost :
-                       sub.billing === "yearly" ? sub.cost / 12 :
-                       sub.billing === "quarterly" ? sub.cost / 3 :
-                       sub.billing === "biannually" ? sub.cost / 6 : sub.cost;
+    const monthlyCost = sub.billing_cycle === "monthly" ? sub.amount :
+                       sub.billing_cycle === "yearly" ? sub.amount / 12 :
+                       sub.billing_cycle === "quarterly" ? sub.amount / 3 :
+                       sub.billing_cycle === "half-yearly" ? sub.amount / 6 : sub.amount;
 
     const existing = acc.find(item => item.category === category);
     if (existing) {

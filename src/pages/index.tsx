@@ -117,10 +117,10 @@ export default function Home() {
 
   const calculateMonthlyCost = (sub: Subscription): number => {
     switch (sub.billing_cycle) {
-      case "yearly": return sub.price / 12;
-      case "quarterly": return sub.price / 3;
-      case "half-yearly": return sub.price / 6;
-      default: return sub.price;
+      case "yearly": return sub.amount / 12;
+      case "quarterly": return sub.amount / 3;
+      case "half-yearly": return sub.amount / 6;
+      default: return sub.amount;
     }
   };
 
@@ -399,7 +399,7 @@ export default function Home() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                              ${Number(sub.price).toFixed(2)}
+                              ${Number(sub.amount).toFixed(2)}
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-400">
                               {billingCycleLabels[sub.billing_cycle]}

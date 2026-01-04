@@ -6,38 +6,27 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Save, Trash2, Users, Plus } from "lucide-react";
+import { ArrowLeft, Save, Trash2, Users } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/router";
+import { subscriptionService } from "@/services/subscriptionService";
+import { AuthGuard } from "@/components/AuthGuard";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Subscription {
-  id: number;
-  name: string;
-  cost: number;
-  currency: string;
-  billing: string;
-  nextBilling: string;
-  category: string;
-  paymentMethod: string;
-  sharedWith: string[];
-  status: string;
-  description?: string;
-  cardLast4?: string;
-  startDate?: string;
-  website?: string;
-  notes?: string;
-}
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 export default function EditSubscription() {
   const router = useRouter();
   const { id } = router.query;
+  const { toast } = useToast();
+
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const { toast } = useToast();
+  const [loading, setLoading] = useState(true);
 
   const categories = [
     "Design", "Development", "Productivity", "Entertainment", 
@@ -61,19 +50,39 @@ export default function EditSubscription() {
 
   useEffect(() => {
     if (id) {
-      const stored = localStorage.getItem("subscriptions");
-      if (stored) {
-        const subscriptions = JSON.parse(stored);
-        const found = subscriptions.find((s: Subscription) => s.id === Number(id));
-        if (found) {
-          setSubscription(found);
-          setSharedUsers(found.sharedWith || []);
-        } else {
-          router.push("/");
-        }
-      }
+      loadSubscription();
     }
-  }, [id, router]);
+  }, [id]);
+
+  const loadSubscription = async () => {
+    try {
+      setLoading(true);
+      const data = await subscriptionService.getById(id as string);
+      
+      if (data) {
+        setSubscription(data);
+        setSharedUsers(data.shared_with || []);
+      } else {
+        toast({
+          title: "❌ ไม่พบข้อมูล",
+          description: "ไม่พบ Subscription ที่ต้องการแก้ไข",
+          variant: "destructive",
+          duration: 3000,
+        });
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Error loading subscription:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถโหลดข้อมูลได้",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
 
   const addSharedUser = () => {
     if (newUserEmail && !sharedUsers.includes(newUserEmail)) {
@@ -90,69 +99,73 @@ export default function EditSubscription() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const formData = new FormData(e.currentTarget);
-    const updatedData = {
-      ...subscription,
-      name: formData.get("name"),
-      category: formData.get("category"),
-      description: formData.get("description"),
-      cost: Number(formData.get("cost")),
-      currency: formData.get("currency"),
-      billing: formData.get("billing"),
-      paymentMethod: formData.get("paymentMethod"),
-      cardLast4: formData.get("cardLast4"),
-      startDate: formData.get("startDate"),
-      nextBilling: formData.get("nextBilling"),
-      website: formData.get("website"),
-      notes: formData.get("notes"),
-      sharedWith: sharedUsers,
-      updatedAt: new Date().toISOString(),
-    };
+    try {
+      const formData = new FormData(e.currentTarget);
+      
+      const updateData = {
+        name: formData.get("name") as string,
+        category: formData.get("category") as string,
+        description: formData.get("description") as string || null,
+        amount: parseFloat(formData.get("cost") as string),
+        currency: formData.get("currency") as string,
+        billing_cycle: formData.get("billing") as string,
+        payment_method: formData.get("paymentMethod") as string,
+        card_last_4: formData.get("cardLast4") as string || null,
+        start_date: formData.get("startDate") as string,
+        next_billing_date: formData.get("nextBilling") as string,
+        website_url: formData.get("website") as string || null,
+        notes: formData.get("notes") as string || null,
+        shared_with: sharedUsers.length > 0 ? sharedUsers : null,
+      };
 
-    await new Promise(resolve => setTimeout(resolve, 1000));
+      await subscriptionService.update(id as string, updateData);
 
-    const stored = localStorage.getItem("subscriptions");
-    if (stored) {
-      const subscriptions = JSON.parse(stored);
-      const index = subscriptions.findIndex((s: Subscription) => s.id === Number(id));
-      if (index !== -1) {
-        subscriptions[index] = updatedData;
-        localStorage.setItem("subscriptions", JSON.stringify(subscriptions));
-      }
-    }
+      toast({
+        title: "✅ อัปเดตสำเร็จ!",
+        description: `อัปเดต ${updateData.name} เรียบร้อยแล้ว`,
+        duration: 3000,
+      });
 
-    setIsSubmitting(false);
-
-    toast({
-      title: "✅ อัปเดต Subscription สำเร็จ!",
-      description: `อัปเดต ${updatedData.name} เรียบร้อยแล้ว`,
-      duration: 3000,
-    });
-
-    setTimeout(() => {
       router.push("/");
-    }, 1500);
+    } catch (error) {
+      console.error("Error updating subscription:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถอัปเดตข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setIsSubmitting(false);
+    }
   };
 
-  if (!subscription) {
+  if (loading) {
     return (
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950 flex items-center justify-center">
-        <div className="text-center">
-          <div className="w-16 h-16 border-4 border-indigo-500 border-t-transparent rounded-full animate-spin mx-auto mb-4" />
-          <p className="text-slate-600 dark:text-slate-400">กำลังโหลดข้อมูล...</p>
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600">กำลังโหลดข้อมูล...</p>
+          </div>
         </div>
-      </div>
+      </AuthGuard>
     );
   }
 
+  if (!subscription) {
+    return null;
+  }
+
   return (
-    <>
+    <AuthGuard>
       <SEO 
         title="แก้ไข Subscription - Subscription Manager"
         description="แก้ไขข้อมูล Subscription และจัดการรายละเอียด"
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
+        {/* Header */}
         <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
@@ -169,9 +182,11 @@ export default function EditSubscription() {
           </div>
         </header>
 
+        {/* Main Content */}
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <form onSubmit={handleSubmit}>
             <div className="space-y-6">
+              {/* Basic Information */}
               <Card>
                 <CardHeader>
                   <CardTitle>ข้อมูลพื้นฐาน</CardTitle>
@@ -183,15 +198,15 @@ export default function EditSubscription() {
                       <Input 
                         id="name"
                         name="name"
-                        defaultValue={subscription.name}
                         placeholder="เช่น Adobe Creative Cloud"
+                        defaultValue={subscription.name}
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="category">หมวดหมู่ *</Label>
-                      <Select name="category" defaultValue={subscription.category} required>
+                      <Select name="category" required defaultValue={subscription.category}>
                         <SelectTrigger id="category">
                           <SelectValue placeholder="เลือกหมวดหมู่" />
                         </SelectTrigger>
@@ -211,14 +226,15 @@ export default function EditSubscription() {
                     <Textarea 
                       id="description"
                       name="description"
-                      defaultValue={subscription.description}
                       placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
                       rows={3}
+                      defaultValue={subscription.description || ""}
                     />
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Pricing Information */}
               <Card>
                 <CardHeader>
                   <CardTitle>ข้อมูลราคาและการชำระเงิน</CardTitle>
@@ -231,16 +247,16 @@ export default function EditSubscription() {
                         id="cost"
                         name="cost"
                         type="number" 
-                        step="0.01"
-                        defaultValue={subscription.cost}
+                        step="0.01" 
                         placeholder="0.00"
+                        defaultValue={subscription.amount}
                         required
                       />
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="currency">สกุลเงิน *</Label>
-                      <Select name="currency" defaultValue={subscription.currency} required>
+                      <Select name="currency" required defaultValue={subscription.currency}>
                         <SelectTrigger id="currency">
                           <SelectValue placeholder="เลือกสกุลเงิน" />
                         </SelectTrigger>
@@ -256,7 +272,7 @@ export default function EditSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="billing">รอบการชำระ *</Label>
-                      <Select name="billing" defaultValue={subscription.billing} required>
+                      <Select name="billing" required defaultValue={subscription.billing_cycle}>
                         <SelectTrigger id="billing">
                           <SelectValue placeholder="เลือกรอบ" />
                         </SelectTrigger>
@@ -264,7 +280,7 @@ export default function EditSubscription() {
                           <SelectItem value="monthly">รายเดือน</SelectItem>
                           <SelectItem value="yearly">รายปี</SelectItem>
                           <SelectItem value="quarterly">ราย 3 เดือน</SelectItem>
-                          <SelectItem value="biannually">ราย 6 เดือน</SelectItem>
+                          <SelectItem value="half-yearly">ราย 6 เดือน</SelectItem>
                         </SelectContent>
                       </Select>
                     </div>
@@ -273,7 +289,7 @@ export default function EditSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="paymentMethod">ช่องทางการชำระเงิน *</Label>
-                      <Select name="paymentMethod" defaultValue={subscription.paymentMethod} required>
+                      <Select name="paymentMethod" required defaultValue={subscription.payment_method}>
                         <SelectTrigger id="paymentMethod">
                           <SelectValue placeholder="เลือกช่องทาง" />
                         </SelectTrigger>
@@ -292,15 +308,16 @@ export default function EditSubscription() {
                       <Input 
                         id="cardLast4"
                         name="cardLast4"
-                        defaultValue={subscription.cardLast4}
                         placeholder="1234"
                         maxLength={4}
+                        defaultValue={subscription.card_last_4 || ""}
                       />
                     </div>
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Billing Dates */}
               <Card>
                 <CardHeader>
                   <CardTitle>วันที่เริ่มต้นและต่ออายุ</CardTitle>
@@ -313,7 +330,7 @@ export default function EditSubscription() {
                         id="startDate"
                         name="startDate"
                         type="date"
-                        defaultValue={subscription.startDate}
+                        defaultValue={subscription.start_date}
                         required
                       />
                     </div>
@@ -324,7 +341,7 @@ export default function EditSubscription() {
                         id="nextBilling"
                         name="nextBilling"
                         type="date"
-                        defaultValue={subscription.nextBilling}
+                        defaultValue={subscription.next_billing_date}
                         required
                       />
                     </div>
@@ -332,6 +349,7 @@ export default function EditSubscription() {
                 </CardContent>
               </Card>
 
+              {/* Shared Users */}
               <Card>
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
@@ -357,7 +375,7 @@ export default function EditSubscription() {
                       onClick={addSharedUser}
                       variant="outline"
                     >
-                      <Plus className="w-4 h-4" />
+                      <Users className="w-4 h-4" />
                     </Button>
                   </div>
 
@@ -384,9 +402,16 @@ export default function EditSubscription() {
                       </div>
                     </div>
                   )}
+
+                  {sharedUsers.length === 0 && (
+                    <p className="text-sm text-slate-500 dark:text-slate-400">
+                      ยังไม่มีผู้ใช้งานร่วม
+                    </p>
+                  )}
                 </CardContent>
               </Card>
 
+              {/* Additional Info */}
               <Card>
                 <CardHeader>
                   <CardTitle>ข้อมูลเพิ่มเติม</CardTitle>
@@ -398,8 +423,8 @@ export default function EditSubscription() {
                       id="website"
                       name="website"
                       type="url"
-                      defaultValue={subscription.website}
                       placeholder="https://example.com"
+                      defaultValue={subscription.website_url || ""}
                     />
                   </div>
 
@@ -408,14 +433,15 @@ export default function EditSubscription() {
                     <Textarea 
                       id="notes"
                       name="notes"
-                      defaultValue={subscription.notes}
                       placeholder="ข้อมูลเพิ่มเติม หรือหมายเหตุสำคัญ"
                       rows={3}
+                      defaultValue={subscription.notes || ""}
                     />
                   </div>
                 </CardContent>
               </Card>
 
+              {/* Action Buttons */}
               <div className="flex gap-4 justify-end pt-4">
                 <Link href="/">
                   <Button type="button" variant="outline" size="lg" disabled={isSubmitting}>
@@ -431,7 +457,7 @@ export default function EditSubscription() {
                   ) : (
                     <>
                       <Save className="w-5 h-5" />
-                      บันทึกการแก้ไข
+                      บันทึกการเปลี่ยนแปลง
                     </>
                   )}
                 </Button>
@@ -440,6 +466,6 @@ export default function EditSubscription() {
           </form>
         </main>
       </div>
-    </>
+    </AuthGuard>
   );
 }

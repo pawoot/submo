@@ -46,6 +46,7 @@ export type Database = {
         Row: {
           amount: number
           billing_cycle: string
+          card_last_4: string | null
           category: string
           created_at: string | null
           currency: string
@@ -58,6 +59,7 @@ export type Database = {
           notes: string | null
           payment_method: string | null
           shared_with: string[] | null
+          start_date: string | null
           updated_at: string | null
           user_id: string
           website_url: string | null
@@ -65,6 +67,7 @@ export type Database = {
         Insert: {
           amount: number
           billing_cycle: string
+          card_last_4?: string | null
           category: string
           created_at?: string | null
           currency?: string
@@ -77,6 +80,7 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           shared_with?: string[] | null
+          start_date?: string | null
           updated_at?: string | null
           user_id: string
           website_url?: string | null
@@ -84,6 +88,7 @@ export type Database = {
         Update: {
           amount?: number
           billing_cycle?: string
+          card_last_4?: string | null
           category?: string
           created_at?: string | null
           currency?: string
@@ -96,6 +101,7 @@ export type Database = {
           notes?: string | null
           payment_method?: string | null
           shared_with?: string[] | null
+          start_date?: string | null
           updated_at?: string | null
           user_id?: string
           website_url?: string | null
