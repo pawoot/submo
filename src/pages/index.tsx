@@ -57,12 +57,22 @@ export default function Home() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [profile, setProfile] = useState<any>(null);
+  const [scrolled, setScrolled] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
   useEffect(() => {
     loadUserData();
     loadSubscriptions();
+
+    // Add scroll event listener
+    const handleScroll = () => {
+      const offset = window.scrollY;
+      setScrolled(offset > 20);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
   useEffect(() => {
@@ -249,19 +259,37 @@ export default function Home() {
         title="Subscription Manager - จัดการค่าใช้จ่าย Software"
         description="ระบบบริหารจัดการค่าใช้จ่าย Software Subscription ติดตามวันหมดอายุ แบ่งปันค่าใช้จ่าย และดูภาพรวมการใช้เงิน"
       />
-      <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadNotifications} />
+      <div className={`lg:hidden sticky top-0 z-50 transition-all duration-300 ${
+        scrolled 
+          ? "bg-white shadow-md" 
+          : "bg-white/90 shadow-sm"
+      }`}>
+        <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadNotifications} />
+      </div>
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
-        <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4">
+        <header className={`hidden lg:block bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm border-b sticky top-0 z-50 transition-all duration-300 ${
+          scrolled 
+            ? "py-3 bg-white/95 dark:bg-slate-900/95 backdrop-blur-md shadow-lg" 
+            : "py-4 bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm"
+        }`}>
+          <div className="container mx-auto px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
-                  <CreditCard className="w-6 h-6 text-white" />
+                <div className={`rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-all duration-300 ${
+                  scrolled ? "w-8 h-8" : "w-10 h-10"
+                }`}>
+                  <CreditCard className={`text-white transition-all duration-300 ${
+                    scrolled ? "w-5 h-5" : "w-6 h-6"
+                  }`} />
                 </div>
                 <div>
-                  <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subscription Mo</h1>
-                  <p className="text-sm text-slate-600 dark:text-slate-400">จัดการค่าใช้จ่าย Software</p>
+                  <h1 className={`font-bold text-slate-900 dark:text-white transition-all duration-300 ${
+                    scrolled ? "text-xl" : "text-2xl"
+                  }`}>Subscription Mo</h1>
+                  <p className={`text-sm text-slate-600 dark:text-slate-400 transition-all duration-300 ${
+                    scrolled ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
+                  }`}>จัดการค่าใช้จ่าย Software</p>
                 </div>
                 {isAdmin && (
                   <Link href="/admin">

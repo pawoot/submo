@@ -13,43 +13,41 @@ interface MobileHeaderProps {
 
 export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }: MobileHeaderProps) {
   return (
-    <header className="lg:hidden sticky top-0 z-50 bg-white border-b border-gray-200 shadow-sm">
-      <div className="flex items-center justify-between px-4 py-3">
-        {/* Left: Hamburger Menu */}
-        <MobileNav user={user} isAdmin={isAdmin} />
+    <div className="flex items-center justify-between px-4 py-3">
+      {/* Left: Hamburger Menu */}
+      <MobileNav user={user} isAdmin={isAdmin} />
 
-        {/* Center: Logo */}
-        <Link href="/" className="flex items-center gap-2">
-          <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
-            <span className="text-white font-bold text-lg">S</span>
-          </div>
-          <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-            SubMo
-          </span>
-        </Link>
-
-        {/* Right: Quick Actions */}
-        <div className="flex items-center gap-2">
-          <Link href="/notifications">
-            <Button variant="ghost" size="icon" className="relative">
-              <Bell className="h-5 w-5" />
-              {unreadCount > 0 && (
-                <Badge
-                  variant="destructive"
-                  className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center px-1 text-xs"
-                >
-                  {unreadCount > 99 ? "99+" : unreadCount}
-                </Badge>
-              )}
-            </Button>
-          </Link>
-          <Link href="/profile">
-            <Button variant="ghost" size="icon">
-              <User className="h-5 w-5" />
-            </Button>
-          </Link>
+      {/* Center: Logo */}
+      <Link href="/" className="flex items-center gap-2">
+        <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
+          <span className="text-white font-bold text-lg">S</span>
         </div>
+        <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          SubMo
+        </span>
+      </Link>
+
+      {/* Right: Quick Actions */}
+      <div className="flex items-center gap-2">
+        <Link href="/notifications">
+          <Button variant="ghost" size="icon" className="relative">
+            <Bell className="h-5 w-5" />
+            {unreadCount > 0 && (
+              <Badge
+                variant="destructive"
+                className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center px-1 text-xs"
+              >
+                {unreadCount > 99 ? "99+" : unreadCount}
+              </Badge>
+            )}
+          </Button>
+        </Link>
+        <Link href="/profile">
+          <Button variant="ghost" size="icon">
+            <User className="h-5 w-5" />
+          </Button>
+        </Link>
       </div>
-    </header>
+    </div>
   );
 }
