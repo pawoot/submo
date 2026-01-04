@@ -122,6 +122,10 @@ export const translations = {
     th: "แสดง",
     en: "Showing"
   },
+  "subscriptions.items": {
+    th: "รายการ",
+    en: "items"
+  },
   "subscriptions.empty": {
     th: "ยังไม่มี Subscription",
     en: "No subscriptions yet"

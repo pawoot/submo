@@ -458,7 +458,7 @@ export default function Home() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
                   <DollarSign className="w-4 h-4" />
-                  รายเดือน
+                  {t("dashboard.totalCost")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -470,6 +470,9 @@ export default function Home() {
                     ≈ ฿{(totals.monthly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
                   </p>
                 )}
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {t("dashboard.perMonth")}
+                </p>
               </CardContent>
             </Card>
 
@@ -477,7 +480,7 @@ export default function Home() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
                   <TrendingUp className="w-4 h-4" />
-                  รายปี
+                  {t("dashboard.totalCost")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -489,6 +492,9 @@ export default function Home() {
                     ≈ ฿{(totals.yearly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
                   </p>
                 )}
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                  {t("dashboard.perYear")}
+                </p>
               </CardContent>
             </Card>
 
@@ -496,7 +502,7 @@ export default function Home() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
                   <CreditCard className="w-4 h-4" />
-                  Subscription ทั้งหมด
+                  {t("dashboard.activeSubscriptions")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -504,7 +510,7 @@ export default function Home() {
                   {subscriptions.length}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ใช้งานอยู่
+                  {t("dashboard.items")}
                 </p>
               </CardContent>
             </Card>
@@ -513,7 +519,7 @@ export default function Home() {
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
                   <AlertCircle className="w-4 h-4" />
-                  ต่ออายุเร็วๆ นี้
+                  {t("dashboard.upcomingRenewals")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
@@ -521,7 +527,7 @@ export default function Home() {
                   {subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 7).length}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ภายใน 7 วัน
+                  {t("dashboard.within30Days")}
                 </p>
               </CardContent>
             </Card>
@@ -535,11 +541,11 @@ export default function Home() {
               <CardHeader>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
-                    <CardTitle className="text-xl">รายการ Subscription</CardTitle>
-                    <Badge variant="secondary">{sortedSubscriptions.length} รายการ</Badge>
+                    <CardTitle className="text-xl">{t("subscriptions.title")}</CardTitle>
+                    <Badge variant="secondary">{sortedSubscriptions.length} {t("subscriptions.items")}</Badge>
                     {totalPages > 1 && (
                       <Badge variant="outline" className="text-xs">
-                        หน้า {currentPage} จาก {totalPages}
+                        {t("subscriptions.page")} {currentPage} {t("subscriptions.of")} {totalPages}
                       </Badge>
                     )}
                   </div>
@@ -548,16 +554,15 @@ export default function Home() {
                     <ArrowUpDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                     <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
                       <SelectTrigger className="w-[200px]">
-                        <SelectValue placeholder="เรียงลำดับ" />
+                        <SelectValue placeholder={t("subscriptions.sort")} />
                       </SelectTrigger>
                       <SelectContent>
-                        <SelectItem value="date-asc">วันหมดอายุ: ใกล้ → ไกล</SelectItem>
-                        <SelectItem value="date-desc">วันหมดอายุ: ไกล → ใกล้</SelectItem>
-                        <SelectItem value="cost-desc">ราคา: มาก → น้อย</SelectItem>
-                        <SelectItem value="cost-asc">ราคา: น้อย → มาก</SelectItem>
-                        <SelectItem value="name-asc">ชื่อ: A → Z</SelectItem>
-                        <SelectItem value="name-desc">ชื่อ: Z → A</SelectItem>
-                        <SelectItem value="category">หมวดหมู่</SelectItem>
+                        <SelectItem value="date-asc">{t("subscriptions.sortNextBilling")}</SelectItem>
+                        <SelectItem value="date-desc">{t("subscriptions.sortOldest")}</SelectItem>
+                        <SelectItem value="cost-desc">{t("subscriptions.sortPriceHigh")}</SelectItem>
+                        <SelectItem value="cost-asc">{t("subscriptions.sortPriceLow")}</SelectItem>
+                        <SelectItem value="name-asc">{t("subscriptions.sortNameAZ")}</SelectItem>
+                        <SelectItem value="name-desc">{t("subscriptions.sortNameZA")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
@@ -593,7 +598,7 @@ export default function Home() {
                             <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                ต่ออายุ: {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
+                                {t("subscriptions.nextBilling")}: {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
                                   year: "numeric", 
                                   month: "short", 
                                   day: "numeric" 
@@ -606,7 +611,7 @@ export default function Home() {
                               {sub.shared_with && sub.shared_with.length > 0 && (
                                 <span className="flex items-center gap-1">
                                   <Users className="w-4 h-4" />
-                                  แบ่งกับ {sub.shared_with.length} คน
+                                  {t("subscriptions.sharedWith")} {sub.shared_with.length} {t("subscriptions.people")}
                                 </span>
                               )}
                             </div>
@@ -626,7 +631,9 @@ export default function Home() {
                             )}
 
                             <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                              {billingCycleLabels[sub.billing_cycle]}
+                              {sub.billing_cycle === "monthly" ? t("subscriptions.monthly") : 
+                               sub.billing_cycle === "yearly" ? t("subscriptions.yearly") : 
+                               billingCycleLabels[sub.billing_cycle]}
                             </div>
                             <div className="text-xs text-slate-400">
                               ≈ {formatCurrency(monthlyCost, preferredCurrency)}/เดือน
@@ -640,7 +647,7 @@ export default function Home() {
 
                           <div className="flex gap-2">
                             <Link href={`/edit-subscription/${sub.id}`}>
-                              <Button variant="outline" size="icon">
+                              <Button variant="outline" size="icon" title={t("subscriptions.edit")}>
                                 <Edit className="w-4 h-4" />
                               </Button>
                             </Link>
@@ -649,6 +656,7 @@ export default function Home() {
                               size="icon"
                               onClick={() => setDeleteId(sub.id)}
                               className="hover:bg-destructive hover:text-destructive-foreground"
+                              title={t("subscriptions.delete")}
                             >
                               <Trash2 className="w-4 h-4" />
                             </Button>
@@ -663,7 +671,7 @@ export default function Home() {
                 {totalPages > 1 && (
                   <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
                     <div className="text-sm text-slate-600 dark:text-slate-400">
-                      แสดง {startIndex + 1}-{Math.min(endIndex, sortedSubscriptions.length)} จาก {sortedSubscriptions.length} รายการ
+                      {t("subscriptions.showing")} {startIndex + 1}-{Math.min(endIndex, sortedSubscriptions.length)} {t("subscriptions.of")} {sortedSubscriptions.length} {t("subscriptions.items")}
                     </div>
                     
                     <Pagination>
@@ -726,12 +734,12 @@ export default function Home() {
               <CardContent className="py-16">
                 <div className="text-center text-slate-500 dark:text-slate-400">
                   <CreditCard className="w-16 h-16 mx-auto mb-4 opacity-30" />
-                  <h3 className="text-xl font-semibold mb-2">ยังไม่มี Subscription</h3>
-                  <p className="mb-6">เริ่มต้นติดตามค่าใช้จ่าย Software ของคุณวันนี้</p>
+                  <h3 className="text-xl font-semibold mb-2">{t("subscriptions.empty")}</h3>
+                  <p className="mb-6">{t("subscriptions.emptyDesc")}</p>
                   <Link href="/add-subscription">
                     <Button size="lg" className="gap-2">
                       <Plus className="w-5 h-5" />
-                      เพิ่ม Subscription แรก
+                      {t("nav.addSubscription")}
                     </Button>
                   </Link>
                 </div>
@@ -744,18 +752,18 @@ export default function Home() {
       <AlertDialog open={deleteId !== null} onOpenChange={() => setDeleteId(null)}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>ยืนยันการลบ Subscription</AlertDialogTitle>
+            <AlertDialogTitle>{t("subscriptions.confirmDelete")}</AlertDialogTitle>
             <AlertDialogDescription>
-              คุณแน่ใจหรือไม่ว่าต้องการลบรายการนี้? การกระทำนี้ไม่สามารถย้อนกลับได้
+              {t("subscriptions.confirmDeleteDesc")}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogCancel>{t("subscriptions.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={() => deleteId && handleDelete(deleteId)}
               className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
             >
-              ลบ
+              {t("subscriptions.delete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

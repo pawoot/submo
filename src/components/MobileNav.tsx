@@ -9,6 +9,7 @@ import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MobileNavProps {
   user: User | null;
@@ -20,6 +21,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
   const [open, setOpen] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { t } = useLanguage();
 
   useEffect(() => {
     if (user) {
@@ -55,11 +57,11 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
   };
 
   const menuItems = [
-    { icon: Home, label: "หน้าหลัก", href: "/", color: "text-blue-600" },
+    { icon: Home, label: t("nav.home"), href: "/", color: "text-blue-600" },
     { icon: BarChart3, label: "สถิติ", href: "/", color: "text-green-600", hash: "#stats" },
-    { icon: PlusCircle, label: "เพิ่ม Subscription", href: "/add-subscription", color: "text-purple-600" },
-    { icon: Bell, label: "การแจ้งเตือน", href: "/notifications", color: "text-orange-600", badge: unreadCount },
-    { icon: UserIcon, label: "โปรไฟล์", href: "/profile", color: "text-pink-600" },
+    { icon: PlusCircle, label: t("nav.addSubscription"), href: "/add-subscription", color: "text-purple-600" },
+    { icon: Bell, label: t("nav.notifications"), href: "/notifications", color: "text-orange-600", badge: unreadCount },
+    { icon: UserIcon, label: t("nav.profile"), href: "/profile", color: "text-pink-600" },
   ];
 
   const adminMenuItems = isAdmin
@@ -179,7 +181,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
                 onClick={handleSignOut}
               >
                 <LogOut className="h-5 w-5 mr-3" />
-                ออกจากระบบ
+                {t("nav.logout")}
               </Button>
             </div>
           </div>
