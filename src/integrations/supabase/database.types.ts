@@ -15,6 +15,128 @@ export type Database = {
   }
   public: {
     Tables: {
+      notification_settings: {
+        Row: {
+          created_at: string | null
+          email_1_day_before: boolean | null
+          email_3_days_before: boolean | null
+          email_7_days_before: boolean | null
+          email_enabled: boolean | null
+          email_monthly_summary: boolean | null
+          email_on_due_date: boolean | null
+          email_price_changes: boolean | null
+          id: string
+          notification_time: string | null
+          push_1_day_before: boolean | null
+          push_3_days_before: boolean | null
+          push_7_days_before: boolean | null
+          push_enabled: boolean | null
+          push_on_due_date: boolean | null
+          quiet_hours_end: string | null
+          quiet_hours_start: string | null
+          timezone: string | null
+          updated_at: string | null
+          user_id: string
+        }
+        Insert: {
+          created_at?: string | null
+          email_1_day_before?: boolean | null
+          email_3_days_before?: boolean | null
+          email_7_days_before?: boolean | null
+          email_enabled?: boolean | null
+          email_monthly_summary?: boolean | null
+          email_on_due_date?: boolean | null
+          email_price_changes?: boolean | null
+          id?: string
+          notification_time?: string | null
+          push_1_day_before?: boolean | null
+          push_3_days_before?: boolean | null
+          push_7_days_before?: boolean | null
+          push_enabled?: boolean | null
+          push_on_due_date?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id: string
+        }
+        Update: {
+          created_at?: string | null
+          email_1_day_before?: boolean | null
+          email_3_days_before?: boolean | null
+          email_7_days_before?: boolean | null
+          email_enabled?: boolean | null
+          email_monthly_summary?: boolean | null
+          email_on_due_date?: boolean | null
+          email_price_changes?: boolean | null
+          id?: string
+          notification_time?: string | null
+          push_1_day_before?: boolean | null
+          push_3_days_before?: boolean | null
+          push_7_days_before?: boolean | null
+          push_enabled?: boolean | null
+          push_on_due_date?: boolean | null
+          quiet_hours_end?: string | null
+          quiet_hours_start?: string | null
+          timezone?: string | null
+          updated_at?: string | null
+          user_id?: string
+        }
+        Relationships: []
+      }
+      notifications: {
+        Row: {
+          channel: string
+          created_at: string | null
+          id: string
+          is_read: boolean | null
+          message: string
+          metadata: Json | null
+          read_at: string | null
+          sent_at: string | null
+          subscription_id: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Insert: {
+          channel: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message: string
+          metadata?: Json | null
+          read_at?: string | null
+          sent_at?: string | null
+          subscription_id?: string | null
+          title: string
+          type: string
+          user_id: string
+        }
+        Update: {
+          channel?: string
+          created_at?: string | null
+          id?: string
+          is_read?: boolean | null
+          message?: string
+          metadata?: Json | null
+          read_at?: string | null
+          sent_at?: string | null
+          subscription_id?: string | null
+          title?: string
+          type?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notifications_subscription_id_fkey"
+            columns: ["subscription_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           avatar_url: string | null
