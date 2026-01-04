@@ -68,7 +68,7 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
     if (!category) return "Other";
     if (language === "th" && category.name_th) return category.name_th;
     if (language === "en" && category.name_en) return category.name_en;
-    return category.name;
+    return category.name_en || "Other";
   };
 
   const getFaviconUrl = (websiteUrl: string | null) => {
@@ -246,7 +246,7 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
                             {template.name}
                           </p>
                           <p className="text-xs text-muted-foreground mb-1">
-                            {template.currency} {template.default_amount}
+                            {template.currency} {template.amount}
                           </p>
                           <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                             {template.categories?.name_en}

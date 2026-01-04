@@ -69,6 +69,7 @@ export const subscriptionTemplateService = {
     if (updates.website_url !== undefined) updateData.website_url = updates.website_url;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
+    if (updates.usage_count !== undefined) updateData.usage_count = updates.usage_count;
 
     const { data, error } = await supabase
       .from("subscriptions")

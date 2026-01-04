@@ -85,7 +85,7 @@ export function SubscriptionNameAutocomplete({
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {selectedTemplate && (
                 <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
-                   <SubscriptionIcon name={selectedTemplate.name} iconUrl={selectedTemplate.icon_url} className="w-full h-full" />
+                   <SubscriptionIcon name={selectedTemplate.name} websiteUrl={selectedTemplate.website_url} className="w-full h-full" />
                 </div>
               )}
               <span className="truncate">
@@ -116,7 +116,7 @@ export function SubscriptionNameAutocomplete({
                     className="cursor-pointer"
                   >
                     <div className="flex items-center gap-2">
-                      <SubscriptionIcon name={template.name} iconUrl={template.icon_url} className="w-5 h-5" />
+                      <SubscriptionIcon name={template.name} websiteUrl={template.website_url} className="w-5 h-5" />
                       <span>{template.name}</span>
                     </div>
                     {value === template.name && (

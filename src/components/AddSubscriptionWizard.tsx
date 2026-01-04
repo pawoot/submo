@@ -131,7 +131,7 @@ export function AddSubscriptionWizard({
     setValue("name", template.name);
     setValue("category_id", template.category_id);
     // Use default_amount if available, fallback to amount, then 0
-    setValue("amount", template.default_amount ?? template.amount ?? 0);
+    setValue("amount", template.amount ?? 0);
     setValue("currency", template.currency);
     // Ensure billing_cycle is a valid enum value
     const cycle = template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly";

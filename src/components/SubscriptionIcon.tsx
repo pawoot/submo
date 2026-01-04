@@ -1,33 +1,40 @@
-import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SubscriptionIconProps {
   name: string;
+  websiteUrl?: string | null;
+  iconUrl?: string | null; // Keep for backward compatibility or direct URLs
   className?: string;
-  size?: "sm" | "md" | "lg" | "xl";
-  iconUrl?: string | null;
 }
 
-export function SubscriptionIcon({ name, className, size = "md", iconUrl }: SubscriptionIconProps) {
-  const [imageError, setImageError] = useState(false);
+export function SubscriptionIcon({ name, websiteUrl, iconUrl, className }: SubscriptionIconProps) {
+  // Generate favicon URL if websiteUrl is provided
+  const faviconUrl = websiteUrl 
+    ? `https://www.google.com/s2/favicons?domain=${new URL(websiteUrl.startsWith('http') ? websiteUrl : `https://${websiteUrl}`).hostname}&sz=128`
+    : iconUrl;
 
-  const sizeClasses = {
-    sm: "w-8 h-8 text-xs",
-    md: "w-10 h-10 text-sm",
-    lg: "w-12 h-12 text-base",
-    xl: "w-16 h-16 text-lg"
-  };
-
-  if (iconUrl && !imageError) {
-    return (
-      <div className={cn("relative rounded-full overflow-hidden shrink-0 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700", sizeClasses[size], className)}>
+  return (
+    <div 
+      className={cn(
+        "flex items-center justify-center bg-indigo-500 text-white font-bold rounded-full overflow-hidden",
+        className
+      )}
+    >
+      {faviconUrl ? (
         <img 
-          src={iconUrl} 
+          src={faviconUrl} 
           alt={name}
           className="w-full h-full object-cover"
-          onError={() => setImageError(true)}
+          onError={(e) => {
+            e.currentTarget.style.display = "none";
+            const fallback = e.currentTarget.nextElementSibling;
+            if (fallback) (fallback as HTMLElement).style.display = "block";
+          }}
         />
-      </div>
-    );
-  }
+      ) : null}
+      <span style={{ display: faviconUrl ? "none" : "block" }}>
+        {name.charAt(0).toUpperCase()}
+      </span>
+    </div>
+  );
 }

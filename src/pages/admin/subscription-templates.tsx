@@ -56,12 +56,13 @@ export default function AdminSubscriptionTemplates() {
   const [formData, setFormData] = useState({
     name: "",
     category_id: "",
-    amount: "",
+    amount: "0",
     currency: "THB",
     billing_cycle: "monthly" as "monthly" | "yearly" | "quarterly" | "half-yearly",
     website: "",
     description: "",
-    is_active: true
+    is_active: true,
+    usage_count: 0,
   });
 
   const [currentPage, setCurrentPage] = useState(1);
@@ -154,12 +155,13 @@ export default function AdminSubscriptionTemplates() {
     setFormData({
       name: "",
       category_id: "",
-      amount: "",
+      amount: "0",
       currency: "USD",
       billing_cycle: "monthly",
       website: "",
       description: "",
-      is_active: true
+      is_active: true,
+      usage_count: 0,
     });
     setShowAddDialog(true);
   };
@@ -169,12 +171,13 @@ export default function AdminSubscriptionTemplates() {
     setFormData({
       name: template.name,
       category_id: template.category_id || "",
-      amount: template.amount?.toString() || "",
+      amount: template.amount?.toString() || "0",
       currency: template.currency || "THB",
       billing_cycle: (template.billing_cycle as any) || "monthly",
       website: template.website_url || "",
       description: template.description || "",
-      is_active: template.is_active ?? true
+      is_active: template.is_active ?? true,
+      usage_count: template.usage_count || 0,
     });
     setShowEditDialog(true);
   };
@@ -186,27 +189,16 @@ export default function AdminSubscriptionTemplates() {
 
   const confirmAdd = async () => {
     try {
-      // Use Google Favicon service based on website URL
-      let iconUrl = "";
-      if (formData.website) {
-        try {
-          const domain = new URL(formData.website).hostname;
-          iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-        } catch (e) {
-          // Invalid URL, ignore
-        }
-      }
-
       await subscriptionTemplateService.createTemplate({
         name: formData.name,
         category_id: formData.category_id,
-        amount: parseFloat(formData.amount) || 0, // Use amount
+        amount: parseFloat(formData.amount) || 0,
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
         website_url: formData.website,
+        description: formData.description,
         is_active: formData.is_active,
-        // icon_url is optional/legacy
-        // popularity_score is handled by service (defaults to 0)
+        usage_count: 0, // Always 0 for new templates
       });
 
       toast({
@@ -230,25 +222,16 @@ export default function AdminSubscriptionTemplates() {
     if (!selectedTemplate) return;
 
     try {
-      // Use Google Favicon service based on website URL
-      let iconUrl = selectedTemplate.icon_url;
-      if (formData.website) {
-        try {
-          const domain = new URL(formData.website).hostname;
-          iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-        } catch (e) {
-          // Invalid URL, ignore
-        }
-      }
-
       await subscriptionTemplateService.updateTemplate(selectedTemplate.id, {
         name: formData.name,
         category_id: formData.category_id,
-        amount: parseFloat(formData.amount) || 0, // Use amount
+        amount: parseFloat(formData.amount) || 0,
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
         website_url: formData.website,
-        is_active: formData.is_active
+        description: formData.description,
+        is_active: formData.is_active,
+        usage_count: formData.usage_count, // Allow editing usage_count
       });
 
       toast({
@@ -287,6 +270,22 @@ export default function AdminSubscriptionTemplates() {
         variant: "destructive",
       });
     }
+  };
+
+  const openEditDialog = (template: SubscriptionTemplate) => {
+    setSelectedTemplate(template);
+    setFormData({
+      name: template.name,
+      category_id: template.category_id,
+      amount: template.amount,
+      currency: template.currency,
+      billing_cycle: template.billing_cycle,
+      website: template.website_url || "",
+      description: template.description || "",
+      is_active: template.is_active,
+      usage_count: template.usage_count || 0,
+    });
+    setShowEditDialog(true);
   };
 
   if (!isAdmin) {
@@ -342,13 +341,14 @@ export default function AdminSubscriptionTemplates() {
               <Table>
                 <TableHeader>
                   <TableRow>
-                    <TableHead className="w-[60px]">{t("admin.icon")}</TableHead>
-                    <TableHead>{t("admin.name")}</TableHead>
-                    <TableHead>{t("admin.website")}</TableHead>
-                    <TableHead>{t("admin.category")}</TableHead>
-                    <TableHead>{t("admin.defaultAmount")}</TableHead>
-                    <TableHead>{t("admin.billingCycle")}</TableHead>
-                    <TableHead className="text-right">{t("admin.actions")}</TableHead>
+                    <TableHead className="w-[50px]">{t("admin.templates.table.icon")}</TableHead>
+                    <TableHead>{t("admin.templates.table.name")}</TableHead>
+                    <TableHead>{t("admin.templates.table.website")}</TableHead>
+                    <TableHead>{t("admin.templates.table.category")}</TableHead>
+                    <TableHead className="text-right">{t("admin.templates.table.amount")}</TableHead>
+                    <TableHead className="text-center">{t("admin.templates.table.users")}</TableHead>
+                    <TableHead className="text-center">{t("admin.templates.table.status")}</TableHead>
+                    <TableHead className="text-right">{t("admin.templates.table.actions")}</TableHead>
                   </TableRow>
                 </TableHeader>
                 <TableBody>
@@ -398,13 +398,22 @@ export default function AdminSubscriptionTemplates() {
                           {template.categories?.name_en || "-"}
                         </Badge>
                       </TableCell>
-                      <TableCell>
-                        {template.amount
-                          ? `${template.currency} ${template.amount}`
-                          : "-"}
+                      <TableCell className="text-right">
+                        {template.amount} {template.currency}
+                        <div className="text-xs text-muted-foreground">
+                          {t(`common.billingCycle.${template.billing_cycle}`)}
+                        </div>
                       </TableCell>
-                      <TableCell className="capitalize">{template.billing_cycle || "-"}</TableCell>
-                      <TableCell>
+                      <TableCell className="text-center">
+                        <div className="flex items-center justify-center gap-1">
+                          {template.usage_count >= 10 && <span className="text-lg">🔥</span>}
+                          {template.usage_count >= 5 && template.usage_count < 10 && <span className="text-lg">⭐</span>}
+                          {template.usage_count < 5 && template.usage_count > 0 && <span className="text-lg">📊</span>}
+                          {template.usage_count === 0 && <span className="text-lg">❄️</span>}
+                          <span className="font-medium">{template.usage_count}</span>
+                        </div>
+                      </TableCell>
+                      <TableCell className="text-center">
                         <div className="flex items-center gap-2">
                           <Button
                             variant="ghost"
@@ -505,7 +514,7 @@ export default function AdminSubscriptionTemplates() {
 
                <div className="grid grid-cols-2 gap-4">
                  <div>
-                   <Label htmlFor="amount">{t("admin.defaultAmount")}</Label>
+                   <Label htmlFor="amount">{t("admin.templates.form.amount")}</Label>
                    <Input
                      id="amount"
                      type="number"
@@ -630,7 +639,7 @@ export default function AdminSubscriptionTemplates() {
 
                <div className="grid grid-cols-2 gap-4">
                  <div>
-                   <Label htmlFor="amount">{t("admin.defaultAmount")}</Label>
+                   <Label htmlFor="amount">{t("admin.templates.form.amount")}</Label>
                    <Input
                      id="amount"
                      type="number"
@@ -688,6 +697,25 @@ export default function AdminSubscriptionTemplates() {
                    rows={3}
                  />
                </div>
+
+               {/* Usage Count - Only show in Edit mode */}
+               {showEditDialog && (
+                 <div>
+                   <Label htmlFor="usage_count">
+                     {t("admin.templates.form.usageCount")}
+                     <span className="text-xs text-muted-foreground ml-2">
+                       ({t("admin.templates.form.usageCountHelp")})
+                     </span>
+                   </Label>
+                   <Input
+                     id="usage_count"
+                     type="number"
+                     min="0"
+                     value={formData.usage_count}
+                     onChange={(e) => setFormData({ ...formData, usage_count: parseInt(e.target.value) || 0 })}
+                   />
+                 </div>
+               )}
              </div>
              
              <div className="flex items-center justify-between">

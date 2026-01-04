@@ -1755,7 +1755,121 @@ export const translations = {
     th: "การกระทำนี้ไม่สามารถย้อนกลับได้",
     en: "This action cannot be undone"
   },
-  
+
+  // Admin Templates Table
+  "admin.templates.table.icon": {
+    th: "ไอคอน",
+    en: "Icon"
+  },
+  "admin.templates.table.name": {
+    th: "ชื่อเทมเพลต",
+    en: "Template Name"
+  },
+  "admin.templates.table.website": {
+    th: "เว็บไซต์",
+    en: "Website"
+  },
+  "admin.templates.table.category": {
+    th: "หมวดหมู่",
+    en: "Category"
+  },
+  "admin.templates.table.amount": {
+    th: "จำนวนเงิน",
+    en: "Amount"
+  },
+  "admin.templates.table.users": {
+    th: "ผู้ใช้",
+    en: "Users"
+  },
+  "admin.templates.table.status": {
+    th: "สถานะ",
+    en: "Status"
+  },
+  "admin.templates.table.actions": {
+    th: "จัดการ",
+    en: "Actions"
+  },
+
+  // Admin Templates Form
+  "admin.templates.form.name": {
+    th: "ชื่อเทมเพลต",
+    en: "Template Name"
+  },
+  "admin.templates.form.namePlaceholder": {
+    th: "เช่น Netflix",
+    en: "e.g., Netflix"
+  },
+  "admin.templates.form.website": {
+    th: "URL เว็บไซต์",
+    en: "Website URL"
+  },
+  "admin.templates.form.websitePlaceholder": {
+    th: "https://example.com",
+    en: "https://example.com"
+  },
+  "admin.templates.form.category": {
+    th: "หมวดหมู่",
+    en: "Category"
+  },
+  "admin.templates.form.categoryPlaceholder": {
+    th: "เลือกหมวดหมู่",
+    en: "Select category"
+  },
+  "admin.templates.form.amount": {
+    th: "จำนวนเงินเริ่มต้น",
+    en: "Default Amount"
+  },
+  "admin.templates.form.currency": {
+    th: "สกุลเงิน",
+    en: "Currency"
+  },
+  "admin.templates.form.billingCycle": {
+    th: "รอบการชำระ",
+    en: "Billing Cycle"
+  },
+  "admin.templates.form.description": {
+    th: "คำอธิบาย",
+    en: "Description"
+  },
+  "admin.templates.form.descriptionPlaceholder": {
+    th: "คำอธิบายเพิ่มเติม (ถ้ามี)",
+    en: "Optional description"
+  },
+  "admin.templates.form.usageCount": {
+    th: "จำนวนการใช้งาน",
+    en: "Usage Count"
+  },
+  "admin.templates.form.usageCountHelp": {
+    th: "จำนวนครั้งที่ผู้ใช้เลือกเทมเพลตนี้",
+    en: "Number of times this template has been selected"
+  },
+  "admin.templates.form.isActive": {
+    th: "เปิดใช้งาน",
+    en: "Active"
+  },
+  "admin.templates.form.isActiveHelp": {
+    th: "เฉพาะเทมเพลตที่เปิดใช้งานเท่านั้นที่ผู้ใช้จะเห็น",
+    en: "Only active templates are visible to users"
+  },
+
+  // Billing Cycles (Common)
+  "common.billingCycle.monthly": {
+    th: "รายเดือน",
+    en: "Monthly"
+  },
+  "common.billingCycle.quarterly": {
+    th: "รายไตรมาส",
+    en: "Quarterly"
+  },
+  "common.billingCycle.half-yearly": {
+    th: "ราย 6 เดือน",
+    en: "Half-yearly"
+  },
+  "common.billingCycle.yearly": {
+    th: "รายปี",
+    en: "Yearly"
+  },
+
   // Admin Template Management
   "admin.name": {
     th: "ชื่อ",

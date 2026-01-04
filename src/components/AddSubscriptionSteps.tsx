@@ -141,7 +141,8 @@ export function AddSubscriptionSteps({
     form.setValue("currency", template.currency);
     form.setValue("billing_cycle", template.billing_cycle);
     form.setValue("website_url", template.website_url || "");
-    form.setValue("icon_url", template.icon_url || "");
+    // icon_url is removed from SubscriptionTemplate, use website_url for icon generation
+    form.setValue("icon_url", template.website_url || ""); 
     form.setValue("template_id", template.id);
     
     if (category) {
@@ -241,7 +242,7 @@ export function AddSubscriptionSteps({
                           />
                           {field.value && (
                              <div className="absolute left-3 top-2.5">
-                               <SubscriptionIcon name={field.value} iconUrl={form.getValues("icon_url")} className="w-5 h-5" />
+                               <SubscriptionIcon name={field.value} websiteUrl={form.getValues("website_url")} className="w-5 h-5" />
                              </div>
                           )}
                         </div>
@@ -569,7 +570,7 @@ export function AddSubscriptionSteps({
                   <CardContent className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <SubscriptionIcon name={watchedValues.name} iconUrl={watchedValues.icon_url} className="w-12 h-12" />
+                        <SubscriptionIcon name={watchedValues.name} websiteUrl={watchedValues.website_url} className="w-12 h-12" />
                         <div>
                           <h3 className="font-bold text-lg">{watchedValues.name}</h3>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">
