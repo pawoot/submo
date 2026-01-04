@@ -2,48 +2,62 @@ import { useState, useEffect } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Switch } from "@/components/ui/switch";
-import { Badge } from "@/components/ui/badge";
-import { Progress } from "@/components/ui/progress";
-import { ArrowLeft, ArrowRight, Calendar as CalendarIcon, Check, Loader2, Sparkles, Users, Trash2, AlertCircle } from "lucide-react";
-import { format, addMonths, addYears } from "date-fns";
-import { th, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { format } from "date-fns";
+import { CalendarIcon, ChevronRight, ChevronLeft, AlertCircle } from "lucide-react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useToast } from "@/hooks/use-toast";
-import { SubscriptionNameAutocomplete } from "./SubscriptionNameAutocomplete";
-import { SubscriptionTemplateBrowser } from "./SubscriptionTemplateBrowser";
-import { SubscriptionSummary } from "./SubscriptionSummary";
-import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
+import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
+import { SubscriptionSummary } from "@/components/SubscriptionSummary";
 import type { Database } from "@/integrations/supabase/types";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
+type SubscriptionTemplate = Database["public"]["Tables"]["subscriptions"]["Row"] & {
+  categories?: Category;
+};
+
+// Form Schema with validation
+const formSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters").max(100),
+  category_id: z.string().min(1, "Category is required"),
+  amount: z.number().min(0.01, "Amount must be greater than 0").max(999999.99),
+  currency: z.string().min(1, "Currency is required"),
+  billing_cycle: z.enum(["monthly", "yearly", "quarterly", "half-yearly"]),
+  payment_method_id: z.string().min(1, "Payment method is required"),
+  card_last_4: z.string().max(4).optional(),
+  start_date: z.date(),
+  next_billing_date: z.date(),
+  notes: z.string().max(500).optional(),
+  shared_with: z.array(z.string().email()).optional(),
+  template_id: z.string().optional(),
+  icon_url: z.string().optional(),
+  remind_3_days: z.boolean().optional(),
+  remind_7_days: z.boolean().optional(),
+  usage_frequency: z.enum(["often", "sometimes", "rarely"]).optional(),
+}).refine((data) => data.next_billing_date >= data.start_date, {
+  message: "Next billing date must be after or equal to start date",
+  path: ["next_billing_date"],
+});
+
+type FormValues = z.infer<typeof formSchema>;
 
 interface AddSubscriptionWizardProps {
   categories: Category[];
   paymentMethods: PaymentMethod[];
-  onSubmit: (data: any) => Promise<void>;
+  onSubmit: (data: FormValues) => Promise<void>;
   isSubmitting: boolean;
 }
-
-const currencies = [
-  { code: "USD", symbol: "$", name: "US Dollar" },
-  { code: "THB", symbol: "฿", name: "Thai Baht" },
-  { code: "EUR", symbol: "€", name: "Euro" },
-  { code: "GBP", symbol: "£", name: "British Pound" },
-  { code: "JPY", symbol: "¥", name: "Japanese Yen" },
-  { code: "AUD", symbol: "A$", name: "Australian Dollar" },
-  { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
-];
 
 export function AddSubscriptionWizard({
   categories,
@@ -51,246 +65,198 @@ export function AddSubscriptionWizard({
   onSubmit,
   isSubmitting
 }: AddSubscriptionWizardProps) {
-  const [step, setStep] = useState(1);
-  const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
-  const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
-  const [sharedUsers, setSharedUsers] = useState<string[]>([]);
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const { t, language } = useLanguage();
-  const { toast } = useToast();
-  const locale = language === "th" ? th : enUS;
+  const { preferredCurrency } = useCurrency();
+  const [step, setStep] = useState(1);
+  const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
 
-  // Form Schema
-  const formSchema = z.object({
-    name: z.string().min(2, t("validation.minLength") + " 2 " + t("validation.characters")),
-    category_id: z.string().min(1, t("validation.required")),
-    amount: z.string()
-      .min(1, t("validation.required"))
-      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-        message: t("validation.positiveNumber")
-      }),
-    currency: z.string().min(1, t("validation.required")),
-    billing_cycle: z.string().min(1, t("validation.required")),
-    payment_method_id: z.string().min(1, t("validation.required")),
-    card_last_4: z.string().max(4, t("validation.maxLength") + " 4").optional().nullable(),
-    start_date: z.date({ required_error: t("validation.required") }),
-    next_billing_date: z.date({ required_error: t("validation.required") }),
-    remind_3_days: z.boolean().default(false),
-    remind_7_days: z.boolean().default(false),
-    usage_frequency: z.enum(["often", "sometimes", "rarely"]).optional().nullable(),
-    notes: z.string().max(500).optional().nullable(),
-  });
-
-  type FormData = z.infer<typeof formSchema>;
-
-  const {
-    register,
-    handleSubmit: handleFormSubmit,
-    formState: { errors },
-    setValue,
-    watch,
-    control,
-  } = useForm<FormData>({
+  const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      currency: "THB",
+      name: "",
+      category_id: "",
+      amount: 0,
+      currency: preferredCurrency || "USD",
       billing_cycle: "monthly",
+      payment_method_id: "",
+      card_last_4: "",
+      start_date: new Date(),
+      next_billing_date: new Date(new Date().setMonth(new Date().getMonth() + 1)),
+      notes: "",
+      shared_with: [],
       remind_3_days: false,
       remind_7_days: false,
-      start_date: new Date(),
+      usage_frequency: undefined,
     }
   });
 
+  const { register, control, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedValues = watch();
 
-  // Load templates
+  // Auto-calculate next billing date based on start date and billing cycle
   useEffect(() => {
-    const loadTemplates = async () => {
-      try {
-        const data = await subscriptionTemplateService.getAllTemplates();
-        setTemplates(data);
-      } catch (error) {
-        console.error("Error loading templates:", error);
-      }
-    };
-    loadTemplates();
-  }, []);
-
-  // Auto-calculate next billing date
-  useEffect(() => {
-    if (watchedValues.start_date && watchedValues.billing_cycle) {
-      const startDate = watchedValues.start_date;
-      let nextBilling: Date;
-
-      switch (watchedValues.billing_cycle) {
+    const startDate = watchedValues.start_date;
+    const billingCycle = watchedValues.billing_cycle;
+    
+    if (startDate) {
+      const nextDate = new Date(startDate);
+      
+      switch (billingCycle) {
         case "monthly":
-          nextBilling = addMonths(startDate, 1);
+          nextDate.setMonth(nextDate.getMonth() + 1);
           break;
         case "quarterly":
-          nextBilling = addMonths(startDate, 3);
+          nextDate.setMonth(nextDate.getMonth() + 3);
           break;
         case "half-yearly":
-          nextBilling = addMonths(startDate, 6);
+          nextDate.setMonth(nextDate.getMonth() + 6);
           break;
         case "yearly":
-          nextBilling = addYears(startDate, 1);
-          setValue("remind_7_days", true); // Auto-enable 7-day reminder for yearly
+          nextDate.setFullYear(nextDate.getFullYear() + 1);
           break;
-        default:
-          nextBilling = addMonths(startDate, 1);
       }
-
-      setValue("next_billing_date", nextBilling);
+      
+      setValue("next_billing_date", nextDate);
     }
   }, [watchedValues.start_date, watchedValues.billing_cycle, setValue]);
 
+  // Auto-enable 7-day reminder for yearly subscriptions
+  useEffect(() => {
+    if (watchedValues.billing_cycle === "yearly" && !watchedValues.remind_7_days) {
+      setValue("remind_7_days", true);
+    }
+  }, [watchedValues.billing_cycle, setValue, watchedValues.remind_7_days]);
+
+  // Handle template selection
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
     setSelectedTemplate(template);
-    setValue("name", template.name, { shouldValidate: true });
-
-    if (template.category_id) {
-      setValue("category_id", template.category_id, { shouldValidate: true });
-    }
-    if (template.amount) {
-      setValue("amount", template.amount.toString(), { shouldValidate: true });
-    }
-    if (template.currency) {
-      setValue("currency", template.currency, { shouldValidate: true });
-    }
-    if (template.billing_cycle) {
-      setValue("billing_cycle", template.billing_cycle, { shouldValidate: true });
-    }
-
-    toast({
-      title: t("addSub.templateSelected"),
-      description: template.name,
-      duration: 2000,
-    });
-
+    setValue("name", template.name);
+    setValue("category_id", template.category_id || "");
+    setValue("amount", template.amount || 0);
+    setValue("currency", template.currency || preferredCurrency);
+    setValue("billing_cycle", (template.billing_cycle as FormValues["billing_cycle"]) || "monthly");
+    setValue("icon_url", template.icon_url || "");
+    setValue("template_id", template.id);
+    
     // Auto-advance to step 2
-    setStep(2);
-  };
-
-  const handleCustomSubscription = () => {
-    setSelectedTemplate(null);
-    setStep(2);
-  };
-
-  const addSharedUser = () => {
-    if (!newUserEmail) {
-      setEmailError(t("validation.required"));
-      return;
+    if (step === 1) {
+      setStep(2);
     }
-
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(newUserEmail)) {
-      setEmailError(t("validation.invalidEmail"));
-      return;
-    }
-
-    if (sharedUsers.includes(newUserEmail)) {
-      setEmailError(t("addSub.emailInUse"));
-      return;
-    }
-
-    setSharedUsers([...sharedUsers, newUserEmail]);
-    setNewUserEmail("");
-    setEmailError("");
   };
 
-  const removeSharedUser = (email: string) => {
-    setSharedUsers(sharedUsers.filter(u => u !== email));
+  // Handle form submission
+  const onSubmitHandler = async (data: FormValues) => {
+    await onSubmit(data);
   };
 
-  const handleNext = () => {
+  // Navigate between steps
+  const nextStep = () => {
     if (step < 3) setStep(step + 1);
   };
 
-  const handleBack = () => {
+  const prevStep = () => {
     if (step > 1) setStep(step - 1);
   };
 
-  const handleFinalSubmit = async (data: FormData) => {
-    await onSubmit({
-      ...data,
-      amount: Number(data.amount),
-      shared_with: sharedUsers,
-      template_id: selectedTemplate?.id || null,
-      icon_url: selectedTemplate?.icon_url || null,
-      is_template: false,
-      popularity_score: 0,
-    });
+  // Validate step before proceeding
+  const canProceedToNextStep = () => {
+    if (step === 1) {
+      return watchedValues.name && watchedValues.category_id && watchedValues.amount > 0;
+    }
+    if (step === 2) {
+      return watchedValues.payment_method_id && watchedValues.start_date && watchedValues.next_billing_date;
+    }
+    return true;
   };
 
-  const progressPercentage = (step / 3) * 100;
-
   return (
-    <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-      {/* Main Form */}
+    <div className="grid gap-8 lg:grid-cols-3">
+      {/* Main Form Area */}
       <div className="lg:col-span-2">
-        <Card className="border-2 border-slate-200 dark:border-slate-800">
-          <CardHeader className="border-b">
-            <div className="flex items-center justify-between mb-4">
-              <CardTitle className="text-2xl flex items-center gap-2">
-                <Sparkles className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
-                {t("addSub.title")}
+        <Card className="border-slate-200 dark:border-slate-800">
+          <CardHeader className="border-b border-slate-200 dark:border-slate-800">
+            <div className="flex items-center justify-between">
+              <CardTitle className="text-xl font-semibold">
+                {t("common.step")} {step} {t("common.of")} 3
               </CardTitle>
-              <Badge variant="outline" className="text-lg px-4 py-1">
-                {t("common.step")} {step} / 3
-              </Badge>
+              <div className="flex gap-2">
+                {[1, 2, 3].map((s) => (
+                  <div
+                    key={s}
+                    className={cn(
+                      "h-2 w-16 rounded-full transition-colors",
+                      s <= step ? "bg-indigo-600" : "bg-slate-200 dark:bg-slate-700"
+                    )}
+                  />
+                ))}
+              </div>
             </div>
-            <Progress value={progressPercentage} className="h-2" />
           </CardHeader>
 
-          <CardContent className="pt-6">
-            <form onSubmit={handleFormSubmit(handleFinalSubmit)} id="wizard-form">
+          <CardContent className="p-6">
+            <form onSubmit={handleSubmit(onSubmitHandler)} className="space-y-6">
               {/* Step 1: Select Service & Price */}
               {step === 1 && (
                 <div className="space-y-6">
                   <div>
-                    <h3 className="text-xl font-semibold mb-4">{t("addSub.selectService")}</h3>
-                    <SubscriptionTemplateBrowser
-                      templates={templates}
-                      onSelect={handleTemplateSelect}
-                    />
-                  </div>
-
-                  <div className="relative">
-                    <div className="absolute inset-0 flex items-center">
-                      <span className="w-full border-t" />
-                    </div>
-                    <div className="relative flex justify-center text-xs uppercase">
-                      <span className="bg-white dark:bg-slate-900 px-2 text-muted-foreground">
-                        {t("common.or")}
-                      </span>
-                    </div>
-                  </div>
-
-                  <div className="space-y-4">
-                    <h3 className="text-lg font-semibold">{t("addSub.customSubscription")}</h3>
+                    <h3 className="text-lg font-semibold mb-4">{t("addSub.basicInfo")}</h3>
                     
+                    {/* Popular Templates */}
+                    <div className="mb-6">
+                      <Label className="text-base mb-3 block">{t("addSub.popularTemplates")}</Label>
+                      <SubscriptionTemplateBrowser
+                        onSelectTemplate={handleTemplateSelect}
+                        compact={true}
+                      />
+                    </div>
+
+                    {/* Custom Subscription Name */}
                     <div className="space-y-2">
                       <Label htmlFor="name">{t("addSub.name")} *</Label>
                       <SubscriptionNameAutocomplete
-                        value={watchedValues.name || ""}
-                        onChange={(val) => setValue("name", val, { shouldValidate: true })}
+                        value={watchedValues.name}
+                        onChange={(value) => setValue("name", value)}
                         onSelectTemplate={handleTemplateSelect}
-                        selectedTemplate={selectedTemplate}
                         error={errors.name?.message}
                       />
                     </div>
 
+                    {/* Category */}
+                    <div className="space-y-2">
+                      <Label htmlFor="category_id">{t("addSub.category")} *</Label>
+                      <Controller
+                        name="category_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger className={errors.category_id ? "border-red-500" : ""}>
+                              <SelectValue placeholder={t("addSub.selectCategory")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {categories.map((category) => (
+                                <SelectItem key={category.id} value={category.id}>
+                                  {language === "th" ? category.name_th : category.name_en}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.category_id && (
+                        <p className="text-sm text-red-500">{errors.category_id.message}</p>
+                      )}
+                    </div>
+
+                    {/* Amount & Currency */}
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
                         <Label htmlFor="amount">{t("addSub.cost")} *</Label>
                         <Input
-                          id="amount"
-                          {...register("amount")}
                           type="number"
                           step="0.01"
-                          placeholder="0.00"
-                          className={cn(errors.amount && "border-red-500")}
+                          placeholder={t("addSub.costPlaceholder")}
+                          {...register("amount", { valueAsNumber: true })}
+                          className={errors.amount ? "border-red-500" : ""}
                         />
                         {errors.amount && (
                           <p className="text-sm text-red-500">{errors.amount.message}</p>
@@ -308,11 +274,11 @@ export function AddSubscriptionWizard({
                                 <SelectValue />
                               </SelectTrigger>
                               <SelectContent>
-                                {currencies.map((curr) => (
-                                  <SelectItem key={curr.code} value={curr.code}>
-                                    {curr.symbol} {curr.code}
-                                  </SelectItem>
-                                ))}
+                                <SelectItem value="USD">USD ($)</SelectItem>
+                                <SelectItem value="THB">THB (฿)</SelectItem>
+                                <SelectItem value="EUR">EUR (€)</SelectItem>
+                                <SelectItem value="GBP">GBP (£)</SelectItem>
+                                <SelectItem value="JPY">JPY (¥)</SelectItem>
                               </SelectContent>
                             </Select>
                           )}
@@ -320,6 +286,7 @@ export function AddSubscriptionWizard({
                       </div>
                     </div>
 
+                    {/* Billing Cycle */}
                     <div className="space-y-2">
                       <Label htmlFor="billing_cycle">{t("addSub.billing")} *</Label>
                       <Controller
@@ -331,64 +298,26 @@ export function AddSubscriptionWizard({
                               <SelectValue />
                             </SelectTrigger>
                             <SelectContent>
-                              <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
+                              <SelectItem value="monthly">{t("subscriptions.monthly")}</SelectItem>
                               <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
                               <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
-                              <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
+                              <SelectItem value="yearly">{t("subscriptions.yearly")}</SelectItem>
                             </SelectContent>
                           </Select>
                         )}
                       />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="category_id">{t("addSub.category")} *</Label>
-                      <Controller
-                        name="category_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger className={cn(errors.category_id && "border-red-500")}>
-                              <SelectValue placeholder={t("addSub.selectCategory")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {categories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  <div className="flex items-center gap-2">
-                                    <span>{cat.icon}</span>
-                                    <span>{language === "th" ? cat.name_th : cat.name_en}</span>
-                                  </div>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.category_id && (
-                        <p className="text-sm text-red-500">{errors.category_id.message}</p>
-                      )}
                     </div>
                   </div>
-
-                  <Button
-                    type="button"
-                    onClick={handleNext}
-                    size="lg"
-                    className="w-full"
-                    disabled={!watchedValues.name || !watchedValues.amount || !watchedValues.category_id}
-                  >
-                    {t("common.continue")}
-                    <ArrowRight className="w-5 h-5 ml-2" />
-                  </Button>
                 </div>
               )}
 
               {/* Step 2: Billing & Payment */}
               {step === 2 && (
                 <div className="space-y-6">
-                  <h3 className="text-xl font-semibold">{t("addSub.billingPayment")}</h3>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-4">{t("addSub.paymentInfo")}</h3>
 
-                  <div className="grid grid-cols-2 gap-4">
+                    {/* Start Date */}
                     <div className="space-y-2">
                       <Label>{t("addSub.startDate")} *</Label>
                       <Controller
@@ -405,10 +334,10 @@ export function AddSubscriptionWizard({
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "d MMMM yyyy", { locale }) : t("common.select")}
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -421,6 +350,7 @@ export function AddSubscriptionWizard({
                       />
                     </div>
 
+                    {/* Next Billing Date */}
                     <div className="space-y-2">
                       <Label>{t("addSub.nextBillingDate")} *</Label>
                       <Controller
@@ -437,10 +367,10 @@ export function AddSubscriptionWizard({
                                 )}
                               >
                                 <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? format(field.value, "d MMMM yyyy", { locale }) : t("common.select")}
+                                {field.value ? format(field.value, "PPP") : <span>Pick a date</span>}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -451,112 +381,83 @@ export function AddSubscriptionWizard({
                           </Popover>
                         )}
                       />
+                      <p className="text-xs text-slate-500">{t("addSub.autoCalculated")}</p>
                     </div>
-                  </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="payment_method_id">{t("subscription.payment_method")} *</Label>
-                    <Controller
-                      name="payment_method_id"
-                      control={control}
-                      render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value}>
-                          <SelectTrigger className={cn(errors.payment_method_id && "border-red-500")}>
-                            <SelectValue placeholder={t("payment.select_method")} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {paymentMethods.map((method) => (
-                              <SelectItem key={method.id} value={method.id}>
-                                <div className="flex items-center gap-2">
-                                  <span>{method.icon}</span>
-                                  <span>{language === "th" ? method.name_th : method.name_en}</span>
-                                </div>
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                    {/* Payment Method */}
+                    <div className="space-y-2">
+                      <Label htmlFor="payment_method_id">{t("addSub.paymentMethod")} *</Label>
+                      <Controller
+                        name="payment_method_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger className={errors.payment_method_id ? "border-red-500" : ""}>
+                              <SelectValue placeholder={t("addSub.selectPayment")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {paymentMethods.map((method) => (
+                                <SelectItem key={method.id} value={method.id}>
+                                  {language === "th" ? method.name_th : method.name_en}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.payment_method_id && (
+                        <p className="text-sm text-red-500">{errors.payment_method_id.message}</p>
                       )}
-                    />
-                    {errors.payment_method_id && (
-                      <p className="text-sm text-red-500">{errors.payment_method_id.message}</p>
-                    )}
-                  </div>
+                    </div>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="card_last_4">{t("addSub.cardNumber")} ({t("common.optional")})</Label>
-                    <Input
-                      id="card_last_4"
-                      {...register("card_last_4")}
-                      placeholder="1234"
-                      maxLength={4}
-                    />
-                  </div>
-
-                  <div className="space-y-4 p-4 bg-indigo-50 dark:bg-indigo-950 rounded-lg border border-indigo-200 dark:border-indigo-800">
-                    <h4 className="font-medium flex items-center gap-2">
-                      <AlertCircle className="w-4 h-4" />
-                      {t("addSub.quickToggles")}
-                    </h4>
-                    
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="remind_3_days" className="cursor-pointer">
-                        {t("addSub.remind3Days")}
-                      </Label>
-                      <Controller
-                        name="remind_3_days"
-                        control={control}
-                        render={({ field }) => (
-                          <Switch
-                            id="remind_3_days"
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        )}
+                    {/* Card Last 4 Digits */}
+                    <div className="space-y-2">
+                      <Label htmlFor="card_last_4">{t("addSub.cardNumber")} ({t("common.optional")})</Label>
+                      <Input
+                        maxLength={4}
+                        placeholder={t("addSub.cardPlaceholder")}
+                        {...register("card_last_4")}
                       />
                     </div>
 
-                    <div className="flex items-center justify-between">
-                      <Label htmlFor="remind_7_days" className="cursor-pointer">
-                        {t("addSub.remind7Days")}
-                        {watchedValues.billing_cycle === "yearly" && (
-                          <Badge variant="secondary" className="ml-2">{t("common.recommended")}</Badge>
-                        )}
-                      </Label>
-                      <Controller
-                        name="remind_7_days"
-                        control={control}
-                        render={({ field }) => (
-                          <Switch
-                            id="remind_7_days"
-                            checked={field.value}
-                            onCheckedChange={field.onChange}
-                          />
-                        )}
-                      />
-                    </div>
-                  </div>
+                    {/* Quick Reminder Toggles */}
+                    <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                      <Label className="text-base">{t("addSub.quickToggles")}</Label>
+                      
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="remind_3_days" className="cursor-pointer flex-1">
+                          {t("addSub.remind3Days")}
+                        </Label>
+                        <Controller
+                          name="remind_3_days"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              id="remind_3_days"
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
 
-                  <div className="flex gap-4">
-                    <Button
-                      type="button"
-                      onClick={handleBack}
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                    >
-                      <ArrowLeft className="w-5 h-5 mr-2" />
-                      {t("common.back")}
-                    </Button>
-                    <Button
-                      type="button"
-                      onClick={handleNext}
-                      size="lg"
-                      className="w-full"
-                      disabled={!watchedValues.payment_method_id}
-                    >
-                      {t("common.continue")}
-                      <ArrowRight className="w-5 h-5 ml-2" />
-                    </Button>
+                      <div className="flex items-center justify-between">
+                        <Label htmlFor="remind_7_days" className="cursor-pointer flex-1">
+                          {t("addSub.remind7Days")}
+                        </Label>
+                        <Controller
+                          name="remind_7_days"
+                          control={control}
+                          render={({ field }) => (
+                            <Switch
+                              id="remind_7_days"
+                              checked={field.value}
+                              onCheckedChange={field.onChange}
+                            />
+                          )}
+                        />
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}
@@ -564,134 +465,95 @@ export function AddSubscriptionWizard({
               {/* Step 3: Optional Context */}
               {step === 3 && (
                 <div className="space-y-6">
-                  <div className="flex items-center justify-between">
-                    <h3 className="text-xl font-semibold">{t("addSub.optionalContext")}</h3>
-                    <Badge variant="secondary">{t("common.optional")}</Badge>
-                  </div>
+                  <div>
+                    <h3 className="text-lg font-semibold mb-2">{t("addSub.additionalInfo")}</h3>
+                    <p className="text-sm text-slate-600 dark:text-slate-400 mb-4">
+                      {t("addSub.optionalContext")}
+                    </p>
 
-                  <div className="space-y-2">
-                    <Label htmlFor="usage_frequency">{t("addSub.usageFrequency")}</Label>
-                    <Controller
-                      name="usage_frequency"
-                      control={control}
-                      render={({ field }) => (
-                        <Select onValueChange={field.onChange} value={field.value || undefined}>
-                          <SelectTrigger>
-                            <SelectValue placeholder={t("common.select")} />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="often">{t("addSub.often")}</SelectItem>
-                            <SelectItem value="sometimes">{t("addSub.sometimes")}</SelectItem>
-                            <SelectItem value="rarely">{t("addSub.rarely")}</SelectItem>
-                          </SelectContent>
-                        </Select>
-                      )}
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">{t("addSub.notes")}</Label>
-                    <Textarea
-                      id="notes"
-                      {...register("notes")}
-                      placeholder={t("addSub.notesPlaceholder")}
-                      rows={4}
-                    />
-                  </div>
-
-                  <div className="space-y-4">
-                    <Label>{t("addSub.sharedUsers")}</Label>
-                    <div className="flex gap-2">
-                      <Input
-                        placeholder={t("addSub.sharedUsersPlaceholder")}
-                        value={newUserEmail}
-                        onChange={(e) => {
-                          setNewUserEmail(e.target.value);
-                          setEmailError("");
-                        }}
-                        onKeyPress={(e) => {
-                          if (e.key === "Enter") {
-                            e.preventDefault();
-                            addSharedUser();
-                          }
-                        }}
-                        className={cn(emailError && "border-red-500")}
+                    {/* Usage Frequency */}
+                    <div className="space-y-2">
+                      <Label>{t("addSub.usageFrequency")} ({t("common.optional")})</Label>
+                      <Controller
+                        name="usage_frequency"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger>
+                              <SelectValue placeholder={t("common.select")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="often">{t("addSub.often")}</SelectItem>
+                              <SelectItem value="sometimes">{t("addSub.sometimes")}</SelectItem>
+                              <SelectItem value="rarely">{t("addSub.rarely")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
                       />
-                      <Button type="button" onClick={addSharedUser} variant="outline">
-                        <Users className="w-4 h-4" />
-                      </Button>
                     </div>
-                    {emailError && (
-                      <p className="text-sm text-red-500">{emailError}</p>
-                    )}
 
-                    {sharedUsers.length > 0 && (
-                      <div className="flex flex-wrap gap-2">
-                        {sharedUsers.map((email) => (
-                          <Badge key={email} variant="secondary" className="gap-2 px-3 py-1">
-                            {email}
-                            <button
-                              type="button"
-                              onClick={() => removeSharedUser(email)}
-                              className="hover:text-destructive"
-                            >
-                              <Trash2 className="w-3 h-3" />
-                            </button>
-                          </Badge>
-                        ))}
-                      </div>
-                    )}
-                  </div>
-
-                  <div className="flex gap-4">
-                    <Button
-                      type="button"
-                      onClick={handleBack}
-                      variant="outline"
-                      size="lg"
-                      className="w-full"
-                    >
-                      <ArrowLeft className="w-5 h-5 mr-2" />
-                      {t("common.back")}
-                    </Button>
-                    <Button
-                      type="submit"
-                      size="lg"
-                      className="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <Loader2 className="w-5 h-5 mr-2 animate-spin" />
-                          {t("addSub.submitting")}
-                        </>
-                      ) : (
-                        <>
-                          <Check className="w-5 h-5 mr-2" />
-                          {t("addSub.submit")}
-                        </>
-                      )}
-                    </Button>
+                    {/* Notes */}
+                    <div className="space-y-2">
+                      <Label htmlFor="notes">{t("addSub.notes")} ({t("common.optional")})</Label>
+                      <Textarea
+                        placeholder={t("addSub.notesPlaceholder")}
+                        rows={4}
+                        {...register("notes")}
+                      />
+                    </div>
                   </div>
                 </div>
               )}
+
+              {/* Navigation Buttons */}
+              <div className="flex justify-between pt-6 border-t">
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={prevStep}
+                  disabled={step === 1}
+                >
+                  <ChevronLeft className="w-4 h-4 mr-2" />
+                  {t("common.previous")}
+                </Button>
+
+                {step < 3 ? (
+                  <Button
+                    type="button"
+                    onClick={nextStep}
+                    disabled={!canProceedToNextStep()}
+                  >
+                    {t("common.continue")}
+                    <ChevronRight className="w-4 h-4 ml-2" />
+                  </Button>
+                ) : (
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="bg-indigo-600 hover:bg-indigo-700"
+                  >
+                    {isSubmitting ? t("addSub.submitting") : t("addSub.submit")}
+                  </Button>
+                )}
+              </div>
             </form>
           </CardContent>
         </Card>
       </div>
 
-      {/* Live Summary Sidebar */}
+      {/* Live Summary Box (Sticky) */}
       <div className="lg:col-span-1">
-        <SubscriptionSummary
-          name={watchedValues.name || ""}
-          amount={Number(watchedValues.amount) || 0}
-          currency={watchedValues.currency || "THB"}
-          billingCycle={watchedValues.billing_cycle as any || "monthly"}
-          startDate={watchedValues.start_date || null}
-          nextBillingDate={watchedValues.next_billing_date || null}
-          remind3Days={watchedValues.remind_3_days || false}
-          remind7Days={watchedValues.remind_7_days || false}
-        />
+        <div className="sticky top-24">
+          <SubscriptionSummary
+            name={watchedValues.name}
+            amount={watchedValues.amount}
+            currency={watchedValues.currency}
+            billingCycle={watchedValues.billing_cycle}
+            nextBillingDate={watchedValues.next_billing_date}
+            remind3Days={watchedValues.remind_3_days || false}
+            remind7Days={watchedValues.remind_7_days || false}
+          />
+        </div>
       </div>
     </div>
   );
