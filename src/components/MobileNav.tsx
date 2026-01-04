@@ -1,7 +1,6 @@
 import { useState, useEffect } from "react";
-import Link from "next/link";
 import { useRouter } from "next/router";
-import { Menu, X, Home, BarChart3, PlusCircle, Bell, User as UserIcon, Settings, LogOut, Shield } from "lucide-react";
+import { Menu, Home, BarChart3, PlusCircle, Bell, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -10,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import type { User } from "@supabase/supabase-js";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useToast } from "@/hooks/use-toast";
 
 interface MobileNavProps {
   user: User | null;
@@ -22,6 +22,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const { t } = useLanguage();
+  const { toast } = useToast();
 
   useEffect(() => {
     if (user) {
@@ -50,10 +51,25 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
     setUnreadCount(count || 0);
   };
 
-  const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    router.push("/auth/login");
-    setOpen(false);
+  const handleLogout = async () => {
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      toast({
+        title: t("toast.logoutSuccess"),
+        variant: "default",
+      });
+
+      setOpen(false);
+      router.push("/auth/login");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast({
+        title: t("toast.logoutError"),
+        variant: "destructive",
+      });
+    }
   };
 
   const menuItems = [
@@ -85,7 +101,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
         <SheetTrigger asChild>
           <Button variant="ghost" size="icon" className="lg:hidden">
             <Menu className="h-6 w-6" />
-            <span className="sr-only">เปิดเมนู</span>
+            <span className="sr-only">Open Menu</span>
           </Button>
         </SheetTrigger>
         <SheetContent side="left" className="w-[280px] sm:w-[320px] p-0">
@@ -101,7 +117,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
                 </Avatar>
                 <div className="flex-1 text-left">
                   <SheetTitle className="text-white text-lg font-semibold">
-                    {profile?.full_name || "ผู้ใช้"}
+                    {profile?.full_name || "User"}
                   </SheetTitle>
                   <p className="text-white/80 text-sm truncate">{user?.email}</p>
                   {isAdmin && (
@@ -170,19 +186,18 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
                     })}
                   </>
                 )}
-              </nav>
-            </div>
 
-            {/* Footer with Sign Out */}
-            <div className="p-4 border-t border-gray-200">
-              <Button
-                variant="ghost"
-                className="w-full justify-start text-red-600 hover:text-red-700 hover:bg-red-50"
-                onClick={handleSignOut}
-              >
-                <LogOut className="h-5 w-5 mr-3" />
-                {t("nav.logout")}
-              </Button>
+                {/* Logout Button */}
+                <div className="mt-2 pt-2 border-t border-gray-100">
+                  <button
+                    onClick={handleLogout}
+                    className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
+                  >
+                    <LogOut className="h-5 w-5" />
+                    <span className="font-medium">{t("nav.logout")}</span>
+                  </button>
+                </div>
+              </nav>
             </div>
           </div>
         </SheetContent>

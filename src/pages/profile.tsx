@@ -294,24 +294,6 @@ export default function ProfilePage() {
     }
   };
 
-  const handleLogout = async () => {
-    try {
-      await authService.signOut();
-      router.push("/auth/login");
-      toast({
-        title: t("nav.logout"),
-        description: t("toast.logoutSuccess"),
-      });
-    } catch (error) {
-      console.error("Error signing out:", error);
-      toast({
-        title: t("common.error"),
-        description: t("toast.logoutError"),
-        variant: "destructive",
-      });
-    }
-  };
-
   const handleDeleteAccount = async () => {
     try {
       const { error } = await supabase.auth.admin.deleteUser(user?.id || "");
@@ -373,7 +355,23 @@ export default function ProfilePage() {
                 </div>
               </div>
 
-              <Button variant="outline" onClick={handleLogout}>
+              <Button variant="outline" onClick={() => {
+                try {
+                  authService.signOut();
+                  router.push("/auth/login");
+                  toast({
+                    title: t("nav.logout"),
+                    description: t("toast.logoutSuccess"),
+                  });
+                } catch (error) {
+                  console.error("Error signing out:", error);
+                  toast({
+                    title: t("common.error"),
+                    description: t("toast.logoutError"),
+                    variant: "destructive",
+                  });
+                }
+              }}>
                 <LogOut className="h-4 w-4 mr-2" />
                 {t("nav.logout")}
               </Button>
@@ -672,7 +670,7 @@ export default function ProfilePage() {
               </Card>
 
               {/* Danger Zone */}
-              <Card className="border-2 border-red-200">
+              <Card className="border-2 border-red-200 bg-red-50">
                 <CardHeader>
                   <CardTitle className="text-red-600 flex items-center gap-2">
                     <Trash2 className="h-5 w-5" />
@@ -693,31 +691,6 @@ export default function ProfilePage() {
               </Card>
             </div>
           </div>
-
-          {/* Logout Button */}
-          <Card className="border-red-200 bg-red-50/50">
-            <CardContent className="p-6">
-              <div className="flex items-center justify-between">
-                <div>
-                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
-                    {t("profile.logout")}
-                  </h3>
-                  <p className="text-sm text-gray-600">
-                    {t("profile.logoutDesc")}
-                  </p>
-                </div>
-                <Button
-                  variant="destructive"
-                  size="lg"
-                  onClick={handleLogout}
-                  className="gap-2 bg-red-600 hover:bg-red-700"
-                >
-                  <LogOut className="w-5 h-5" />
-                  {t("nav.logout")}
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
         </main>
       </div>
 
