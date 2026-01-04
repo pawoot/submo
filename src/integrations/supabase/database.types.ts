@@ -1,4 +1,4 @@
- 
+/* eslint-disable @typescript-eslint/no-empty-object-type */
 export type Json =
   | string
   | number
@@ -15,6 +15,45 @@ export type Database = {
   }
   public: {
     Tables: {
+      categories: {
+        Row: {
+          color: string | null
+          created_at: string | null
+          display_order: number | null
+          icon: string | null
+          id: string
+          is_active: boolean | null
+          name_en: string
+          name_th: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          color?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en: string
+          name_th: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string | null
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string | null
+          id?: string
+          is_active?: boolean | null
+          name_en?: string
+          name_th?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       notification_settings: {
         Row: {
           created_at: string | null
@@ -148,6 +187,7 @@ export type Database = {
           first_name: string | null
           full_name: string | null
           id: string
+          is_admin: boolean | null
           kyc_verified: boolean | null
           last_name: string | null
           phone: string | null
@@ -165,6 +205,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id: string
+          is_admin?: boolean | null
           kyc_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
@@ -182,6 +223,7 @@ export type Database = {
           first_name?: string | null
           full_name?: string | null
           id?: string
+          is_admin?: boolean | null
           kyc_verified?: boolean | null
           last_name?: string | null
           phone?: string | null
