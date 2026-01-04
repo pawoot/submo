@@ -128,11 +128,11 @@ export default function ProfilePage() {
         // Check if user is admin
         const { data: profileData } = await supabase
           .from("profiles")
-          .select("is_admin")
+          .select("role")
           .eq("id", currentUser.id)
           .single();
         
-        if (profileData?.is_admin) {
+        if (profileData?.role === 'admin') {
           setIsAdmin(true);
         }
       }
