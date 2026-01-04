@@ -34,6 +34,15 @@ import { profileService } from "@/services/profileService";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import Link from "next/link";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type SubscriptionTemplateInsert = Database["public"]["Tables"]["subscription_templates"]["Insert"];
@@ -54,6 +63,8 @@ export default function AdminSubscriptionTemplates() {
   const [logoFile, setLogoFile] = useState<File | null>(null);
   const [logoPreview, setLogoPreview] = useState<string>("");
   const [uploading, setUploading] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage, setItemsPerPage] = useState(10);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -133,6 +144,7 @@ export default function AdminSubscriptionTemplates() {
     }
 
     setFilteredTemplates(filtered);
+    setCurrentPage(1); // Reset to first page when filters change
   };
 
   const handleLogoChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -372,6 +384,53 @@ export default function AdminSubscriptionTemplates() {
     return null;
   }
 
+  // Pagination calculations
+  const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
+  const showingFrom = filteredTemplates.length === 0 ? 0 : startIndex + 1;
+  const showingTo = Math.min(endIndex, filteredTemplates.length);
+
+  // Generate page numbers for pagination
+  const getPageNumbers = () => {
+    const pages: (number | string)[] = [];
+    const maxPagesToShow = 5;
+
+    if (totalPages <= maxPagesToShow) {
+      // Show all pages if total is less than max
+      for (let i = 1; i <= totalPages; i++) {
+        pages.push(i);
+      }
+    } else {
+      // Always show first page
+      pages.push(1);
+
+      if (currentPage > 3) {
+        pages.push("...");
+      }
+
+      // Show pages around current page
+      const start = Math.max(2, currentPage - 1);
+      const end = Math.min(totalPages - 1, currentPage + 1);
+
+      for (let i = start; i <= end; i++) {
+        pages.push(i);
+      }
+
+      if (currentPage < totalPages - 2) {
+        pages.push("...");
+      }
+
+      // Always show last page
+      if (totalPages > 1) {
+        pages.push(totalPages);
+      }
+    }
+
+    return pages;
+  };
+
   return (
     <AuthGuard>
       <SEO 
@@ -512,7 +571,32 @@ export default function AdminSubscriptionTemplates() {
           {/* Templates Table */}
           <Card>
             <CardHeader>
-              <CardTitle>รายการ Templates ({filteredTemplates.length})</CardTitle>
+              <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+                <CardTitle>รายการ Templates ({filteredTemplates.length})</CardTitle>
+                <div className="flex items-center gap-2">
+                  <Label htmlFor="itemsPerPage" className="text-sm text-slate-600 whitespace-nowrap">
+                    แสดง
+                  </Label>
+                  <Select
+                    value={itemsPerPage.toString()}
+                    onValueChange={(value) => {
+                      setItemsPerPage(Number(value));
+                      setCurrentPage(1);
+                    }}
+                  >
+                    <SelectTrigger id="itemsPerPage" className="w-20">
+                      <SelectValue />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="10">10</SelectItem>
+                      <SelectItem value="25">25</SelectItem>
+                      <SelectItem value="50">50</SelectItem>
+                      <SelectItem value="100">100</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <span className="text-sm text-slate-600 whitespace-nowrap">รายการ</span>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {loading ? (
@@ -543,7 +627,7 @@ export default function AdminSubscriptionTemplates() {
                       </TableRow>
                     </TableHeader>
                     <TableBody>
-                      {filteredTemplates.map((template) => (
+                      {paginatedTemplates.map((template) => (
                         <TableRow key={template.id}>
                           <TableCell>
                             <div className="w-12 h-12 rounded-lg overflow-hidden bg-white shadow-sm">
@@ -616,6 +700,55 @@ export default function AdminSubscriptionTemplates() {
                 </div>
               )}
             </CardContent>
+
+            {/* Pagination */}
+            {filteredTemplates.length > 0 && (
+              <div className="border-t px-6 py-4">
+                <div className="flex flex-col sm:flex-row items-center justify-between gap-4">
+                  {/* Showing info */}
+                  <div className="text-sm text-slate-600">
+                    แสดง <span className="font-medium">{showingFrom}</span> ถึง{" "}
+                    <span className="font-medium">{showingTo}</span> จากทั้งหมด{" "}
+                    <span className="font-medium">{filteredTemplates.length}</span> รายการ
+                  </div>
+
+                  {/* Pagination controls */}
+                  <Pagination>
+                    <PaginationContent>
+                      <PaginationItem>
+                        <PaginationPrevious
+                          onClick={() => setCurrentPage((prev) => Math.max(1, prev - 1))}
+                          className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+
+                      {getPageNumbers().map((page, index) => (
+                        <PaginationItem key={index}>
+                          {page === "..." ? (
+                            <PaginationEllipsis />
+                          ) : (
+                            <PaginationLink
+                              onClick={() => setCurrentPage(page as number)}
+                              isActive={currentPage === page}
+                              className="cursor-pointer"
+                            >
+                              {page}
+                            </PaginationLink>
+                          )}
+                        </PaginationItem>
+                      ))}
+
+                      <PaginationItem>
+                        <PaginationNext
+                          onClick={() => setCurrentPage((prev) => Math.min(totalPages, prev + 1))}
+                          className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                        />
+                      </PaginationItem>
+                    </PaginationContent>
+                  </Pagination>
+                </div>
+              </div>
+            )}
           </Card>
         </main>
       </div>
