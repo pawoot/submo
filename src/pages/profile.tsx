@@ -66,7 +66,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { preferredCurrency, setPreferredCurrency } = useCurrency();
+  const { preferredCurrency, setPreferredCurrency, formatAmount } = useCurrency();
   const { t } = useLanguage();
 
   const [profile, setProfile] = useState<{
