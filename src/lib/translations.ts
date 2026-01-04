@@ -1729,7 +1729,17 @@ export const translations = {
   "profile.logoutDesc": {
     th: "ออกจากระบบบนอุปกรณ์นี้",
     en: "Sign out from your account on this device"
-  }
+  },
+
+  addSub: {
+    title: "เพิ่มรายการสมัครสมาชิก",
+    selectService: "เลือกบริการ",
+    customSub: "Custom Subscription",
+    monthlyBillingInfo: "การเรียกเก็บเงินรายเดือนเกิดขึ้นทุกเดือน",
+    yearlyBillingInfo: "การเรียกเก็บเงินรายปีเกิดขึ้นหนึ่งครั้งต่อปี"
+  },
+  "Monthly billing occurs every month": "Monthly billing occurs every month",
+  "Yearly billing occurs once per year": "Yearly billing occurs once per year"
 };
 
 export type TranslationKey = keyof typeof translations;

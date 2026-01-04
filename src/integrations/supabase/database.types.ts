@@ -293,10 +293,13 @@ export type Database = {
           payment_method: string | null
           payment_method_id: string | null
           popularity_score: number | null
+          remind_3_days_before: boolean | null
+          remind_7_days_before: boolean | null
           shared_with: string[] | null
           start_date: string | null
           template_id: string | null
           updated_at: string | null
+          usage_frequency: string | null
           user_id: string | null
           website_url: string | null
         }
@@ -320,10 +323,13 @@ export type Database = {
           payment_method?: string | null
           payment_method_id?: string | null
           popularity_score?: number | null
+          remind_3_days_before?: boolean | null
+          remind_7_days_before?: boolean | null
           shared_with?: string[] | null
           start_date?: string | null
           template_id?: string | null
           updated_at?: string | null
+          usage_frequency?: string | null
           user_id?: string | null
           website_url?: string | null
         }
@@ -347,10 +353,13 @@ export type Database = {
           payment_method?: string | null
           payment_method_id?: string | null
           popularity_score?: number | null
+          remind_3_days_before?: boolean | null
+          remind_7_days_before?: boolean | null
           shared_with?: string[] | null
           start_date?: string | null
           template_id?: string | null
           updated_at?: string | null
+          usage_frequency?: string | null
           user_id?: string | null
           website_url?: string | null
         }

@@ -1,102 +1,91 @@
+import { useState, useEffect } from "react";
+import { useRouter } from "next/router";
 import SEO from "@/components/SEO";
-import { Button } from "@/components/ui/button";
+import { AuthGuard } from "@/components/AuthGuard";
+import { AddSubscriptionWizard } from "@/components/AddSubscriptionWizard";
 import { ArrowLeft } from "lucide-react";
 import Link from "next/link";
-import { useState, useEffect } from "react";
+import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
-import { useRouter } from "next/router";
-import { subscriptionService } from "@/services/subscriptionService";
-import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
-import { AuthGuard } from "@/components/AuthGuard";
-import { AddSubscriptionSteps } from "@/components/AddSubscriptionSteps";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { subscriptionService } from "@/services/subscriptionService";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export default function AddSubscription() {
+  const router = useRouter();
+  const { toast } = useToast();
+  const { t } = useLanguage();
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
-  
-  const { toast } = useToast();
-  const router = useRouter();
-  const { t } = useLanguage();
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    const loadData = async () => {
+      try {
+        const [categoriesData, paymentMethodsData] = await Promise.all([
+          supabase.from("categories").select("*").order("name_en"),
+          supabase.from("payment_methods").select("*").order("name_en")
+        ]);
+
+        if (categoriesData.error) throw categoriesData.error;
+        if (paymentMethodsData.error) throw paymentMethodsData.error;
+
+        setCategories(categoriesData.data || []);
+        setPaymentMethods(paymentMethodsData.data || []);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          title: t("common.error"),
+          description: t("common.error_occurred"),
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     loadData();
-  }, []);
-
-  const loadData = async () => {
-    try {
-      const [templatesData, categoriesData, paymentMethodsData] = await Promise.all([
-        subscriptionTemplateService.getPopularTemplates(6),
-        subscriptionService.getCategories(),
-        subscriptionService.getPaymentMethods()
-      ]);
-      
-      setPopularTemplates(templatesData);
-      setCategories(categoriesData);
-      setPaymentMethods(paymentMethodsData);
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast({
-        title: t("common.error"),
-        description: t("toast.loadError"),
-        variant: "destructive",
-      });
-    }
-  };
-
-  const handleTemplateSelect = (template: SubscriptionTemplate) => {
-    toast({
-      title: t("addSub.templateSelected"),
-      description: t("addSub.templateSelectedDesc"),
-      duration: 3000,
-    });
-  };
+  }, [toast, t]);
 
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const selectedCategory = categories.find(c => c.id === data.category_id);
-      const selectedPaymentMethod = paymentMethods.find(p => p.id === data.payment_method_id);
-
       await subscriptionService.create({
         name: data.name,
         category_id: data.category_id,
-        category: selectedCategory?.slug || "other",
-        description: data.description || null,
-        amount: Number(data.amount),
+        category: categories.find(c => c.id === data.category_id)?.slug || "other",
+        amount: data.amount,
         currency: data.currency,
         billing_cycle: data.billing_cycle,
         payment_method_id: data.payment_method_id,
-        payment_method: selectedPaymentMethod?.slug || "other",
+        payment_method: paymentMethods.find(p => p.id === data.payment_method_id)?.slug || "other",
         card_last_4: data.card_last_4 || null,
         start_date: data.start_date.toISOString(),
         next_billing_date: data.next_billing_date.toISOString(),
-        website_url: data.website_url || null,
         notes: data.notes || null,
-        is_active: true,
-        logo_url: data.icon_url || null, // Map icon_url to logo_url for legacy support
-        icon_url: data.icon_url || null, // New field
+        shared_with: data.shared_with || [],
+        template_id: data.template_id,
+        icon_url: data.icon_url,
         is_template: false,
-        template_id: data.template_id || null, // Link to parent template
         popularity_score: 0,
-        shared_with: [], 
-        updated_at: new Date().toISOString()
+        remind_3_days_before: data.remind_3_days,
+        remind_7_days_before: data.remind_7_days,
+        usage_frequency: data.usage_frequency || null,
       });
 
       toast({
         title: t("common.success"),
         description: t("subscription.add_success"),
       });
-      
+
       router.push("/");
     } catch (error) {
-      console.error("Error creating subscription:", error);
+      console.error("Error adding subscription:", error);
       toast({
         title: t("common.error"),
         description: t("common.error_occurred"),
@@ -107,11 +96,24 @@ export default function AddSubscription() {
     }
   };
 
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600">{t("common.loading")}</p>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
   return (
     <AuthGuard>
       <SEO 
         title={t("addSub.title") + " - Submo.ai"}
-        description={t("addSub.title") + " - " + t("home.seo.description")}
+        description={t("addSub.title")}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
@@ -125,19 +127,17 @@ export default function AddSubscription() {
               </Link>
               <div>
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("addSub.title")}</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{t("addSub.desc")}</p>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{t("addSub.subtitle")}</p>
               </div>
             </div>
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8 max-w-6xl">
-          <AddSubscriptionSteps
-            popularTemplates={popularTemplates}
+        <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <AddSubscriptionWizard
             categories={categories}
             paymentMethods={paymentMethods}
             onSubmit={handleSubmit}
-            onTemplateSelect={handleTemplateSelect}
             isSubmitting={isSubmitting}
           />
         </main>
