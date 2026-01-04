@@ -35,6 +35,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { SUPPORTED_CURRENCIES } from "@/services/currencyService";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { 
   User, 
   Mail, 
@@ -66,6 +67,7 @@ export default function ProfilePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { preferredCurrency, setPreferredCurrency } = useCurrency();
+  const { t } = useLanguage();
 
   const [profile, setProfile] = useState<{
     id: string;

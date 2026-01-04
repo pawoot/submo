@@ -26,6 +26,7 @@ import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 
@@ -86,6 +87,7 @@ export default function AddSubscription() {
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, isLoading: currencyLoading } = useCurrency();
+  const { t } = useLanguage();
 
   const {
     register,
