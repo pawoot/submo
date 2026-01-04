@@ -7,6 +7,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { adminUserService } from "@/services/adminUserService";
 import { profileService } from "@/services/profileService";
 import { getCountryDisplay, getCountryFlag, formatFullName, getUserDisplayName } from "@/lib/countryUtils";
@@ -53,6 +54,7 @@ export default function UserDetailPage() {
   const [pendingRole, setPendingRole] = useState<"admin" | "user" | null>(null);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const { toast } = useToast();
+  const { convertCurrency, formatCurrency: formatCurrencyWithSymbol } = useCurrency();
   const router = useRouter();
   const { id } = router.query;
 
@@ -161,11 +163,12 @@ export default function UserDetailPage() {
   };
 
   const formatCurrency = (amount: number, currency: string = "THB") => {
+    const amountInTHB = convertCurrency(amount, currency, "THB");
     return new Intl.NumberFormat("th-TH", {
       style: "currency",
-      currency: currency,
+      currency: "THB",
       minimumFractionDigits: 2,
-    }).format(amount);
+    }).format(amountInTHB);
   };
 
   const formatDate = (dateString: string) => {
@@ -185,13 +188,18 @@ export default function UserDetailPage() {
 
     const totalMonthly = activeSubscriptions.reduce((sum, sub) => {
       const price = sub.amount || 0;
+      const currency = sub.currency || "THB";
+      
+      // Convert to THB first
+      const priceInTHB = convertCurrency(price, currency, "THB");
+      
       const monthlyCost =
         sub.billing_cycle === "monthly"
-          ? price
+          ? priceInTHB
           : sub.billing_cycle === "yearly"
-          ? price / 12
+          ? priceInTHB / 12
           : sub.billing_cycle === "quarterly"
-          ? price / 3
+          ? priceInTHB / 3
           : 0;
       return sum + monthlyCost;
     }, 0);
