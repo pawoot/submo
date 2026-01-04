@@ -535,51 +535,11 @@ export default function Home() {
           {/* กราฟสถิติ */}
           <SubscriptionCharts subscriptions={displaySubscriptions} />
 
-          {/* Mobile Search Section - Simple (no sort dropdown) */}
-          <div className="block md:hidden mb-8">
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <label className="text-sm font-medium mb-2 block">{t("common.search")}</label>
-                <div className="flex gap-2">
-                  <div className="relative flex-1">
-                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                    <Input 
-                      placeholder={t("subscriptions.searchPlaceholder")} 
-                      className="pl-9"
-                      value={searchQuery}
-                      onChange={(e) => setSearchQuery(e.target.value)}
-                    />
-                  </div>
-                  <Button className="bg-indigo-600 hover:bg-indigo-700">
-                    {t("common.search")}
-                  </Button>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
-
           {/* Desktop Search Section - Detailed (with sort dropdown) */}
           <div className="hidden md:block mb-8">
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 <div className="flex flex-col md:flex-row gap-4">
-                  <div className="flex-1">
-                    <label className="text-sm font-medium mb-2 block">{t("common.search")}</label>
-                    <div className="flex gap-2">
-                      <div className="relative flex-1">
-                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
-                        <Input 
-                          placeholder={t("subscriptions.searchPlaceholder")} 
-                          className="pl-9"
-                          value={searchQuery}
-                          onChange={(e) => setSearchQuery(e.target.value)}
-                        />
-                      </div>
-                      <Button className="bg-indigo-600 hover:bg-indigo-700">
-                        {t("common.search")}
-                      </Button>
-                    </div>
-                  </div>
                   <div className="md:w-48">
                     <label className="text-sm font-medium mb-2 block">{t("subscriptions.sort")}</label>
                     <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
