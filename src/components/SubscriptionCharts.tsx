@@ -476,7 +476,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       cx="50%"
                       cy="50%"
                       labelLine={true}
-                      label={({ category, percentage }: { category: string; percentage: string }) => `${category} ${percentage}%`}
+                      label={({ category, percentage }: any) => `${category} ${percentage}%`}
                       outerRadius={110}
                       fill="#8884d8"
                       dataKey="cost"
@@ -559,7 +559,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       cx="50%"
                       cy="50%"
                       labelLine={true}
-                      label={({ method, percentage }: { method: string; percentage: string }) => {
+                      label={({ method, percentage }: any) => {
                         const label = paymentMethodLabels[method]?.label || method;
                         const icon = paymentMethodLabels[method]?.icon || "📱";
                         return `${icon} ${label} ${percentage}%`;
