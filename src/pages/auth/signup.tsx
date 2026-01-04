@@ -152,7 +152,7 @@ export default function SignUpPage() {
       } else if (user) {
         // Update profile with country
         try {
-          await profileService.updateProfile(user.id, { country });
+          await profileService.updateProfile({ country });
         } catch (profileError) {
           console.error("Failed to update country:", profileError);
         }
