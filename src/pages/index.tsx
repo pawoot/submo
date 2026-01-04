@@ -30,6 +30,15 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -68,6 +77,8 @@ export default function Home() {
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [profile, setProfile] = useState<any>(null);
   const [scrolled, setScrolled] = useState(false);
+  const [currentPage, setCurrentPage] = useState(1);
+  const [itemsPerPage] = useState(10);
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, convertAmount, formatAmount } = useCurrency();
@@ -230,6 +241,26 @@ export default function Home() {
     }
     
     setSortedSubscriptions(sorted);
+  };
+
+  // Pagination calculations
+  const totalPages = Math.ceil(sortedSubscriptions.length / itemsPerPage);
+  const startIndex = (currentPage - 1) * itemsPerPage;
+  const endIndex = startIndex + itemsPerPage;
+  const paginatedSubscriptions = sortedSubscriptions.slice(startIndex, endIndex);
+
+  // Reset to page 1 when sorting changes
+  useEffect(() => {
+    setCurrentPage(1);
+  }, [sortOption]);
+
+  const handlePageChange = (page: number) => {
+    setCurrentPage(page);
+    // Scroll to top of subscription list
+    const subscriptionList = document.getElementById('subscription-list');
+    if (subscriptionList) {
+      subscriptionList.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
   };
 
   const handleDelete = async (id: string) => {
@@ -496,12 +527,17 @@ export default function Home() {
           <SubscriptionCharts subscriptions={displaySubscriptions} />
 
           {sortedSubscriptions.length > 0 ? (
-            <Card>
+            <Card id="subscription-list">
               <CardHeader>
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
                     <CardTitle className="text-xl">รายการ Subscription</CardTitle>
                     <Badge variant="secondary">{sortedSubscriptions.length} รายการ</Badge>
+                    {totalPages > 1 && (
+                      <Badge variant="outline" className="text-xs">
+                        หน้า {currentPage} จาก {totalPages}
+                      </Badge>
+                    )}
                   </div>
                   
                   <div className="flex items-center gap-2">
@@ -525,7 +561,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {sortedSubscriptions.map((sub) => {
+                  {paginatedSubscriptions.map((sub) => {
                     const daysUntil = getDaysUntilRenewal(sub.next_billing_date);
                     const isUrgent = daysUntil <= 7;
                     const monthlyCost = sub.billing_cycle === "yearly" ? sub.amount / 12 :
@@ -618,6 +654,67 @@ export default function Home() {
                     );
                   })}
                 </div>
+
+                {/* Pagination */}
+                {totalPages > 1 && (
+                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
+                    <div className="text-sm text-slate-600 dark:text-slate-400">
+                      แสดง {startIndex + 1}-{Math.min(endIndex, sortedSubscriptions.length)} จาก {sortedSubscriptions.length} รายการ
+                    </div>
+                    
+                    <Pagination>
+                      <PaginationContent>
+                        <PaginationItem>
+                          <PaginationPrevious 
+                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
+                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                        
+                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
+                          // Show first page, last page, current page, and pages around current
+                          const showPage = 
+                            page === 1 || 
+                            page === totalPages || 
+                            (page >= currentPage - 1 && page <= currentPage + 1);
+                          
+                          // Show ellipsis
+                          const showEllipsisBefore = page === currentPage - 2 && currentPage > 3;
+                          const showEllipsisAfter = page === currentPage + 2 && currentPage < totalPages - 2;
+                          
+                          if (showEllipsisBefore || showEllipsisAfter) {
+                            return (
+                              <PaginationItem key={page}>
+                                <PaginationEllipsis />
+                              </PaginationItem>
+                            );
+                          }
+                          
+                          if (!showPage) return null;
+                          
+                          return (
+                            <PaginationItem key={page}>
+                              <PaginationLink
+                                onClick={() => handlePageChange(page)}
+                                isActive={currentPage === page}
+                                className="cursor-pointer"
+                              >
+                                {page}
+                              </PaginationLink>
+                            </PaginationItem>
+                          );
+                        })}
+                        
+                        <PaginationItem>
+                          <PaginationNext 
+                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
+                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
+                          />
+                        </PaginationItem>
+                      </PaginationContent>
+                    </Pagination>
+                  </div>
+                )}
               </CardContent>
             </Card>
           ) : (
