@@ -341,8 +341,8 @@ export default function Home() {
   return (
     <AuthGuard>
       <SEO 
-        title="Subscription Manager - จัดการค่าใช้จ่าย Software"
-        description="ระบบบริหารจัดการค่าใช้จ่าย Software Subscription ติดตามวันหมดอายุ แบ่งปันค่าใช้จ่าย และดูภาพรวมการใช้เงิน"
+        title="Submo - Subscription Monitoring"
+        description="ระบบติดตามและจัดการ Subscription ทั้งหมดของคุณ ตรวจสอบค่าใช้จ่าย วันหมดอายุ และแบ่งปันค่าใช้จ่ายได้ง่าย"
       />
       <div className={`lg:hidden sticky top-0 z-50 transition-all duration-300 ${
         scrolled 
@@ -371,10 +371,10 @@ export default function Home() {
                 <div>
                   <h1 className={`font-bold text-slate-900 dark:text-white transition-all duration-300 ${
                     scrolled ? "text-xl" : "text-2xl"
-                  }`}>Subscription Mo</h1>
+                  }`}>Submo</h1>
                   <p className={`text-sm text-slate-600 dark:text-slate-400 transition-all duration-300 ${
                     scrolled ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
-                  }`}>จัดการค่าใช้จ่าย Software</p>
+                  }`}>Subscription Monitoring</p>
                 </div>
                 {isAdmin && (
                   <Link href="/admin">

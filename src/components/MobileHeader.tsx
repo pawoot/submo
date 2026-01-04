@@ -23,7 +23,7 @@ export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }:
           <span className="text-white font-bold text-lg">S</span>
         </div>
         <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          SubMo
+          Submo
         </span>
       </Link>
 

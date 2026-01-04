@@ -86,7 +86,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                 <span className="text-white font-bold text-lg">S</span>
               </div>
               <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                SubMo Admin
+                Submo Admin
               </span>
             </Link>
           </div>
@@ -133,7 +133,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
             <span className="text-white font-bold text-lg">S</span>
           </div>
           <span className="text-lg font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-            SubMo Admin
+            Submo Admin
           </span>
         </Link>
         
@@ -151,7 +151,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
                     <span className="text-white font-bold text-lg">S</span>
                   </div>
                   <span className="text-xl font-bold bg-gradient-to-r from-purple-600 to-pink-600 text-transparent bg-clip-text">
-                    SubMo Admin
+                    Submo Admin
                   </span>
                 </Link>
               </div>
