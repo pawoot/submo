@@ -30,6 +30,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
+type Category = Database["public"]["Tables"]["categories"]["Row"];
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
@@ -39,6 +40,7 @@ export default function AddSubscription() {
   const [startDate, setStartDate] = useState<Date>();
   const [nextBillingDate, setNextBillingDate] = useState<Date>();
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
   const { toast } = useToast();
@@ -51,7 +53,7 @@ export default function AddSubscription() {
     name: z.string()
       .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
       .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
-    category: z.string()
+    category_id: z.string()
       .min(1, t("validation.required")),
     description: z.string()
       .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
@@ -121,6 +123,7 @@ export default function AddSubscription() {
 
   useEffect(() => {
     loadPopularTemplates();
+    loadCategories();
   }, []);
 
   useEffect(() => {
@@ -144,6 +147,15 @@ export default function AddSubscription() {
     }
   };
 
+  const loadCategories = async () => {
+    try {
+      const cats = await subscriptionService.getCategories();
+      setDbCategories(cats);
+    } catch (error) {
+      console.error("Error loading categories:", error);
+    }
+  };
+
   const loadPopularTemplates = async () => {
     try {
       const templates = await subscriptionTemplateService.getPopularTemplates(6);
@@ -157,10 +169,14 @@ export default function AddSubscription() {
     setSelectedTemplate(template);
     setValue("name", template.name);
     
-    // Auto-fill form with template data using setValue
+    // Auto-select category if slug matches
     if (template.category) {
-      setValue("category", template.category);
+      const matchingCat = dbCategories.find(c => c.slug === template.category);
+      if (matchingCat) {
+        setValue("category_id", matchingCat.id);
+      }
     }
+    
     if (template.default_price) {
       setValue("cost", template.default_price.toString());
     }
@@ -182,31 +198,7 @@ export default function AddSubscription() {
   };
 
   const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
-    setSelectedTemplate(template);
-    setValue("name", template.name);
-    
-    // Auto-fill form with template data using setValue
-    if (template.category) {
-      setValue("category", template.category);
-    }
-    if (template.default_price) {
-      setValue("cost", template.default_price.toString());
-    }
-    if (template.default_currency) {
-      setValue("currency", template.default_currency);
-    }
-    if (template.default_billing_cycle) {
-      setValue("billing", template.default_billing_cycle);
-    }
-    if (template.website_url) {
-      setValue("website", template.website_url);
-    }
-
-    toast({
-      title: t("addSub.templateSelected"),
-      description: t("addSub.templateSelectedDesc"),
-      duration: 3000,
-    });
+    handleTemplateSelect(template);
   };
 
   const categories = [
@@ -272,9 +264,13 @@ export default function AddSubscription() {
     setIsSubmitting(true);
 
     try {
+      // Find selected category to get slug for legacy support
+      const selectedCategory = dbCategories.find(c => c.id === data.category_id);
+      
       const subscriptionData = {
         name: data.name,
-        category: data.category,
+        category_id: data.category_id,
+        category: selectedCategory?.slug || "other", // Legacy support
         description: data.description || null,
         amount: parseFloat(data.cost),
         currency: data.currency,
@@ -424,20 +420,23 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="category">{t("addSub.category")} *</Label>
-                      <Select onValueChange={(value) => setValue("category", value)} required>
-                        <SelectTrigger id="category" className={cn(errors.category && "border-red-500")}>
+                      <Select onValueChange={(value) => setValue("category_id", value)} required>
+                        <SelectTrigger id="category" className={cn(errors.category_id && "border-red-500")}>
                           <SelectValue placeholder={t("addSub.selectCategory")} />
                         </SelectTrigger>
                         <SelectContent>
-                          {categories.map((cat) => (
-                            <SelectItem key={cat.value} value={cat.value}>
-                              {cat.label}
+                          {dbCategories.map((cat) => (
+                            <SelectItem key={cat.id} value={cat.id}>
+                              <div className="flex items-center gap-2">
+                                <span>{cat.icon}</span>
+                                <span>{language === 'th' ? cat.name_th : cat.name_en}</span>
+                              </div>
                             </SelectItem>
                           ))}
                         </SelectContent>
                       </Select>
-                      {errors.category && (
-                        <p className="text-sm text-red-500">{errors.category.message}</p>
+                      {errors.category_id && (
+                        <p className="text-sm text-red-500">{errors.category_id.message}</p>
                       )}
                     </div>
                   </div>

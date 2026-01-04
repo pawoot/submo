@@ -290,6 +290,7 @@ export type Database = {
           billing_cycle: string
           card_last_4: string | null
           category: string
+          category_id: string
           created_at: string | null
           currency: string
           description: string | null
@@ -311,6 +312,7 @@ export type Database = {
           billing_cycle: string
           card_last_4?: string | null
           category: string
+          category_id: string
           created_at?: string | null
           currency?: string
           description?: string | null
@@ -332,6 +334,7 @@ export type Database = {
           billing_cycle?: string
           card_last_4?: string | null
           category?: string
+          category_id?: string
           created_at?: string | null
           currency?: string
           description?: string | null
@@ -348,7 +351,15 @@ export type Database = {
           user_id?: string
           website_url?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "subscriptions_category_id_fkey"
+            columns: ["category_id"]
+            isOneToOne: false
+            referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+        ]
       }
     }
     Views: {

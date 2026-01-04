@@ -1,7 +1,9 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
-type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
+  categories?: Database["public"]["Tables"]["categories"]["Row"] | null;
+};
 type SubscriptionInsert = Database["public"]["Tables"]["subscriptions"]["Insert"];
 type SubscriptionUpdate = Database["public"]["Tables"]["subscriptions"]["Update"];
 
@@ -12,11 +14,28 @@ export const subscriptionService = {
   async getAll(): Promise<Subscription[]> {
     const { data, error } = await supabase
       .from("subscriptions")
-      .select("*")
+      .select("*, categories(*)")
       .order("next_billing_date", { ascending: true });
 
     if (error) {
       console.error("Error fetching subscriptions:", error);
+      throw error;
+    }
+
+    return data || [];
+  },
+
+  /**
+   * Get all available categories
+   */
+  async getCategories() {
+    const { data, error } = await supabase
+      .from("categories")
+      .select("*")
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching categories:", error);
       throw error;
     }
 
@@ -29,7 +48,7 @@ export const subscriptionService = {
   async getById(id: string): Promise<Subscription | null> {
     const { data, error } = await supabase
       .from("subscriptions")
-      .select("*")
+      .select("*, categories(*)")
       .eq("id", id)
       .single();
 
@@ -51,13 +70,16 @@ export const subscriptionService = {
       throw new Error("User not authenticated");
     }
 
+    // Ensure we send both category_id and legacy category text for compatibility
+    const payload = {
+      ...subscription,
+      user_id: user.id,
+    };
+
     const { data, error } = await supabase
       .from("subscriptions")
-      .insert({
-        ...subscription,
-        user_id: user.id,
-      })
-      .select()
+      .insert(payload)
+      .select("*, categories(*)")
       .single();
 
     if (error) {
@@ -76,7 +98,7 @@ export const subscriptionService = {
       .from("subscriptions")
       .update(subscription)
       .eq("id", id)
-      .select()
+      .select("*, categories(*)")
       .single();
 
     if (error) {
