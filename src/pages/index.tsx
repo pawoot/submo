@@ -4,63 +4,92 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle } from "lucide-react";
 import Link from "next/link";
+import { useEffect, useState } from "react";
+
+interface Subscription {
+  id: number;
+  name: string;
+  cost: number;
+  currency: string;
+  billing: string;
+  nextBilling: string;
+  category: string;
+  paymentMethod: string;
+  sharedWith: string[];
+  status: string;
+}
 
 export default function Home() {
-  // Mock data for demonstration
-  const subscriptions = [
-    {
-      id: 1,
-      name: "Adobe Creative Cloud",
-      cost: 52.99,
-      currency: "USD",
-      billing: "monthly",
-      nextBilling: "2026-01-15",
-      category: "Design",
-      paymentMethod: "Credit Card",
-      sharedWith: 2,
-      status: "active"
-    },
-    {
-      id: 2,
-      name: "Figma Professional",
-      cost: 12,
-      currency: "USD",
-      billing: "monthly",
-      nextBilling: "2026-01-20",
-      category: "Design",
-      paymentMethod: "Credit Card",
-      sharedWith: 0,
-      status: "active"
-    },
-    {
-      id: 3,
-      name: "GitHub Team",
-      cost: 4,
-      currency: "USD",
-      billing: "monthly",
-      nextBilling: "2026-01-10",
-      category: "Development",
-      paymentMethod: "Credit Card",
-      sharedWith: 5,
-      status: "active"
-    },
-    {
-      id: 4,
-      name: "Notion Team",
-      cost: 8,
-      currency: "USD",
-      billing: "monthly",
-      nextBilling: "2026-01-25",
-      category: "Productivity",
-      paymentMethod: "Credit Card",
-      sharedWith: 3,
-      status: "active"
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+
+  useEffect(() => {
+    // Load subscriptions from localStorage
+    const stored = localStorage.getItem("subscriptions");
+    if (stored) {
+      setSubscriptions(JSON.parse(stored));
+    } else {
+      // Mock data for demonstration if no data exists
+      const mockData = [
+        {
+          id: 1,
+          name: "Adobe Creative Cloud",
+          cost: 52.99,
+          currency: "USD",
+          billing: "monthly",
+          nextBilling: "2026-01-15",
+          category: "design",
+          paymentMethod: "credit-card",
+          sharedWith: ["user1@example.com", "user2@example.com"],
+          status: "active"
+        },
+        {
+          id: 2,
+          name: "Figma Professional",
+          cost: 12,
+          currency: "USD",
+          billing: "monthly",
+          nextBilling: "2026-01-20",
+          category: "design",
+          paymentMethod: "credit-card",
+          sharedWith: [],
+          status: "active"
+        },
+        {
+          id: 3,
+          name: "GitHub Team",
+          cost: 4,
+          currency: "USD",
+          billing: "monthly",
+          nextBilling: "2026-01-10",
+          category: "development",
+          paymentMethod: "credit-card",
+          sharedWith: ["dev1@example.com", "dev2@example.com", "dev3@example.com", "dev4@example.com", "dev5@example.com"],
+          status: "active"
+        },
+        {
+          id: 4,
+          name: "Notion Team",
+          cost: 8,
+          currency: "USD",
+          billing: "monthly",
+          nextBilling: "2026-01-25",
+          category: "productivity",
+          paymentMethod: "credit-card",
+          sharedWith: ["team1@example.com", "team2@example.com", "team3@example.com"],
+          status: "active"
+        }
+      ];
+      setSubscriptions(mockData);
     }
-  ];
+  }, []);
 
   const totalMonthly = subscriptions.reduce((sum, sub) => {
-    if (sub.billing === "monthly") return sum + sub.cost;
-    return sum + (sub.cost / 12);
+    const cost = Number(sub.cost);
+    if (sub.billing === "monthly") return sum + cost;
+    if (sub.billing === "yearly") return sum + (cost / 12);
+    if (sub.billing === "quarterly") return sum + (cost / 3);
+    if (sub.billing === "biannually") return sum + (cost / 6);
+    return sum;
   }, 0);
 
   const totalYearly = totalMonthly * 12;
@@ -70,6 +99,18 @@ export default function Home() {
     const renewal = new Date(date);
     const diff = Math.ceil((renewal.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
     return diff;
+  };
+
+  const categoryLabels: { [key: string]: string } = {
+    design: "Design",
+    development: "Development",
+    productivity: "Productivity",
+    entertainment: "Entertainment",
+    storage: "Storage",
+    communication: "Communication",
+    marketing: "Marketing",
+    education: "Education",
+    other: "Other"
   };
 
   return (
@@ -119,7 +160,7 @@ export default function Home() {
                   ${totalMonthly.toFixed(2)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ≈ ฿{(totalMonthly * 35).toLocaleString('th-TH', { maximumFractionDigits: 0 })}
+                  ≈ ฿{(totalMonthly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
                 </p>
               </CardContent>
             </Card>
@@ -136,7 +177,7 @@ export default function Home() {
                   ${totalYearly.toFixed(2)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ≈ ฿{(totalYearly * 35).toLocaleString('th-TH', { maximumFractionDigits: 0 })}
+                  ≈ ฿{(totalYearly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
                 </p>
               </CardContent>
             </Card>
@@ -177,82 +218,99 @@ export default function Home() {
           </div>
 
           {/* Subscriptions List */}
-          <Card>
-            <CardHeader>
-              <CardTitle className="text-xl flex items-center justify-between">
-                <span>รายการ Subscription</span>
-                <Badge variant="secondary">{subscriptions.length} รายการ</Badge>
-              </CardTitle>
-            </CardHeader>
-            <CardContent>
-              <div className="space-y-4">
-                {subscriptions.map((sub) => {
-                  const daysUntil = getDaysUntilRenewal(sub.nextBilling);
-                  const isUrgent = daysUntil <= 7;
+          {subscriptions.length > 0 ? (
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-xl flex items-center justify-between">
+                  <span>รายการ Subscription</span>
+                  <Badge variant="secondary">{subscriptions.length} รายการ</Badge>
+                </CardTitle>
+              </CardHeader>
+              <CardContent>
+                <div className="space-y-4">
+                  {subscriptions.map((sub) => {
+                    const daysUntil = getDaysUntilRenewal(sub.nextBilling);
+                    const isUrgent = daysUntil <= 7;
 
-                  return (
-                    <div 
-                      key={sub.id}
-                      className="flex items-center justify-between p-4 rounded-lg border bg-white dark:bg-slate-800 hover:shadow-md transition-shadow"
-                    >
-                      <div className="flex items-center gap-4 flex-1">
-                        <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
-                          {sub.name.charAt(0)}
-                        </div>
-                        
-                        <div className="flex-1">
-                          <div className="flex items-center gap-2 mb-1">
-                            <h3 className="font-semibold text-slate-900 dark:text-white">{sub.name}</h3>
-                            <Badge variant="outline" className="text-xs">{sub.category}</Badge>
+                    return (
+                      <div 
+                        key={sub.id}
+                        className="flex items-center justify-between p-4 rounded-lg border bg-white dark:bg-slate-800 hover:shadow-md transition-shadow"
+                      >
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                            {sub.name.charAt(0)}
                           </div>
-                          <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
-                            <span className="flex items-center gap-1">
-                              <Calendar className="w-4 h-4" />
-                              ต่ออายุ: {new Date(sub.nextBilling).toLocaleDateString('th-TH', { 
-                                year: 'numeric', 
-                                month: 'short', 
-                                day: 'numeric' 
-                              })}
-                            </span>
-                            <span className="flex items-center gap-1">
-                              <CreditCard className="w-4 h-4" />
-                              {sub.paymentMethod}
-                            </span>
-                            {sub.sharedWith > 0 && (
+                          
+                          <div className="flex-1">
+                            <div className="flex items-center gap-2 mb-1">
+                              <h3 className="font-semibold text-slate-900 dark:text-white">{sub.name}</h3>
+                              <Badge variant="outline" className="text-xs">
+                                {categoryLabels[sub.category] || sub.category}
+                              </Badge>
+                            </div>
+                            <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                               <span className="flex items-center gap-1">
-                                <Users className="w-4 h-4" />
-                                แบ่งกับ {sub.sharedWith} คน
+                                <Calendar className="w-4 h-4" />
+                                ต่ออายุ: {new Date(sub.nextBilling).toLocaleDateString("th-TH", { 
+                                  year: "numeric", 
+                                  month: "short", 
+                                  day: "numeric" 
+                                })}
                               </span>
-                            )}
+                              <span className="flex items-center gap-1">
+                                <CreditCard className="w-4 h-4" />
+                                {sub.paymentMethod.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                              </span>
+                              {sub.sharedWith && sub.sharedWith.length > 0 && (
+                                <span className="flex items-center gap-1">
+                                  <Users className="w-4 h-4" />
+                                  แบ่งกับ {sub.sharedWith.length} คน
+                                </span>
+                              )}
+                            </div>
                           </div>
                         </div>
-                      </div>
 
-                      <div className="text-right">
-                        <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                          ${sub.cost}
+                        <div className="text-right">
+                          <div className="text-2xl font-bold text-slate-900 dark:text-white">
+                            ${Number(sub.cost).toFixed(2)}
+                          </div>
+                          <div className="text-sm text-slate-500 dark:text-slate-400">
+                            {sub.billing === "monthly" && "ต่อเดือน"}
+                            {sub.billing === "yearly" && "ต่อปี"}
+                            {sub.billing === "quarterly" && "ราย 3 เดือน"}
+                            {sub.billing === "biannually" && "ราย 6 เดือน"}
+                          </div>
+                          {isUrgent && (
+                            <Badge variant="destructive" className="mt-2 text-xs">
+                              เหลือ {daysUntil} วัน
+                            </Badge>
+                          )}
                         </div>
-                        <div className="text-sm text-slate-500 dark:text-slate-400">
-                          {sub.billing === "monthly" ? "ต่อเดือน" : "ต่อปี"}
-                        </div>
-                        {isUrgent && (
-                          <Badge variant="destructive" className="mt-2 text-xs">
-                            เหลือ {daysUntil} วัน
-                          </Badge>
-                        )}
                       </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </CardContent>
-          </Card>
-
-          {/* Empty State Example */}
-          <div className="mt-8 p-8 text-center text-slate-500 dark:text-slate-400 bg-white/50 dark:bg-slate-900/50 rounded-lg border-2 border-dashed">
-            <CreditCard className="w-12 h-12 mx-auto mb-4 opacity-50" />
-            <p className="mb-4">คลิก "เพิ่ม Subscription" เพื่อเริ่มติดตามค่าใช้จ่าย Software ของคุณ</p>
-          </div>
+                    );
+                  })}
+                </div>
+              </CardContent>
+            </Card>
+          ) : (
+            <Card>
+              <CardContent className="py-16">
+                <div className="text-center text-slate-500 dark:text-slate-400">
+                  <CreditCard className="w-16 h-16 mx-auto mb-4 opacity-30" />
+                  <h3 className="text-xl font-semibold mb-2">ยังไม่มี Subscription</h3>
+                  <p className="mb-6">เริ่มต้นติดตามค่าใช้จ่าย Software ของคุณวันนี้</p>
+                  <Link href="/add-subscription">
+                    <Button size="lg" className="gap-2">
+                      <Plus className="w-5 h-5" />
+                      เพิ่ม Subscription แรก
+                    </Button>
+                  </Link>
+                </div>
+              </CardContent>
+            </Card>
+          )}
         </main>
       </div>
     </>

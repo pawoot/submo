@@ -6,13 +6,18 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Trash2, Users } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, CheckCircle2 } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
+import { useToast } from "@/hooks/use-toast";
+import { useRouter } from "next/router";
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { toast } = useToast();
+  const router = useRouter();
 
   const categories = [
     "Design", "Development", "Productivity", "Entertainment", 
@@ -45,10 +50,54 @@ export default function AddSubscription() {
     setSharedUsers(sharedUsers.filter(u => u !== email));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
     e.preventDefault();
-    // TODO: Implement save logic
-    console.log("Form submitted");
+    setIsSubmitting(true);
+
+    const formData = new FormData(e.currentTarget);
+    const subscriptionData = {
+      name: formData.get("name"),
+      category: formData.get("category"),
+      description: formData.get("description"),
+      cost: formData.get("cost"),
+      currency: formData.get("currency"),
+      billing: formData.get("billing"),
+      paymentMethod: formData.get("paymentMethod"),
+      cardLast4: formData.get("cardLast4"),
+      startDate: formData.get("startDate"),
+      nextBilling: formData.get("nextBilling"),
+      website: formData.get("website"),
+      notes: formData.get("notes"),
+      sharedWith: sharedUsers,
+    };
+
+    // Simulate API call
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Store in localStorage for now
+    const existingSubscriptions = JSON.parse(localStorage.getItem("subscriptions") || "[]");
+    const newSubscription = {
+      ...subscriptionData,
+      id: Date.now(),
+      status: "active",
+      createdAt: new Date().toISOString(),
+    };
+    existingSubscriptions.push(newSubscription);
+    localStorage.setItem("subscriptions", JSON.stringify(existingSubscriptions));
+
+    setIsSubmitting(false);
+
+    // Show success toast
+    toast({
+      title: "✅ เพิ่ม Subscription สำเร็จ!",
+      description: `เพิ่ม ${subscriptionData.name} เรียบร้อยแล้ว`,
+      duration: 3000,
+    });
+
+    // Redirect to home page after 1.5 seconds
+    setTimeout(() => {
+      router.push("/");
+    }, 1500);
   };
 
   return (
@@ -90,7 +139,8 @@ export default function AddSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="name">ชื่อ Subscription *</Label>
                       <Input 
-                        id="name" 
+                        id="name"
+                        name="name"
                         placeholder="เช่น Adobe Creative Cloud"
                         required
                       />
@@ -98,7 +148,7 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="category">หมวดหมู่ *</Label>
-                      <Select required>
+                      <Select name="category" required>
                         <SelectTrigger id="category">
                           <SelectValue placeholder="เลือกหมวดหมู่" />
                         </SelectTrigger>
@@ -116,7 +166,8 @@ export default function AddSubscription() {
                   <div className="space-y-2">
                     <Label htmlFor="description">รายละเอียด</Label>
                     <Textarea 
-                      id="description" 
+                      id="description"
+                      name="description"
                       placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
                       rows={3}
                     />
@@ -134,7 +185,8 @@ export default function AddSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="cost">ราคา *</Label>
                       <Input 
-                        id="cost" 
+                        id="cost"
+                        name="cost"
                         type="number" 
                         step="0.01" 
                         placeholder="0.00"
@@ -144,7 +196,7 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="currency">สกุลเงิน *</Label>
-                      <Select required>
+                      <Select name="currency" required>
                         <SelectTrigger id="currency">
                           <SelectValue placeholder="เลือกสกุลเงิน" />
                         </SelectTrigger>
@@ -160,7 +212,7 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="billing">รอบการชำระ *</Label>
-                      <Select required>
+                      <Select name="billing" required>
                         <SelectTrigger id="billing">
                           <SelectValue placeholder="เลือกรอบ" />
                         </SelectTrigger>
@@ -177,13 +229,13 @@ export default function AddSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="paymentMethod">ช่องทางการชำระเงิน *</Label>
-                      <Select required>
+                      <Select name="paymentMethod" required>
                         <SelectTrigger id="paymentMethod">
                           <SelectValue placeholder="เลือกช่องทาง" />
                         </SelectTrigger>
                         <SelectContent>
                           {paymentMethods.map((method) => (
-                            <SelectItem key={method} value={method.toLowerCase().replace(/\s+/g, '-')}>
+                            <SelectItem key={method} value={method.toLowerCase().replace(/\s+/g, "-")}>
                               {method}
                             </SelectItem>
                           ))}
@@ -194,7 +246,8 @@ export default function AddSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="cardLast4">เลขท้าย 4 หลัก (ถ้ามี)</Label>
                       <Input 
-                        id="cardLast4" 
+                        id="cardLast4"
+                        name="cardLast4"
                         placeholder="1234"
                         maxLength={4}
                       />
@@ -213,7 +266,8 @@ export default function AddSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="startDate">วันเริ่มต้น *</Label>
                       <Input 
-                        id="startDate" 
+                        id="startDate"
+                        name="startDate"
                         type="date"
                         required
                       />
@@ -222,7 +276,8 @@ export default function AddSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="nextBilling">วันต่ออายุถัดไป *</Label>
                       <Input 
-                        id="nextBilling" 
+                        id="nextBilling"
+                        name="nextBilling"
                         type="date"
                         required
                       />
@@ -313,7 +368,8 @@ export default function AddSubscription() {
                   <div className="space-y-2">
                     <Label htmlFor="website">เว็บไซต์</Label>
                     <Input 
-                      id="website" 
+                      id="website"
+                      name="website"
                       type="url"
                       placeholder="https://example.com"
                     />
@@ -322,7 +378,8 @@ export default function AddSubscription() {
                   <div className="space-y-2">
                     <Label htmlFor="notes">หมายเหตุ</Label>
                     <Textarea 
-                      id="notes" 
+                      id="notes"
+                      name="notes"
                       placeholder="ข้อมูลเพิ่มเติม หรือหมายเหตุสำคัญ"
                       rows={3}
                     />
@@ -333,13 +390,22 @@ export default function AddSubscription() {
               {/* Action Buttons */}
               <div className="flex gap-4 justify-end pt-4">
                 <Link href="/">
-                  <Button type="button" variant="outline" size="lg">
+                  <Button type="button" variant="outline" size="lg" disabled={isSubmitting}>
                     ยกเลิก
                   </Button>
                 </Link>
-                <Button type="submit" size="lg" className="gap-2">
-                  <Plus className="w-5 h-5" />
-                  บันทึก Subscription
+                <Button type="submit" size="lg" className="gap-2" disabled={isSubmitting}>
+                  {isSubmitting ? (
+                    <>
+                      <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                      กำลังบันทึก...
+                    </>
+                  ) : (
+                    <>
+                      <Plus className="w-5 h-5" />
+                      บันทึก Subscription
+                    </>
+                  )}
                 </Button>
               </div>
             </div>
