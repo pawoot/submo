@@ -324,21 +324,15 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
             <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 font-semibold">
               {t("filter.all")}
             </TabsTrigger>
-            {availableCategories.includes("design") && (
-              <TabsTrigger value="design" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">
-                {t("category.design")}
+            {availableCategories.map((category) => (
+              <TabsTrigger 
+                key={category}
+                value={category} 
+                className="data-[state=active]:bg-white data-[state=active]:text-indigo-600"
+              >
+                {t(`category.${category}` as any) || category}
               </TabsTrigger>
-            )}
-            {availableCategories.includes("development") && (
-              <TabsTrigger value="development" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">
-                {t("category.development")}
-              </TabsTrigger>
-            )}
-            {availableCategories.includes("productivity") && (
-              <TabsTrigger value="productivity" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">
-                {t("category.productivity")}
-              </TabsTrigger>
-            )}
+            ))}
           </TabsList>
         </Tabs>
         
