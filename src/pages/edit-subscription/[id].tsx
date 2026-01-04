@@ -33,7 +33,8 @@ type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export default function EditSubscription() {
   const router = useRouter();
-  const { id } = router.query;
+  const rawId = router.query.id;
+  const id = Array.isArray(rawId) ? rawId[0] : rawId;
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
@@ -187,20 +188,20 @@ export default function EditSubscription() {
     setValue("name", template.name, { shouldValidate: true });
     
     // Auto-fill form with template data using setValue
-    if (template.category) {
-      const matchingCat = dbCategories.find(c => c.slug === template.category);
+    if (template.categories?.slug) {
+      const matchingCat = dbCategories.find(c => c.slug === template.categories?.slug);
       if (matchingCat) {
         setValue("category_id", matchingCat.id, { shouldValidate: true });
       }
     }
-    if (template.default_price) {
-      setValue("amount", template.default_price.toString(), { shouldValidate: true });
+    if (template.amount) {
+      setValue("amount", template.amount.toString(), { shouldValidate: true });
     }
-    if (template.default_currency) {
-      setValue("currency", template.default_currency, { shouldValidate: true });
+    if (template.currency) {
+      setValue("currency", template.currency, { shouldValidate: true });
     }
-    if (template.default_billing_cycle) {
-      setValue("billing_cycle", template.default_billing_cycle, { shouldValidate: true });
+    if (template.billing_cycle) {
+      setValue("billing_cycle", template.billing_cycle, { shouldValidate: true });
     }
     if (template.website_url) {
       setValue("website_url", template.website_url, { shouldValidate: true });
@@ -311,7 +312,7 @@ export default function EditSubscription() {
                       <SubscriptionNameAutocomplete
                         value={subscriptionName}
                         onChange={(val) => setValue("name", val, { shouldValidate: true })}
-                        onTemplateSelect={handleAutocompleteTemplateSelect}
+                        onSelectTemplate={handleAutocompleteTemplateSelect}
                         disabled={isSubmitting}
                       />
                       {/* Hidden input for react-hook-form registration if needed, but controlled value via watch/setValue handles it */}

@@ -89,7 +89,7 @@ export function SubscriptionNameAutocomplete({
                 </div>
               )}
               <span className="truncate">
-                {value || t("common.select") + " / " + t("common.type_name")}
+                {value || t("common.select")}
               </span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />

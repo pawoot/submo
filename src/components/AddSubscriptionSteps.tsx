@@ -53,22 +53,28 @@ interface AddSubscriptionStepsProps {
 
 // Form Schema
 const formSchema = z.object({
-  name: z.string().min(1, "Name is required"),
-  amount: z.string().min(1, "Amount is required"),
+  name: z.string().min(1, "Name is required").max(100, "Name must be less than 100 characters"),
+  amount: z.string()
+    .min(1, "Amount is required")
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, "Amount must be a positive number")
+    .refine((val) => Number(val) < 1000000, "Amount must be less than 1,000,000"),
   currency: z.string().default("USD"),
   billing_cycle: z.string().default("monthly"),
   category_id: z.string().min(1, "Category is required"),
   start_date: z.date(),
   next_billing_date: z.date(),
   payment_method_id: z.string().optional(),
-  card_last_4: z.string().optional(),
+  card_last_4: z.string().regex(/^\d{4}$/, "Must be exactly 4 digits").optional().or(z.literal("")),
   remind_3_days: z.boolean().default(true),
   remind_7_days: z.boolean().default(false),
-  website_url: z.string().optional(),
-  notes: z.string().optional(),
+  website_url: z.string().url("Invalid URL format").optional().or(z.literal("")),
+  notes: z.string().max(500, "Notes must be less than 500 characters").optional(),
   usage_frequency: z.string().optional(),
   icon_url: z.string().optional(),
   template_id: z.string().optional()
+}).refine((data) => data.next_billing_date >= data.start_date, {
+  message: "Next billing date must be after or equal to start date",
+  path: ["next_billing_date"],
 });
 
 type FormData = z.infer<typeof formSchema>;
