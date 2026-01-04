@@ -200,7 +200,7 @@ export default function AdminSubscriptionTemplates() {
       await subscriptionTemplateService.createTemplate({
         name: formData.name,
         category_id: formData.category_id,
-        default_amount: parseFloat(formData.amount) || 0, // Use default_amount
+        amount: parseFloat(formData.amount) || 0, // Use amount
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
         website_url: formData.website,
@@ -244,7 +244,7 @@ export default function AdminSubscriptionTemplates() {
       await subscriptionTemplateService.updateTemplate(selectedTemplate.id, {
         name: formData.name,
         category_id: formData.category_id,
-        default_amount: parseFloat(formData.amount) || 0, // Use default_amount
+        amount: parseFloat(formData.amount) || 0, // Use amount
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
         website_url: formData.website,
