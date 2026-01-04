@@ -141,7 +141,30 @@ export function AddSubscriptionSteps({
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
     setSelectedTemplate(template);
     
-    const matchingCategory = categories.find(c => c.slug === template.category);
+    // Debug: Log template and categories for troubleshooting
+    console.log("🎯 Selected Template:", {
+      name: template.name,
+      category: template.category,
+      id: template.id
+    });
+    
+    console.log("📂 Available Categories:", categories.map(c => ({
+      id: c.id,
+      slug: c.slug,
+      name_en: c.name_en,
+      name_th: c.name_th
+    })));
+    
+    // Find matching category by slug
+    const matchingCategory = categories.find(c => 
+      c.slug.toLowerCase() === template.category?.toLowerCase()
+    );
+    
+    console.log("✅ Matched Category:", matchingCategory ? {
+      id: matchingCategory.id,
+      slug: matchingCategory.slug,
+      name_en: matchingCategory.name_en
+    } : "❌ No match found");
     
     setFormData(prev => ({
       ...prev,
