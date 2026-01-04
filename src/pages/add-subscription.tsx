@@ -6,18 +6,25 @@ import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
-import { ArrowLeft, Plus, Trash2, Users } from "lucide-react";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { ArrowLeft, Plus, Trash2, Users, CalendarIcon } from "lucide-react";
 import Link from "next/link";
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
 import { AuthGuard } from "@/components/AuthGuard";
+import { format } from "date-fns";
+import { th } from "date-fns/locale";
+import { cn } from "@/lib/utils";
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [startDate, setStartDate] = useState<Date>();
+  const [nextBillingDate, setNextBillingDate] = useState<Date>();
   const { toast } = useToast();
   const router = useRouter();
 
@@ -59,6 +66,17 @@ export default function AddSubscription() {
     try {
       const formData = new FormData(e.currentTarget);
       
+      if (!startDate || !nextBillingDate) {
+        toast({
+          title: "❌ กรุณาเลือกวันที่",
+          description: "กรุณาเลือกวันเริ่มต้นและวันต่ออายุถัดไป",
+          variant: "destructive",
+          duration: 3000,
+        });
+        setIsSubmitting(false);
+        return;
+      }
+      
       const subscriptionData = {
         name: formData.get("name") as string,
         category: formData.get("category") as string,
@@ -68,8 +86,8 @@ export default function AddSubscription() {
         billing_cycle: formData.get("billing") as string,
         payment_method: formData.get("paymentMethod") as string,
         card_last_4: formData.get("cardLast4") as string || null,
-        start_date: formData.get("startDate") as string,
-        next_billing_date: formData.get("nextBilling") as string,
+        start_date: format(startDate, "yyyy-MM-dd"),
+        next_billing_date: format(nextBillingDate, "yyyy-MM-dd"),
         website_url: formData.get("website") as string || null,
         notes: formData.get("notes") as string || null,
         shared_with: sharedUsers.length > 0 ? sharedUsers : null,
@@ -261,23 +279,68 @@ export default function AddSubscription() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="startDate">วันเริ่มต้น *</Label>
-                      <Input 
-                        id="startDate"
-                        name="startDate"
-                        type="date"
-                        required
-                      />
+                      <Label>วันเริ่มต้น *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !startDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {startDate ? (
+                              format(startDate, "d MMMM yyyy", { locale: th })
+                            ) : (
+                              <span>เลือกวันที่</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={startDate}
+                            onSelect={setStartDate}
+                            initialFocus
+                            locale={th}
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="nextBilling">วันต่ออายุถัดไป *</Label>
-                      <Input 
-                        id="nextBilling"
-                        name="nextBilling"
-                        type="date"
-                        required
-                      />
+                      <Label>วันต่ออายุถัดไป *</Label>
+                      <Popover>
+                        <PopoverTrigger asChild>
+                          <Button
+                            variant="outline"
+                            className={cn(
+                              "w-full justify-start text-left font-normal",
+                              !nextBillingDate && "text-muted-foreground"
+                            )}
+                          >
+                            <CalendarIcon className="mr-2 h-4 w-4" />
+                            {nextBillingDate ? (
+                              format(nextBillingDate, "d MMMM yyyy", { locale: th })
+                            ) : (
+                              <span>เลือกวันที่</span>
+                            )}
+                          </Button>
+                        </PopoverTrigger>
+                        <PopoverContent className="w-auto p-0" align="start">
+                          <Calendar
+                            mode="single"
+                            selected={nextBillingDate}
+                            onSelect={setNextBillingDate}
+                            initialFocus
+                            locale={th}
+                            disabled={(date) =>
+                              startDate ? date < startDate : false
+                            }
+                          />
+                        </PopoverContent>
+                      </Popover>
                     </div>
                   </div>
 
