@@ -519,8 +519,11 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* Search Section */}
-          <div className="mb-8">
+          {/* กราฟสถิติ */}
+          <SubscriptionCharts subscriptions={displaySubscriptions} />
+
+          {/* Mobile Search Section - Simple (no sort dropdown) */}
+          <div className="block md:hidden mb-8">
             <Card className="shadow-sm">
               <CardContent className="p-4">
                 <label className="text-sm font-medium mb-2 block">{t("common.search")}</label>
@@ -528,7 +531,7 @@ export default function Home() {
                   <div className="relative flex-1">
                     <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input 
-                      placeholder={t("subscriptions.searchPlaceholder") || "ค้นหาชื่อ Subscription..."} 
+                      placeholder={t("subscriptions.searchPlaceholder")} 
                       className="pl-9"
                       value={searchQuery}
                       onChange={(e) => setSearchQuery(e.target.value)}
@@ -542,8 +545,49 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* กราฟสถิติ */}
-          <SubscriptionCharts subscriptions={displaySubscriptions} />
+          {/* Desktop Search Section - Detailed (with sort dropdown) */}
+          <div className="hidden md:block mb-8">
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <div className="flex flex-col md:flex-row gap-4">
+                  <div className="flex-1">
+                    <label className="text-sm font-medium mb-2 block">{t("common.search")}</label>
+                    <div className="flex gap-2">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                        <Input 
+                          placeholder={t("subscriptions.searchPlaceholder")} 
+                          className="pl-9"
+                          value={searchQuery}
+                          onChange={(e) => setSearchQuery(e.target.value)}
+                        />
+                      </div>
+                      <Button className="bg-indigo-600 hover:bg-indigo-700">
+                        {t("common.search")}
+                      </Button>
+                    </div>
+                  </div>
+                  <div className="md:w-48">
+                    <label className="text-sm font-medium mb-2 block">{t("subscriptions.sort")}</label>
+                    <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+                      <SelectTrigger>
+                        <SelectValue placeholder={t("subscriptions.sort")} />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="date-asc">{t("subscriptions.sortNextBilling")}</SelectItem>
+                        <SelectItem value="date-desc">{t("subscriptions.sortNextBillingDesc")}</SelectItem>
+                        <SelectItem value="cost-desc">{t("subscriptions.sortPriceHigh")}</SelectItem>
+                        <SelectItem value="cost-asc">{t("subscriptions.sortPriceLow")}</SelectItem>
+                        <SelectItem value="name-asc">{t("subscriptions.sortNameAZ")}</SelectItem>
+                        <SelectItem value="name-desc">{t("subscriptions.sortNameZA")}</SelectItem>
+                        <SelectItem value="category">{t("subscriptions.sortCategory")}</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          </div>
 
           {sortedSubscriptions.length > 0 ? (
             <Card id="subscription-list" className="shadow-sm">
