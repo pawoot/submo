@@ -338,15 +338,39 @@ export default function EditSubscription() {
         </header>
 
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
-              {t("editSub.title")}
-            </h1>
-            <p className="text-sm text-slate-600 dark:text-slate-400">{subscription?.name}</p>
-          </div>
+          {/* Current Subscription Summary */}
+          {subscription && (
+            <Card className="mb-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+              <CardContent className="p-6">
+                <div className="flex items-start gap-4">
+                  <SubscriptionIcon
+                    name={subscription.name}
+                    websiteUrl={subscription.website_url}
+                    size="lg"
+                  />
+                  <div className="flex-1">
+                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                      {subscription.name}
+                    </h2>
+                    <div className="flex flex-wrap gap-2 mt-2">
+                      <Badge variant="secondary">
+                        {language === 'th' 
+                          ? dbCategories.find(c => c.id === subscription.category_id)?.name_th 
+                          : dbCategories.find(c => c.id === subscription.category_id)?.name_en}
+                      </Badge>
+                      <Badge variant="outline">
+                        {subscription.amount} {subscription.currency} / {subscription.billing_cycle === 'monthly' ? t("addSub.billingMonthly") : subscription.billing_cycle === 'yearly' ? t("addSub.billingYearly") : subscription.billing_cycle}
+                      </Badge>
+                    </div>
+                  </div>
+                </div>
+              </CardContent>
+            </Card>
+          )}
+
           <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
             <div className="space-y-6">
-              {/* Edit Form */}
+              {/* Basic Information */}
               <Card className="border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>{t("addSub.basicInfo")}</CardTitle>
@@ -355,14 +379,11 @@ export default function EditSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">{t("addSub.name")} *</Label>
-                      <SubscriptionNameAutocomplete
-                        value={subscriptionName}
-                        onChange={(val) => setValue("name", val, { shouldValidate: true })}
-                        onSelectTemplate={handleAutocompleteTemplateSelect}
-                        disabled={isSubmitting}
+                      <Input
+                        id="name"
+                        {...register("name")}
+                        className={cn(errors.name && "border-red-500")}
                       />
-                      {/* Hidden input for react-hook-form registration if needed, but controlled value via watch/setValue handles it */}
-                      <input type="hidden" {...register("name")} />
                       {errors.name && (
                         <p className="text-sm text-red-500">{errors.name.message}</p>
                       )}
@@ -431,7 +452,7 @@ export default function EditSubscription() {
               </Card>
 
               {/* Pricing Information */}
-              <Card>
+              <Card className="border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>{t("addSub.pricingInfo")}</CardTitle>
                 </CardHeader>
@@ -446,7 +467,6 @@ export default function EditSubscription() {
                         step="0.01" 
                         placeholder={t("addSub.costPlaceholder")}
                         className={cn(errors.amount && "border-red-500")}
-                        required
                       />
                       {errors.amount && (
                         <p className="text-sm text-red-500">{errors.amount.message}</p>
@@ -511,13 +531,13 @@ export default function EditSubscription() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="payment_method_id">{t("subscription.payment_method")}</Label>
+                      <Label htmlFor="payment_method_id">{t("subscription.payment_method")} *</Label>
                       <Controller
                         name="payment_method_id"
                         control={control}
                         render={({ field }) => (
                           <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger id="payment_method_id" className="w-full h-11">
+                            <SelectTrigger id="payment_method_id">
                               <SelectValue placeholder={t("payment.select_method")} />
                             </SelectTrigger>
                             <SelectContent>
@@ -539,7 +559,7 @@ export default function EditSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="card_last_4">{t("addSub.cardNumber")} {t("common.optional")}</Label>
+                      <Label htmlFor="card_last_4">{t("addSub.cardNumber")} ({t("common.optional")})</Label>
                       <Input 
                         id="card_last_4"
                         {...register("card_last_4")}
@@ -555,8 +575,8 @@ export default function EditSubscription() {
                 </CardContent>
               </Card>
 
-              {/* Billing Dates */}
-              <Card>
+              {/* Payment Information */}
+              <Card className="border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>{t("addSub.paymentInfo")}</CardTitle>
                 </CardHeader>
@@ -586,7 +606,7 @@ export default function EditSubscription() {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+                            <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -597,6 +617,9 @@ export default function EditSubscription() {
                           </Popover>
                         )}
                       />
+                      {errors.start_date && (
+                        <p className="text-sm text-red-500">{errors.start_date.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -623,7 +646,7 @@ export default function EditSubscription() {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
+                            <PopoverContent className="w-auto p-0" align="start">
                               <Calendar
                                 mode="single"
                                 selected={field.value}
@@ -634,13 +657,30 @@ export default function EditSubscription() {
                           </Popover>
                         )}
                       />
+                      {errors.next_billing_date && (
+                        <p className="text-sm text-red-500">{errors.next_billing_date.message}</p>
+                      )}
                     </div>
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="notes">{t("addSub.notes")}</Label>
+                    <Textarea 
+                      id="notes"
+                      {...register("notes")}
+                      placeholder={t("addSub.notesPlaceholder")}
+                      rows={3}
+                      className={cn(errors.notes && "border-red-500")}
+                    />
+                    {errors.notes && (
+                      <p className="text-sm text-red-500">{errors.notes.message}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
 
               {/* Shared Users */}
-              <Card>
+              <Card className="border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
@@ -700,12 +740,6 @@ export default function EditSubscription() {
                         ))}
                       </div>
                     </div>
-                  )}
-
-                  {sharedUsers.length === 0 && (
-                    <p className="text-sm text-slate-500 dark:text-slate-400">
-                      {t("addSub.sharedUsersPlaceholder")}
-                    </p>
                   )}
                 </CardContent>
               </Card>
