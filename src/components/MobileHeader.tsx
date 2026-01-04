@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, User, Plus } from "lucide-react";
+import { Bell, User, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileNav from "@/components/MobileNav";
@@ -44,6 +44,20 @@ export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }:
 
       {/* Right: Quick Actions */}
       <div className="flex items-center gap-2">
+        {/* Admin Panel Button (Only for Admin Users) */}
+        {isAdmin && (
+          <Link href="/admin">
+            <Button 
+              variant="ghost" 
+              size="icon"
+              className="relative text-purple-600 hover:text-purple-700 hover:bg-purple-50 dark:text-purple-400 dark:hover:bg-purple-950"
+              title="Admin Panel"
+            >
+              <Settings className="h-5 w-5" />
+            </Button>
+          </Link>
+        )}
+
         <Link href="/notifications">
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
