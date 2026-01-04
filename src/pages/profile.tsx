@@ -11,6 +11,13 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import { 
   AlertDialog,
   AlertDialogAction,
@@ -26,6 +33,8 @@ import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { SUPPORTED_CURRENCIES } from "@/services/currencyService";
 import { 
   User, 
   Mail, 
@@ -56,6 +65,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const { preferredCurrency, setPreferredCurrency } = useCurrency();
 
   const [profile, setProfile] = useState<{
     id: string;
@@ -420,11 +430,11 @@ export default function ProfilePage() {
                   <Separator />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ค่าใช้จ่ายรายเดือน</span>
-                    <span className="text-xl font-bold text-indigo-600">${stats.totalMonthlySpend.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-indigo-600">${formatCurrency(stats.totalMonthlySpend, preferredCurrency)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ค่าใช้จ่ายรายปี</span>
-                    <span className="text-xl font-bold text-purple-600">${stats.totalYearlySpend.toFixed(2)}</span>
+                    <span className="text-xl font-bold text-purple-600">${formatCurrency(stats.totalYearlySpend, preferredCurrency)}</span>
                   </div>
                 </CardContent>
               </Card>
@@ -571,6 +581,79 @@ export default function ProfilePage() {
                       </div>
                     </form>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Currency Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CreditCard className="h-5 w-5" />
+                    💱 การตั้งค่าสกุลเงิน
+                  </CardTitle>
+                  <CardDescription>เลือกสกุลเงินที่ต้องการแสดงในระบบ</CardDescription>
+                </CardHeader>
+                <CardContent className="space-y-4">
+                  <div className="space-y-2">
+                    <Label htmlFor="currency">สกุลเงินที่แสดง</Label>
+                    <Select
+                      value={preferredCurrency}
+                      onValueChange={async (value) => {
+                        try {
+                          await setPreferredCurrency(value);
+                          toast({
+                            title: "✅ สำเร็จ!",
+                            description: "เปลี่ยนสกุลเงินเรียบร้อยแล้ว",
+                          });
+                          
+                          // Reload page to update all displays
+                          window.location.reload();
+                        } catch (error) {
+                          console.error("Error updating currency:", error);
+                          toast({
+                            title: "เกิดข้อผิดพลาด",
+                            description: "ไม่สามารถเปลี่ยนสกุลเงินได้",
+                            variant: "destructive",
+                          });
+                        }
+                      }}
+                    >
+                      <SelectTrigger id="currency">
+                        <SelectValue placeholder="เลือกสกุลเงิน" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {SUPPORTED_CURRENCIES.map((currency) => (
+                          <SelectItem key={currency.code} value={currency.code}>
+                            <div className="flex items-center gap-2">
+                              <span>{currency.flag}</span>
+                              <span className="font-medium">{currency.code}</span>
+                              <span className="text-muted-foreground">- {currency.name}</span>
+                            </div>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                    <p className="text-xs text-gray-500">
+                      ระบบจะแปลงค่าเงินทั้งหมดเป็นสกุลที่คุณเลือกโดยอัตโนมัติ
+                    </p>
+                  </div>
+
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                    <div className="flex items-start gap-3">
+                      <div className="text-2xl">{SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.flag}</div>
+                      <div>
+                        <p className="font-semibold text-blue-900">
+                          สกุลเงินปัจจุบัน: {preferredCurrency}
+                        </p>
+                        <p className="text-sm text-blue-700">
+                          {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.name}
+                        </p>
+                        <p className="text-xs text-blue-600 mt-1">
+                          ตัวอย่าง: {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.symbol}1,000.00
+                        </p>
+                      </div>
+                    </div>
+                  </div>
                 </CardContent>
               </Card>
 
