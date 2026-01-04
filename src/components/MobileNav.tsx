@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Menu, X, Home, BarChart3, PlusCircle, Bell, User, Settings, LogOut, Shield } from "lucide-react";
+import { Menu, X, Home, BarChart3, PlusCircle, Bell, User as UserIcon, Settings, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
@@ -59,7 +59,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
     { icon: BarChart3, label: "สถิติ", href: "/", color: "text-green-600", hash: "#stats" },
     { icon: PlusCircle, label: "เพิ่ม Subscription", href: "/add-subscription", color: "text-purple-600" },
     { icon: Bell, label: "การแจ้งเตือน", href: "/notifications", color: "text-orange-600", badge: unreadCount },
-    { icon: User, label: "โปรไฟล์", href: "/profile", color: "text-pink-600" },
+    { icon: UserIcon, label: "โปรไฟล์", href: "/profile", color: "text-pink-600" },
   ];
 
   const adminMenuItems = isAdmin

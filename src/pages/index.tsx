@@ -31,6 +31,8 @@ import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 import { useRouter } from "next/router";
 import type { Database } from "@/integrations/supabase/types";
+import { User } from "@supabase/supabase-js";
+import { supabase } from "@/integrations/supabase/client";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-asc" | "date-desc" | "category";
@@ -41,8 +43,10 @@ export default function Home() {
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [user, setUser] = useState<User | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -56,9 +60,10 @@ export default function Home() {
   }, [subscriptions, sortOption]);
 
   const loadUserData = async () => {
-    const user = await authService.getCurrentUser();
-    if (user) {
-      setUserEmail(user.email || "");
+    const currentUser = await authService.getCurrentUser();
+    if (currentUser) {
+      setUser(currentUser);
+      setUserEmail(currentUser.email || "");
       
       // Check if user is admin
       try {
@@ -66,6 +71,18 @@ export default function Home() {
         setIsAdmin(profile?.role === "admin");
       } catch (error) {
         console.error("Error checking admin status:", error);
+      }
+
+      // Load unread notifications
+      try {
+        const { count } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", currentUser.id)
+          .eq("is_read", false);
+        setUnreadNotifications(count || 0);
+      } catch (error) {
+        console.error("Error loading notifications:", error);
       }
     }
   };
