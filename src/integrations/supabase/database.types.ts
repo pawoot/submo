@@ -164,6 +164,57 @@ export type Database = {
         }
         Relationships: []
       }
+      subscription_templates: {
+        Row: {
+          category: string
+          created_at: string | null
+          default_billing_cycle: string | null
+          default_currency: string | null
+          default_price: number | null
+          description: string | null
+          display_order: number | null
+          id: string
+          is_active: boolean | null
+          is_popular: boolean | null
+          logo_url: string
+          name: string
+          updated_at: string | null
+          website_url: string | null
+        }
+        Insert: {
+          category: string
+          created_at?: string | null
+          default_billing_cycle?: string | null
+          default_currency?: string | null
+          default_price?: number | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          logo_url: string
+          name: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Update: {
+          category?: string
+          created_at?: string | null
+          default_billing_cycle?: string | null
+          default_currency?: string | null
+          default_price?: number | null
+          description?: string | null
+          display_order?: number | null
+          id?: string
+          is_active?: boolean | null
+          is_popular?: boolean | null
+          logo_url?: string
+          name?: string
+          updated_at?: string | null
+          website_url?: string | null
+        }
+        Relationships: []
+      }
       subscriptions: {
         Row: {
           amount: number

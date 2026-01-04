@@ -8,16 +8,21 @@ import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, Plus, Trash2, Users, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Plus, Trash2, Users, CalendarIcon, Sparkles } from "lucide-react";
 import Link from "next/link";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
+import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 import { AuthGuard } from "@/components/AuthGuard";
 import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
+import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
+import type { Database } from "@/integrations/supabase/types";
+
+type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
@@ -25,8 +30,58 @@ export default function AddSubscription() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [nextBillingDate, setNextBillingDate] = useState<Date>();
+  const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [showBrowser, setShowBrowser] = useState(false);
+  const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
   const { toast } = useToast();
   const router = useRouter();
+
+  useEffect(() => {
+    loadPopularTemplates();
+  }, []);
+
+  const loadPopularTemplates = async () => {
+    try {
+      const templates = await subscriptionTemplateService.getPopularTemplates(6);
+      setPopularTemplates(templates);
+    } catch (error) {
+      console.error("Error loading popular templates:", error);
+    }
+  };
+
+  const handleTemplateSelect = (template: SubscriptionTemplate) => {
+    setSelectedTemplate(template);
+    
+    // Auto-fill form with template data
+    const form = document.getElementById("subscription-form") as HTMLFormElement;
+    if (form) {
+      // Set basic fields
+      (form.elements.namedItem("name") as HTMLInputElement).value = template.name;
+      (form.elements.namedItem("category") as HTMLInputElement).value = template.category;
+      
+      // Set pricing fields
+      if (template.default_price) {
+        (form.elements.namedItem("cost") as HTMLInputElement).value = template.default_price.toString();
+      }
+      if (template.default_currency) {
+        (form.elements.namedItem("currency") as HTMLInputElement).value = template.default_currency;
+      }
+      if (template.default_billing_cycle) {
+        (form.elements.namedItem("billing") as HTMLInputElement).value = template.default_billing_cycle;
+      }
+      
+      // Set website
+      if (template.website_url) {
+        (form.elements.namedItem("website") as HTMLInputElement).value = template.website_url;
+      }
+    }
+
+    toast({
+      title: "✅ เลือกบริการสำเร็จ!",
+      description: `กรอกข้อมูล ${template.name} อัตโนมัติแล้ว`,
+      duration: 3000,
+    });
+  };
 
   const categories = [
     "Design", "Development", "Productivity", "Entertainment", 
@@ -142,8 +197,68 @@ export default function AddSubscription() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} id="subscription-form">
             <div className="space-y-6">
+              {/* Quick Add Section */}
+              <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                      <Sparkles className="w-5 h-5 text-blue-600" />
+                      <CardTitle className="text-blue-900 dark:text-blue-100">Quick Add</CardTitle>
+                    </div>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      size="sm"
+                      onClick={() => setShowBrowser(true)}
+                      className="text-blue-600 border-blue-300 hover:bg-blue-100"
+                    >
+                      Browse all →
+                    </Button>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  {popularTemplates.length > 0 ? (
+                    <div className="grid grid-cols-3 md:grid-cols-6 gap-4">
+                      {popularTemplates.map((template) => (
+                        <button
+                          key={template.id}
+                          type="button"
+                          onClick={() => handleTemplateSelect(template)}
+                          className={cn(
+                            "flex flex-col items-center gap-2 p-3 rounded-xl transition-all duration-200",
+                            "hover:scale-105 hover:shadow-lg",
+                            "bg-white dark:bg-slate-800 border-2",
+                            selectedTemplate?.id === template.id
+                              ? "border-blue-500 bg-blue-50 dark:bg-blue-950"
+                              : "border-gray-200 dark:border-gray-700 hover:border-blue-300"
+                          )}
+                        >
+                          <div className="w-12 h-12 rounded-lg overflow-hidden bg-white shadow-sm">
+                            <img
+                              src={template.logo_url}
+                              alt={template.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                          <span className="text-xs font-medium text-gray-700 dark:text-gray-300 text-center truncate w-full">
+                            {template.name}
+                          </span>
+                        </button>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-center py-8 text-gray-500">
+                      <p>กำลังโหลดบริการยอดนิยม...</p>
+                    </div>
+                  )}
+                  <p className="text-sm text-blue-700 dark:text-blue-300 mt-4 text-center">
+                    💡 เลือกบริการที่ต้องการ หรือคลิก "Browse all" เพื่อดูทั้งหมด
+                  </p>
+                </CardContent>
+              </Card>
+
               {/* Basic Information */}
               <Card>
                 <CardHeader>
@@ -153,12 +268,29 @@ export default function AddSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">ชื่อ Subscription *</Label>
-                      <Input 
-                        id="name"
-                        name="name"
-                        placeholder="เช่น Adobe Creative Cloud"
-                        required
-                      />
+                      <div className="relative">
+                        {selectedTemplate && (
+                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded overflow-hidden bg-white shadow-sm">
+                            <img
+                              src={selectedTemplate.logo_url}
+                              alt={selectedTemplate.name}
+                              className="w-full h-full object-cover"
+                            />
+                          </div>
+                        )}
+                        <Input 
+                          id="name"
+                          name="name"
+                          placeholder="เช่น Adobe Creative Cloud"
+                          className={selectedTemplate ? "pl-12" : ""}
+                          required
+                        />
+                      </div>
+                      {selectedTemplate && (
+                        <p className="text-xs text-blue-600 dark:text-blue-400">
+                          ✓ ใช้ข้อมูลจาก Template
+                        </p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -472,6 +604,13 @@ export default function AddSubscription() {
           </form>
         </main>
       </div>
+
+      {/* Subscription Template Browser */}
+      <SubscriptionTemplateBrowser
+        open={showBrowser}
+        onOpenChange={setShowBrowser}
+        onSelect={handleTemplateSelect}
+      />
     </AuthGuard>
   );
 }
