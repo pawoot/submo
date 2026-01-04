@@ -91,7 +91,7 @@ export const adminUserService = {
   },
 
   /**
-   * Search users by name, email, or phone
+   * Search users by name or email
    */
   async searchUsers(query: string): Promise<UserWithSubscriptions[]> {
     const allUsers = await this.getAllUsers();
@@ -100,48 +100,7 @@ export const adminUserService = {
     return allUsers.filter(
       (user) =>
         user.full_name?.toLowerCase().includes(searchLower) ||
-        user.email?.toLowerCase().includes(searchLower) ||
-        user.phone?.toLowerCase().includes(searchLower)
+        user.email?.toLowerCase().includes(searchLower)
     );
-  },
-
-  /**
-   * Filter users by KYC status
-   */
-  async filterUsersByKYC(kycVerified: boolean): Promise<UserWithSubscriptions[]> {
-    const allUsers = await this.getAllUsers();
-    return allUsers.filter((user) => user.kyc_verified === kycVerified);
-  },
-
-  /**
-   * Filter users by account status
-   */
-  async filterUsersByStatus(status: string): Promise<UserWithSubscriptions[]> {
-    const allUsers = await this.getAllUsers();
-    return allUsers.filter((user) => user.account_status === status);
-  },
-
-  /**
-   * Update user's KYC status
-   */
-  async updateKYCStatus(userId: string, verified: boolean) {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ kyc_verified: verified })
-      .eq("id", userId);
-
-    if (error) throw error;
-  },
-
-  /**
-   * Update user's account status
-   */
-  async updateAccountStatus(userId: string, status: "active" | "suspended" | "inactive") {
-    const { error } = await supabase
-      .from("profiles")
-      .update({ account_status: status })
-      .eq("id", userId);
-
-    if (error) throw error;
   },
 };

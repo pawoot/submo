@@ -35,8 +35,6 @@ export default function AdminUsers() {
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const [kycFilter, setKycFilter] = useState<string>("all");
-  const [statusFilter, setStatusFilter] = useState<string>("all");
   const [sortBy, setSortBy] = useState<string>("newest");
   
   const { toast } = useToast();
@@ -54,7 +52,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     filterAndSortUsers();
-  }, [users, searchQuery, kycFilter, statusFilter, sortBy]);
+  }, [users, searchQuery, sortBy]);
 
   const checkAdminAccess = async () => {
     try {
@@ -101,21 +99,8 @@ export default function AdminUsers() {
       filtered = filtered.filter(
         (user) =>
           user.full_name?.toLowerCase().includes(searchLower) ||
-          user.email?.toLowerCase().includes(searchLower) ||
-          user.phone?.toLowerCase().includes(searchLower)
+          user.email?.toLowerCase().includes(searchLower)
       );
-    }
-
-    // KYC filter
-    if (kycFilter !== "all") {
-      filtered = filtered.filter((user) =>
-        kycFilter === "verified" ? user.kyc_verified : !user.kyc_verified
-      );
-    }
-
-    // Status filter
-    if (statusFilter !== "all") {
-      filtered = filtered.filter((user) => user.account_status === statusFilter);
     }
 
     // Sort
@@ -193,8 +178,40 @@ export default function AdminUsers() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8">
+          {/* Filters */}
+          <Card className="mb-6">
+            <CardContent className="pt-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Search */}
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
+                  <Input
+                    placeholder="ค้นหาชื่อ, อีเมล..."
+                    value={searchQuery}
+                    onChange={(e) => setSearchQuery(e.target.value)}
+                    className="pl-10"
+                  />
+                </div>
+
+                {/* Sort */}
+                <Select value={sortBy} onValueChange={setSortBy}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="เรียงลำดับ" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="newest">วันสมัครใหม่สุด</SelectItem>
+                    <SelectItem value="oldest">วันสมัครเก่าสุด</SelectItem>
+                    <SelectItem value="name">ชื่อ A-Z</SelectItem>
+                    <SelectItem value="spending-high">ค่าใช้จ่ายสูง-ต่ำ</SelectItem>
+                    <SelectItem value="spending-low">ค่าใช้จ่ายต่ำ-สูง</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </CardContent>
+          </Card>
+
           {/* Statistics Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
@@ -212,30 +229,14 @@ export default function AdminUsers() {
             <Card>
               <CardHeader className="pb-2">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  ยืนยันแล้ว
-                </CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="flex items-center gap-2">
-                  <CheckCircle className="w-5 h-5 text-green-600" />
-                  <span className="text-2xl font-bold">
-                    {users.filter((u) => u.kyc_verified).length}
-                  </span>
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="pb-2">
-                <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400">
-                  ใช้งานอยู่
+                  Subscriptions ทั้งหมด
                 </CardTitle>
               </CardHeader>
               <CardContent>
                 <div className="flex items-center gap-2">
                   <CheckCircle className="w-5 h-5 text-blue-600" />
                   <span className="text-2xl font-bold">
-                    {users.filter((u) => u.account_status === "active").length}
+                    {users.reduce((sum, u) => sum + u.subscription_count, 0)}
                   </span>
                 </div>
               </CardContent>
@@ -259,50 +260,6 @@ export default function AdminUsers() {
               </CardContent>
             </Card>
           </div>
-
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                {/* Search */}
-                <div className="relative md:col-span-2">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="ค้นหาชื่อ, เบอร์โทร, อีเมล..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-
-                {/* KYC Filter */}
-                <Select value={kycFilter} onValueChange={setKycFilter}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="KYC ทั้งหมด" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="all">KYC ทั้งหมด</SelectItem>
-                    <SelectItem value="verified">ยืนยันแล้ว</SelectItem>
-                    <SelectItem value="unverified">ยังไม่ยืนยัน</SelectItem>
-                  </SelectContent>
-                </Select>
-
-                {/* Sort */}
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="เรียงลำดับ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">วันสมัครใหม่สุด</SelectItem>
-                    <SelectItem value="oldest">วันสมัครเก่าสุด</SelectItem>
-                    <SelectItem value="name">ชื่อ A-Z</SelectItem>
-                    <SelectItem value="spending-high">ค่าใช้จ่ายสูง-ต่ำ</SelectItem>
-                    <SelectItem value="spending-low">ค่าใช้จ่ายต่ำ-สูง</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
 
           {/* Users List */}
           <Card>
@@ -336,15 +293,9 @@ export default function AdminUsers() {
                               <h3 className="font-semibold text-lg">
                                 {user.full_name || "ไม่มีชื่อ"}
                               </h3>
-                              {user.kyc_verified && (
-                                <Badge className="bg-green-500 hover:bg-green-600">
-                                  <CheckCircle className="w-3 h-3 mr-1" />
-                                  ยืนยันแล้ว
-                                </Badge>
-                              )}
                             </div>
                             <p className="text-sm text-slate-600 dark:text-slate-400">
-                              {user.email || user.phone || "ไม่มีข้อมูลติดต่อ"}
+                              {user.email || "ไม่มีข้อมูลติดต่อ"}
                             </p>
                             <div className="flex items-center gap-4 mt-2 text-xs text-slate-500">
                               <span className="flex items-center gap-1">
@@ -358,11 +309,7 @@ export default function AdminUsers() {
                             <div className="text-xl font-bold text-purple-600">
                               {formatCurrency(user.total_monthly_cost)}
                             </div>
-                            <div className="text-xs text-slate-500">
-                              {formatDate(user.created_at).split(" ")[0]}{" "}
-                              {formatDate(user.created_at).split(" ")[1]}{" "}
-                              {formatDate(user.created_at).split(" ")[2]}
-                            </div>
+                            <div className="text-xs text-slate-500">ต่อเดือน</div>
                           </div>
                         </div>
                       </div>

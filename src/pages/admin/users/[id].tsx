@@ -13,14 +13,11 @@ import type { Database } from "@/integrations/supabase/types";
 import {
   ArrowLeft,
   Mail,
-  Phone,
   Calendar,
   DollarSign,
   CreditCard,
   CheckCircle,
   XCircle,
-  User,
-  Activity,
   TrendingUp,
   AlertCircle,
 } from "lucide-react";
@@ -212,32 +209,12 @@ export default function UserDetailPage() {
                     <h2 className="text-2xl font-bold">
                       {userDetail.profile.full_name || "ไม่มีชื่อ"}
                     </h2>
-                    <div className="flex items-center gap-2 mt-1">
-                      {userDetail.profile.kyc_verified && (
-                        <Badge className="bg-green-500 hover:bg-green-600">
-                          <CheckCircle className="w-3 h-3 mr-1" />
-                          ยืนยันแล้ว
-                        </Badge>
-                      )}
-                      {userDetail.profile.account_status === "active" && (
-                        <Badge className="bg-blue-500 hover:bg-blue-600">
-                          <Activity className="w-3 h-3 mr-1" />
-                          ใช้งานอยู่
-                        </Badge>
-                      )}
-                      {userDetail.profile.account_status === "suspended" && (
-                        <Badge variant="destructive">
-                          <XCircle className="w-3 h-3 mr-1" />
-                          ระงับ
-                        </Badge>
-                      )}
-                    </div>
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                 {/* Email */}
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <Mail className="w-5 h-5 text-purple-600" />
@@ -245,30 +222,6 @@ export default function UserDetailPage() {
                     <p className="text-xs text-slate-500">อีเมล</p>
                     <p className="text-sm font-medium">
                       {userDetail.profile.email || "ไม่มีข้อมูล"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Phone */}
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <Phone className="w-5 h-5 text-purple-600" />
-                  <div>
-                    <p className="text-xs text-slate-500">เบอร์โทร</p>
-                    <p className="text-sm font-medium">
-                      {userDetail.profile.phone || "ไม่มีข้อมูล"}
-                    </p>
-                  </div>
-                </div>
-
-                {/* Date of Birth */}
-                <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
-                  <User className="w-5 h-5 text-purple-600" />
-                  <div>
-                    <p className="text-xs text-slate-500">วันเกิด</p>
-                    <p className="text-sm font-medium">
-                      {userDetail.profile.date_of_birth
-                        ? formatDate(userDetail.profile.date_of_birth)
-                        : "ไม่มีข้อมูล"}
                     </p>
                   </div>
                 </div>
