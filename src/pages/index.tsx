@@ -39,6 +39,8 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
+import { Input } from "@/components/ui/input";
+import { Search } from "lucide-react";
 import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
@@ -69,6 +71,7 @@ export default function Home() {
   const [sortedSubscriptions, setSortedSubscriptions] = useState<DisplaySubscription[]>([]);
   const [displaySubscriptions, setDisplaySubscriptions] = useState<DisplaySubscription[]>([]);
   const [totals, setTotals] = useState({ monthly: 0, yearly: 0 });
+  const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -154,62 +157,18 @@ export default function Home() {
   }, [subscriptions, preferredCurrency, convertAmount]);
 
   useEffect(() => {
-    sortSubscriptions(sortOption);
-  }, [displaySubscriptions, sortOption]); // Depend on displaySubscriptions instead
+    let result = [...displaySubscriptions];
 
-  const loadUserData = async () => {
-    // Use supabase.auth.getUser() directly to get full User object compatible with state
-    const { data: { user: currentUser } } = await supabase.auth.getUser();
-    
-    if (currentUser) {
-      setUser(currentUser);
-      setUserEmail(currentUser.email || "");
-      
-      // Check if user is admin and load profile
-      try {
-        const profileData = await profileService.getCurrentProfile();
-        setProfile(profileData);
-        setIsAdmin(profileData?.role === "admin");
-      } catch (error) {
-        console.error("Error checking admin status:", error);
-      }
-
-      // Load unread notifications
-      try {
-        const { count } = await supabase
-          .from("notifications")
-          .select("*", { count: "exact", head: true })
-          .eq("user_id", currentUser.id)
-          .eq("is_read", false);
-        setUnreadNotifications(count || 0);
-      } catch (error) {
-        console.error("Error loading notifications:", error);
-      }
+    // 1. Filter by Search Query
+    if (searchQuery.trim()) {
+      const query = searchQuery.toLowerCase();
+      result = result.filter(sub => 
+        sub.name.toLowerCase().includes(query) || 
+        sub.category.toLowerCase().includes(query)
+      );
     }
-  };
 
-  const loadSubscriptions = async () => {
-    try {
-      setLoading(true);
-      const data = await subscriptionService.getAll();
-      setSubscriptions(data);
-    } catch (error) {
-      console.error("Error loading subscriptions:", error);
-      toast({
-        title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถโหลดข้อมูล Subscription ได้",
-        variant: "destructive",
-        duration: 3000,
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const sortSubscriptions = (option: SortOption) => {
-    const sorted = [...displaySubscriptions];
-    
-    // Helper for monthly cost (synchronous since amounts are already converted)
+    // 2. Sort
     const getMonthlyCost = (sub: Subscription) => {
       switch (sub.billing_cycle) {
         case "yearly": return sub.amount / 12;
@@ -219,32 +178,33 @@ export default function Home() {
       }
     };
 
-    switch (option) {
+    switch (sortOption) {
       case "name-asc":
-        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        result.sort((a, b) => a.name.localeCompare(b.name));
         break;
       case "name-desc":
-        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        result.sort((a, b) => b.name.localeCompare(a.name));
         break;
       case "cost-asc":
-        sorted.sort((a, b) => getMonthlyCost(a) - getMonthlyCost(b));
+        result.sort((a, b) => getMonthlyCost(a) - getMonthlyCost(b));
         break;
       case "cost-desc":
-        sorted.sort((a, b) => getMonthlyCost(b) - getMonthlyCost(a));
+        result.sort((a, b) => getMonthlyCost(b) - getMonthlyCost(a));
         break;
       case "date-asc":
-        sorted.sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime());
+        result.sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime());
         break;
       case "date-desc":
-        sorted.sort((a, b) => new Date(b.next_billing_date).getTime() - new Date(a.next_billing_date).getTime());
+        result.sort((a, b) => new Date(b.next_billing_date).getTime() - new Date(a.next_billing_date).getTime());
         break;
       case "category":
-        sorted.sort((a, b) => a.category.localeCompare(b.category));
+        result.sort((a, b) => a.category.localeCompare(b.category));
         break;
     }
     
-    setSortedSubscriptions(sorted);
-  };
+    setSortedSubscriptions(result);
+    setCurrentPage(1); // Reset to page 1 when filter/sort changes
+  }, [displaySubscriptions, sortOption, searchQuery]);
 
   // Pagination calculations
   const totalPages = Math.ceil(sortedSubscriptions.length / itemsPerPage);
@@ -453,82 +413,95 @@ export default function Home() {
         </header>
 
         <main className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
-            <Card className="border-l-4 border-l-indigo-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                  <DollarSign className="w-4 h-4" />
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
+            <Card className="border-l-4 border-l-indigo-500 shadow-sm">
+              <CardHeader className="pb-2 p-4">
+                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                  <DollarSign className="w-3.5 h-3.5 shrink-0" />
                   {t("dashboard.totalCost")}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white truncate">
                   {formatCurrency(totals.monthly, preferredCurrency)}
                 </div>
-                {preferredCurrency !== 'THB' && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    ≈ ฿{(totals.monthly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
-                  </p>
-                )}
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t("dashboard.perMonth")}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-purple-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                  <TrendingUp className="w-4 h-4" />
+            <Card className="border-l-4 border-l-purple-500 shadow-sm">
+              <CardHeader className="pb-2 p-4">
+                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
                   {t("dashboard.totalCost")}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white truncate">
                   {formatCurrency(totals.yearly, preferredCurrency)}
                 </div>
-                {preferredCurrency !== 'THB' && (
-                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                    ≈ ฿{(totals.yearly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
-                  </p>
-                )}
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t("dashboard.perYear")}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-green-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                  <CreditCard className="w-4 h-4" />
+            <Card className="border-l-4 border-l-green-500 shadow-sm">
+              <CardHeader className="pb-2 p-4">
+                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                  <CreditCard className="w-3.5 h-3.5 shrink-0" />
                   {t("dashboard.activeSubscriptions")}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white">
                   {subscriptions.length}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t("dashboard.items")}
                 </p>
               </CardContent>
             </Card>
 
-            <Card className="border-l-4 border-l-orange-500">
-              <CardHeader className="pb-3">
-                <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
-                  <AlertCircle className="w-4 h-4" />
+            <Card className="border-l-4 border-l-orange-500 shadow-sm">
+              <CardHeader className="pb-2 p-4">
+                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
+                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
                   {t("dashboard.upcomingRenewals")}
                 </CardTitle>
               </CardHeader>
-              <CardContent>
-                <div className="text-3xl font-bold text-slate-900 dark:text-white">
+              <CardContent className="p-4 pt-0">
+                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white">
                   {subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 7).length}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
                   {t("dashboard.within30Days")}
                 </p>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Search Section */}
+          <div className="mb-8">
+            <Card className="shadow-sm">
+              <CardContent className="p-4">
+                <label className="text-sm font-medium mb-2 block">{t("common.search")}</label>
+                <div className="flex gap-2">
+                  <div className="relative flex-1">
+                    <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-400" />
+                    <Input 
+                      placeholder={t("subscriptions.searchPlaceholder") || "ค้นหาชื่อ Subscription..."} 
+                      className="pl-9"
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                    />
+                  </div>
+                  <Button className="bg-indigo-600 hover:bg-indigo-700">
+                    {t("common.search")}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -537,124 +510,117 @@ export default function Home() {
           <SubscriptionCharts subscriptions={displaySubscriptions} />
 
           {sortedSubscriptions.length > 0 ? (
-            <Card id="subscription-list">
-              <CardHeader>
+            <Card id="subscription-list" className="shadow-sm">
+              <CardHeader className="px-4 py-4 md:px-6">
                 <div className="flex items-center justify-between flex-wrap gap-4">
                   <div className="flex items-center gap-3">
-                    <CardTitle className="text-xl">{t("subscriptions.title")}</CardTitle>
-                    <Badge variant="secondary">{sortedSubscriptions.length} {t("subscriptions.items")}</Badge>
-                    {totalPages > 1 && (
-                      <Badge variant="outline" className="text-xs">
-                        {t("subscriptions.page")} {currentPage} {t("subscriptions.of")} {totalPages}
-                      </Badge>
-                    )}
+                    <CardTitle className="text-lg md:text-xl">{t("subscriptions.title")}</CardTitle>
+                    <Badge variant="secondary" className="text-xs">{sortedSubscriptions.length} {t("subscriptions.items")}</Badge>
                   </div>
                   
                   <div className="hidden md:flex items-center gap-2">
                     <ArrowUpDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                     <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-                      <SelectTrigger className="w-[200px]">
+                      <SelectTrigger className="w-[180px]">
                         <SelectValue placeholder={t("subscriptions.sort")} />
                       </SelectTrigger>
                       <SelectContent>
                         <SelectItem value="date-asc">{t("subscriptions.sortNextBilling")}</SelectItem>
-                        <SelectItem value="date-desc">{t("subscriptions.sortOldest")}</SelectItem>
                         <SelectItem value="cost-desc">{t("subscriptions.sortPriceHigh")}</SelectItem>
-                        <SelectItem value="cost-asc">{t("subscriptions.sortPriceLow")}</SelectItem>
                         <SelectItem value="name-asc">{t("subscriptions.sortNameAZ")}</SelectItem>
-                        <SelectItem value="name-desc">{t("subscriptions.sortNameZA")}</SelectItem>
                       </SelectContent>
                     </Select>
                   </div>
                 </div>
               </CardHeader>
-              <CardContent>
-                <div className="space-y-4">
+              <CardContent className="p-3 md:p-6">
+                <div className="space-y-3">
                   {paginatedSubscriptions.map((sub) => {
                     const daysUntil = getDaysUntilRenewal(sub.next_billing_date);
                     const isUrgent = daysUntil <= 7;
-                    const monthlyCost = sub.billing_cycle === "yearly" ? sub.amount / 12 :
-                                      sub.billing_cycle === "quarterly" ? sub.amount / 3 :
-                                      sub.billing_cycle === "half-yearly" ? sub.amount / 6 : 
-                                      sub.amount;
-
+                    
                     return (
                       <div 
                         key={sub.id}
-                        className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-4 rounded-lg border bg-white dark:bg-slate-800 hover:shadow-md transition-shadow"
+                        className="bg-white dark:bg-slate-800 rounded-xl border p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
                       >
-                        {/* Mobile: Stacked Layout */}
-                        <div className="flex items-start gap-3 flex-1">
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
-                            {sub.name.charAt(0)}
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            {/* Name and Category */}
-                            <div className="flex items-center gap-2 mb-2">
-                              <h3 className="font-semibold text-slate-900 dark:text-white truncate">{sub.name}</h3>
-                              <Badge variant="outline" className="text-xs shrink-0">
-                                {categoryLabels[sub.category] || sub.category}
-                              </Badge>
-                            </div>
-                            
-                            {/* Price */}
-                            <div className="flex items-baseline gap-2 mb-2">
-                              <span className="text-xl font-bold text-slate-900 dark:text-white">
+                         {/* Left colored accent bar */}
+                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${
+                          categoryLabels[sub.category] === "Entertainment" ? "bg-purple-500" :
+                          categoryLabels[sub.category] === "Productivity" ? "bg-blue-500" : "bg-indigo-500"
+                        }`} />
+
+                        <div className="flex items-start justify-between pl-2">
+                           {/* Icon & Main Info */}
+                           <div className="flex gap-3">
+                              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
+                                {sub.name.charAt(0)}
+                              </div>
+                              <div>
+                                <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
+                                <div className="flex items-center gap-2 mt-1">
+                                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-slate-50">
+                                    {categoryLabels[sub.category] || sub.category}
+                                  </Badge>
+                                </div>
+                              </div>
+                           </div>
+
+                           {/* Price (Top Right) */}
+                           <div className="text-right">
+                              <div className="text-lg font-bold text-slate-900 dark:text-white">
                                 {formatCurrency(Number(sub.amount), preferredCurrency)}
-                              </span>
-                              <span className="text-sm text-slate-500 dark:text-slate-400">
+                              </div>
+                              <div className="text-[10px] text-slate-500">
                                 {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
                                  sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
                                  billingCycleLabels[sub.billing_cycle]}
-                              </span>
-                            </div>
-
-                            {/* Original Currency (if different) */}
-                            {sub.originalCurrency !== preferredCurrency && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
-                                ({formatCurrency(sub.originalAmount, sub.originalCurrency)})
                               </div>
-                            )}
-                            
-                            {/* Info Row */}
-                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
-                              <span className="flex items-center gap-1">
-                                <Calendar className="w-3 h-3" />
-                                {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
-                                  day: "numeric",
-                                  month: "short"
-                                })}
-                              </span>
-                              <span className="flex items-center gap-1">
-                                <CreditCard className="w-3 h-3" />
-                                {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
-                              </span>
-                              <span className="text-slate-400">
-                                ≈ {formatCurrency(monthlyCost, preferredCurrency)}/เดือน
-                              </span>
-                              {isUrgent && (
-                                <Badge variant="destructive" className="text-xs">
-                                  เหลือ {daysUntil} วัน
-                                </Badge>
-                              )}
-                            </div>
-                          </div>
+                           </div>
                         </div>
 
-                        {/* Action Buttons */}
-                        <div className="flex gap-2 ml-auto md:ml-0">
+                        {/* Details Grid (Bottom) */}
+                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-3 pl-2">
+                            <div>
+                                <p className="text-[10px] text-slate-500 mb-0.5">{t("subscriptions.nextBilling")}</p>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                  <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                                  {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
+                                    day: "numeric", 
+                                    month: "short",
+                                    year: "2-digit"
+                                  })}
+                                </div>
+                                {isUrgent && (
+                                  <span className="inline-block mt-1 text-[10px] text-white bg-red-500 px-1.5 py-0.5 rounded-sm">
+                                    เหลือ {daysUntil} วัน
+                                  </span>
+                                )}
+                            </div>
+                            
+                            <div>
+                                <p className="text-[10px] text-slate-500 mb-0.5">{t("addSub.paymentMethod")}</p>
+                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                                  <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
+                                  <span className="truncate max-w-[100px]">
+                                    {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                                  </span>
+                                </div>
+                            </div>
+                        </div>
+
+                        {/* Action Buttons (Absolute Bottom Right) */}
+                        <div className="absolute bottom-3 right-3 flex gap-1">
                           <Link href={`/edit-subscription/${sub.id}`}>
-                            <Button variant="outline" size="icon" title={t("subscriptions.edit")} className="shrink-0">
+                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600">
                               <Edit className="w-4 h-4" />
                             </Button>
                           </Link>
                           <Button 
-                            variant="outline" 
+                            variant="ghost" 
                             size="icon"
                             onClick={() => setDeleteId(sub.id)}
-                            className="hover:bg-destructive hover:text-destructive-foreground shrink-0"
-                            title={t("subscriptions.delete")}
+                            className="h-8 w-8 text-slate-400 hover:text-red-600"
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
@@ -663,67 +629,6 @@ export default function Home() {
                     );
                   })}
                 </div>
-
-                {/* Pagination */}
-                {totalPages > 1 && (
-                  <div className="mt-6 flex flex-col sm:flex-row items-center justify-between gap-4">
-                    <div className="text-sm text-slate-600 dark:text-slate-400">
-                      {t("subscriptions.showing")} {startIndex + 1}-{Math.min(endIndex, sortedSubscriptions.length)} {t("subscriptions.of")} {sortedSubscriptions.length} {t("subscriptions.items")}
-                    </div>
-                    
-                    <Pagination>
-                      <PaginationContent>
-                        <PaginationItem>
-                          <PaginationPrevious 
-                            onClick={() => handlePageChange(Math.max(1, currentPage - 1))}
-                            className={currentPage === 1 ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                        </PaginationItem>
-                        
-                        {Array.from({ length: totalPages }, (_, i) => i + 1).map((page) => {
-                          // Show first page, last page, current page, and pages around current
-                          const showPage = 
-                            page === 1 || 
-                            page === totalPages || 
-                            (page >= currentPage - 1 && page <= currentPage + 1);
-                          
-                          // Show ellipsis
-                          const showEllipsisBefore = page === currentPage - 2 && currentPage > 3;
-                          const showEllipsisAfter = page === currentPage + 2 && currentPage < totalPages - 2;
-                          
-                          if (showEllipsisBefore || showEllipsisAfter) {
-                            return (
-                              <PaginationItem key={page}>
-                                <PaginationEllipsis />
-                              </PaginationItem>
-                            );
-                          }
-                          
-                          if (!showPage) return null;
-                          
-                          return (
-                            <PaginationItem key={page}>
-                              <PaginationLink
-                                onClick={() => handlePageChange(page)}
-                                isActive={currentPage === page}
-                                className="cursor-pointer"
-                              >
-                                {page}
-                              </PaginationLink>
-                            </PaginationItem>
-                          );
-                        })}
-                        
-                        <PaginationItem>
-                          <PaginationNext 
-                            onClick={() => handlePageChange(Math.min(totalPages, currentPage + 1))}
-                            className={currentPage === totalPages ? "pointer-events-none opacity-50" : "cursor-pointer"}
-                          />
-                        </PaginationItem>
-                      </PaginationContent>
-                    </Pagination>
-                  </div>
-                )}
               </CardContent>
             </Card>
           ) : (

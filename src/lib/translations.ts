@@ -174,6 +174,14 @@ export const translations = {
     th: "ยกเลิก",
     en: "Cancel"
   },
+  "subscriptions.perYear": {
+    th: "/ปี",
+    en: "/year"
+  },
+  "subscriptions.perMonth": {
+    th: "/เดือน",
+    en: "/month"
+  },
 
   // Add Subscription Page
   "addSub.title": {
