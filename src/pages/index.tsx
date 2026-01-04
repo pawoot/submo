@@ -89,6 +89,42 @@ export default function Home() {
   const { preferredCurrency, convertAmount, formatAmount } = useCurrency();
   const { t } = useLanguage();
 
+  const loadUserData = async () => {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      if (user) {
+        setUser(user);
+        setUserEmail(user.email || "");
+        
+        // Load profile
+        const profileData = await profileService.getProfile(user.id);
+        setProfile(profileData);
+        
+        // Check if user is admin (simple check based on email or profile role if available)
+        // For now we'll rely on the backend/RLS or specific admin checks
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const loadSubscriptions = async () => {
+    try {
+      setLoading(true);
+      const data = await subscriptionService.getAll();
+      setSubscriptions(data || []);
+    } catch (error) {
+      console.error("Error loading subscriptions:", error);
+      toast({
+        title: t("common.error"),
+        description: "Failed to load subscriptions",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
   useEffect(() => {
     loadUserData();
     loadSubscriptions();

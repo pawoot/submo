@@ -118,13 +118,17 @@ export const translations = {
     th: "จาก",
     en: "of"
   },
-  "subscriptions.showing": {
-    th: "แสดง",
-    en: "Showing"
-  },
   "subscriptions.items": {
     th: "รายการ",
     en: "items"
+  },
+  "subscriptions.searchPlaceholder": {
+    th: "ค้นหาชื่อ Subscription...",
+    en: "Search subscriptions..."
+  },
+  "subscriptions.showing": {
+    th: "แสดง",
+    en: "Showing"
   },
   "subscriptions.empty": {
     th: "ยังไม่มี Subscription",
