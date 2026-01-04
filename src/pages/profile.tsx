@@ -432,11 +432,11 @@ export default function ProfilePage() {
                   <Separator />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ค่าใช้จ่ายรายเดือน</span>
-                    <span className="text-xl font-bold text-indigo-600">${formatCurrency(stats.totalMonthlySpend, preferredCurrency)}</span>
+                    <span className="text-xl font-bold text-indigo-600">{formatAmount(stats.totalMonthlySpend)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ค่าใช้จ่ายรายปี</span>
-                    <span className="text-xl font-bold text-purple-600">${formatCurrency(stats.totalYearlySpend, preferredCurrency)}</span>
+                    <span className="text-xl font-bold text-purple-600">{formatAmount(stats.totalYearlySpend)}</span>
                   </div>
                 </CardContent>
               </Card>
