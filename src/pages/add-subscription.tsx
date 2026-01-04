@@ -93,7 +93,6 @@ export default function AddSubscription() {
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
-  const [subscriptionName, setSubscriptionName] = useState("");
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, isLoading: currencyLoading } = useCurrency();
@@ -108,12 +107,16 @@ export default function AddSubscription() {
   } = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
+      name: "",
       currency: "USD",
       billing: "monthly",
       paymentMethod: "credit-card",
     },
-    mode: "onChange", // Enable real-time validation
+    mode: "onChange",
   });
+
+  // Watch name field from form
+  const subscriptionName = watch("name");
 
   useEffect(() => {
     loadPopularTemplates();
@@ -151,7 +154,7 @@ export default function AddSubscription() {
 
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
     setSelectedTemplate(template);
-    setSubscriptionName(template.name);
+    setValue("name", template.name);
     
     // Auto-fill form with template data using setValue
     if (template.category) {
@@ -179,7 +182,7 @@ export default function AddSubscription() {
 
   const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
     setSelectedTemplate(template);
-    setSubscriptionName(template.name);
+    setValue("name", template.name);
     
     // Auto-fill form with template data using setValue
     if (template.category) {
@@ -253,22 +256,11 @@ export default function AddSubscription() {
   };
 
   const handleSubmit = async (data: SubscriptionFormData) => {
-    // Validate subscription name
-    if (!subscriptionName || subscriptionName.trim().length < 2) {
-      toast({
-        title: "❌ กรุณากรอกชื่อ Subscription",
-        description: "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-
     setIsSubmitting(true);
 
     try {
       const subscriptionData = {
-        name: subscriptionName,
+        name: data.name,
         category: data.category,
         description: data.description || null,
         amount: parseFloat(data.cost),
@@ -404,25 +396,18 @@ export default function AddSubscription() {
                     <div className="space-y-2">
                       <Label htmlFor="name">ชื่อ Subscription *</Label>
                       <SubscriptionNameAutocomplete
-                        value={subscriptionName}
-                        onChange={setSubscriptionName}
+                        value={subscriptionName || ""}
+                        onChange={(value) => setValue("name", value, { shouldValidate: true })}
                         onTemplateSelect={handleAutocompleteTemplateSelect}
                         disabled={isSubmitting}
                         selectedTemplate={selectedTemplate}
                       />
-                      {subscriptionName && subscriptionName.trim().length < 2 && (
-                        <p className="text-sm text-red-500">ชื่อต้องมีอย่างน้อย 2 ตัวอักษร</p>
+                      {errors.name && (
+                        <p className="text-sm text-red-500">{errors.name.message}</p>
                       )}
-                      {subscriptionName && subscriptionName.trim().length >= 2 && !selectedTemplate && (
+                      {subscriptionName && subscriptionName.trim().length >= 2 && !errors.name && !selectedTemplate && (
                         <p className="text-sm text-green-600 dark:text-green-400">✓ ชื่อถูกต้อง</p>
                       )}
-                      <input
-                        type="hidden"
-                        id="name"
-                        name="name"
-                        value={subscriptionName}
-                        required
-                      />
                     </div>
 
                     <div className="space-y-2">
