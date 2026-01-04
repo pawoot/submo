@@ -22,21 +22,83 @@ import { cn } from "@/lib/utils";
 import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import type { Database } from "@/integrations/supabase/types";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
+
+// Validation Schema
+const subscriptionSchema = z.object({
+  name: z.string()
+    .min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร")
+    .max(100, "ชื่อต้องไม่เกิน 100 ตัวอักษร"),
+  category: z.string()
+    .min(1, "กรุณาเลือกหมวดหมู่"),
+  description: z.string()
+    .max(500, "รายละเอียดต้องไม่เกิน 500 ตัวอักษร")
+    .optional()
+    .nullable(),
+  cost: z.string()
+    .min(1, "กรุณากรอกจำนวนเงิน")
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: "จำนวนเงินต้องมากกว่า 0"
+    })
+    .refine((val) => Number(val) <= 999999.99, {
+      message: "จำนวนเงินต้องไม่เกิน 999,999.99"
+    }),
+  currency: z.string()
+    .min(1, "กรุณาเลือกสกุลเงิน"),
+  billing: z.string()
+    .min(1, "กรุณาเลือกรอบการชำระเงิน"),
+  paymentMethod: z.string()
+    .min(1, "กรุณาเลือกวิธีการชำระเงิน"),
+  cardLast4: z.string()
+    .max(4, "เลขท้ายบัตรต้องไม่เกิน 4 หลัก")
+    .optional()
+    .nullable(),
+  website: z.string()
+    .url("รูปแบบ URL ไม่ถูกต้อง")
+    .optional()
+    .nullable()
+    .or(z.literal("")),
+  notes: z.string()
+    .max(500, "หมายเหตุต้องไม่เกิน 500 ตัวอักษร")
+    .optional()
+    .nullable(),
+});
+
+type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
+  const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [nextBillingDate, setNextBillingDate] = useState<Date>();
+  const [dateError, setDateError] = useState("");
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
   const [subscriptionName, setSubscriptionName] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+
+  const {
+    register,
+    handleSubmit: handleFormSubmit,
+    formState: { errors },
+    setValue,
+    watch,
+  } = useForm<SubscriptionFormData>({
+    resolver: zodResolver(subscriptionSchema),
+    defaultValues: {
+      currency: "USD",
+      billing: "monthly",
+      paymentMethod: "credit-card",
+    },
+  });
 
   useEffect(() => {
     loadPopularTemplates();
@@ -55,27 +117,21 @@ export default function AddSubscription() {
     setSelectedTemplate(template);
     setSubscriptionName(template.name);
     
-    // Auto-fill form with template data
-    const form = document.getElementById("subscription-form") as HTMLFormElement;
-    if (form) {
-      // Set category
-      (form.elements.namedItem("category") as HTMLInputElement).value = template.category;
-      
-      // Set pricing fields
-      if (template.default_price) {
-        (form.elements.namedItem("cost") as HTMLInputElement).value = template.default_price.toString();
-      }
-      if (template.default_currency) {
-        (form.elements.namedItem("currency") as HTMLInputElement).value = template.default_currency;
-      }
-      if (template.default_billing_cycle) {
-        (form.elements.namedItem("billing") as HTMLInputElement).value = template.default_billing_cycle;
-      }
-      
-      // Set website
-      if (template.website_url) {
-        (form.elements.namedItem("website") as HTMLInputElement).value = template.website_url;
-      }
+    // Auto-fill form with template data using setValue
+    if (template.category) {
+      setValue("category", template.category);
+    }
+    if (template.default_price) {
+      setValue("cost", template.default_price.toString());
+    }
+    if (template.default_currency) {
+      setValue("currency", template.default_currency);
+    }
+    if (template.default_billing_cycle) {
+      setValue("billing", template.default_billing_cycle);
+    }
+    if (template.website_url) {
+      setValue("website", template.website_url);
     }
 
     toast({
@@ -110,47 +166,73 @@ export default function AddSubscription() {
   ];
 
   const addSharedUser = () => {
-    if (newUserEmail && !sharedUsers.includes(newUserEmail)) {
-      setSharedUsers([...sharedUsers, newUserEmail]);
-      setNewUserEmail("");
+    if (!newUserEmail) {
+      setEmailError("กรุณากรอกอีเมล");
+      return;
     }
+
+    // Email validation
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    if (!emailRegex.test(newUserEmail)) {
+      setEmailError("รูปแบบอีเมลไม่ถูกต้อง");
+      return;
+    }
+
+    if (sharedUsers.includes(newUserEmail)) {
+      setEmailError("อีเมลนี้มีอยู่ในรายการแล้ว");
+      return;
+    }
+
+    setSharedUsers([...sharedUsers, newUserEmail]);
+    setNewUserEmail("");
+    setEmailError("");
   };
 
   const removeSharedUser = (email: string) => {
     setSharedUsers(sharedUsers.filter(u => u !== email));
   };
 
-  const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
-    e.preventDefault();
+  const handleSubmit = async (data: SubscriptionFormData) => {
+    // Validate dates
+    if (!startDate || !nextBillingDate) {
+      setDateError("กรุณาเลือกวันที่เริ่มต้นและวันต่ออายุถัดไป");
+      toast({
+        title: "❌ กรุณาเลือกวันที่",
+        description: "กรุณาเลือกวันเริ่มต้นและวันต่ออายุถัดไป",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    if (nextBillingDate <= startDate) {
+      setDateError("วันต่ออายุต้องหลังวันเริ่มต้น");
+      toast({
+        title: "❌ วันที่ไม่ถูกต้อง",
+        description: "วันต่ออายุต้องหลังวันเริ่มต้น",
+        variant: "destructive",
+        duration: 3000,
+      });
+      return;
+    }
+
+    setDateError("");
     setIsSubmitting(true);
 
     try {
-      const formData = new FormData(e.currentTarget);
-      
-      if (!startDate || !nextBillingDate) {
-        toast({
-          title: "❌ กรุณาเลือกวันที่",
-          description: "กรุณาเลือกวันเริ่มต้นและวันต่ออายุถัดไป",
-          variant: "destructive",
-          duration: 3000,
-        });
-        setIsSubmitting(false);
-        return;
-      }
-      
       const subscriptionData = {
-        name: formData.get("name") as string,
-        category: formData.get("category") as string,
-        description: formData.get("description") as string || null,
-        amount: parseFloat(formData.get("cost") as string),
-        currency: formData.get("currency") as string,
-        billing_cycle: formData.get("billing") as string,
-        payment_method: formData.get("paymentMethod") as string,
-        card_last_4: formData.get("cardLast4") as string || null,
+        name: subscriptionName,
+        category: data.category,
+        description: data.description || null,
+        amount: parseFloat(data.cost),
+        currency: data.currency,
+        billing_cycle: data.billing,
+        payment_method: data.paymentMethod,
+        card_last_4: data.cardLast4 || null,
         start_date: format(startDate, "yyyy-MM-dd"),
         next_billing_date: format(nextBillingDate, "yyyy-MM-dd"),
-        website_url: formData.get("website") as string || null,
-        notes: formData.get("notes") as string || null,
+        website_url: data.website || null,
+        notes: data.notes || null,
         shared_with: sharedUsers.length > 0 ? sharedUsers : null,
       };
 
@@ -203,7 +285,7 @@ export default function AddSubscription() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <form onSubmit={handleSubmit} id="subscription-form">
+          <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
             <div className="space-y-6">
               {/* Quick Add Section */}
               <Card className="border-2 border-dashed border-blue-300 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
@@ -291,8 +373,8 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="category">หมวดหมู่ *</Label>
-                      <Select name="category" required>
-                        <SelectTrigger id="category">
+                      <Select {...register("category")} required>
+                        <SelectTrigger id="category" className={cn(errors.category && "border-red-500")}>
                           <SelectValue placeholder="เลือกหมวดหมู่" />
                         </SelectTrigger>
                         <SelectContent>
@@ -303,6 +385,9 @@ export default function AddSubscription() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.category && (
+                        <p className="text-sm text-red-500">{errors.category.message}</p>
+                      )}
                     </div>
                   </div>
 
@@ -310,10 +395,14 @@ export default function AddSubscription() {
                     <Label htmlFor="description">รายละเอียด</Label>
                     <Textarea 
                       id="description"
-                      name="description"
+                      {...register("description")}
                       placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
                       rows={3}
+                      className={cn(errors.description && "border-red-500")}
                     />
+                    {errors.description && (
+                      <p className="text-sm text-red-500">{errors.description.message}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -329,18 +418,22 @@ export default function AddSubscription() {
                       <Label htmlFor="cost">ราคา *</Label>
                       <Input 
                         id="cost"
-                        name="cost"
+                        {...register("cost")}
                         type="number" 
                         step="0.01" 
                         placeholder="0.00"
+                        className={cn(errors.cost && "border-red-500")}
                         required
                       />
+                      {errors.cost && (
+                        <p className="text-sm text-red-500">{errors.cost.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="currency">สกุลเงิน *</Label>
-                      <Select name="currency" required defaultValue="USD">
-                        <SelectTrigger id="currency">
+                      <Select {...register("currency")} required defaultValue="USD">
+                        <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
                           <SelectValue placeholder="เลือกสกุลเงิน" />
                         </SelectTrigger>
                         <SelectContent>
@@ -351,12 +444,15 @@ export default function AddSubscription() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.currency && (
+                        <p className="text-sm text-red-500">{errors.currency.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="billing">รอบการชำระ *</Label>
-                      <Select name="billing" required defaultValue="monthly">
-                        <SelectTrigger id="billing">
+                      <Select {...register("billing")} required defaultValue="monthly">
+                        <SelectTrigger id="billing" className={cn(errors.billing && "border-red-500")}>
                           <SelectValue placeholder="เลือกรอบ" />
                         </SelectTrigger>
                         <SelectContent>
@@ -366,14 +462,17 @@ export default function AddSubscription() {
                           <SelectItem value="half-yearly">ราย 6 เดือน</SelectItem>
                         </SelectContent>
                       </Select>
+                      {errors.billing && (
+                        <p className="text-sm text-red-500">{errors.billing.message}</p>
+                      )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="paymentMethod">ช่องทางการชำระเงิน *</Label>
-                      <Select name="paymentMethod" required defaultValue="credit-card">
-                        <SelectTrigger id="paymentMethod">
+                      <Select {...register("paymentMethod")} required defaultValue="credit-card">
+                        <SelectTrigger id="paymentMethod" className={cn(errors.paymentMethod && "border-red-500")}>
                           <SelectValue placeholder="เลือกช่องทาง" />
                         </SelectTrigger>
                         <SelectContent>
@@ -384,16 +483,23 @@ export default function AddSubscription() {
                           ))}
                         </SelectContent>
                       </Select>
+                      {errors.paymentMethod && (
+                        <p className="text-sm text-red-500">{errors.paymentMethod.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="cardLast4">เลขท้าย 4 หลัก (ถ้ามี)</Label>
                       <Input 
                         id="cardLast4"
-                        name="cardLast4"
+                        {...register("cardLast4")}
                         placeholder="1234"
                         maxLength={4}
+                        className={cn(errors.cardLast4 && "border-red-500")}
                       />
+                      {errors.cardLast4 && (
+                        <p className="text-sm text-red-500">{errors.cardLast4.message}</p>
+                      )}
                     </div>
                   </div>
                 </CardContent>
@@ -414,7 +520,8 @@ export default function AddSubscription() {
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !startDate && "text-muted-foreground"
+                              !startDate && "text-muted-foreground",
+                              dateError && "border-red-500"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -445,7 +552,8 @@ export default function AddSubscription() {
                             variant="outline"
                             className={cn(
                               "w-full justify-start text-left font-normal",
-                              !nextBillingDate && "text-muted-foreground"
+                              !nextBillingDate && "text-muted-foreground",
+                              dateError && "border-red-500"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -472,6 +580,10 @@ export default function AddSubscription() {
                     </div>
                   </div>
 
+                  {dateError && (
+                    <p className="text-sm text-red-500">{dateError}</p>
+                  )}
+
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
                       💡 <strong>คำแนะนำ:</strong> วันต่ออายุถัดไปจะถูกใช้ในการแจ้งเตือนและคำนวณค่าใช้จ่าย
@@ -490,17 +602,26 @@ export default function AddSubscription() {
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
-                    <Input 
-                      placeholder="อีเมลผู้ใช้งานร่วม"
-                      value={newUserEmail}
-                      onChange={(e) => setNewUserEmail(e.target.value)}
-                      onKeyPress={(e) => {
-                        if (e.key === "Enter") {
-                          e.preventDefault();
-                          addSharedUser();
-                        }
-                      }}
-                    />
+                    <div className="flex-1">
+                      <Input 
+                        placeholder="อีเมลผู้ใช้งานร่วม"
+                        value={newUserEmail}
+                        onChange={(e) => {
+                          setNewUserEmail(e.target.value);
+                          setEmailError("");
+                        }}
+                        onKeyPress={(e) => {
+                          if (e.key === "Enter") {
+                            e.preventDefault();
+                            addSharedUser();
+                          }
+                        }}
+                        className={cn(emailError && "border-red-500")}
+                      />
+                      {emailError && (
+                        <p className="text-sm text-red-500 mt-1">{emailError}</p>
+                      )}
+                    </div>
                     <Button 
                       type="button" 
                       onClick={addSharedUser}
@@ -557,20 +678,28 @@ export default function AddSubscription() {
                     <Label htmlFor="website">เว็บไซต์</Label>
                     <Input 
                       id="website"
-                      name="website"
+                      {...register("website")}
                       type="url"
                       placeholder="https://example.com"
+                      className={cn(errors.website && "border-red-500")}
                     />
+                    {errors.website && (
+                      <p className="text-sm text-red-500">{errors.website.message}</p>
+                    )}
                   </div>
 
                   <div className="space-y-2">
                     <Label htmlFor="notes">หมายเหตุ</Label>
                     <Textarea 
                       id="notes"
-                      name="notes"
+                      {...register("notes")}
                       placeholder="ข้อมูลเพิ่มเติม หรือหมายเหตุสำคัญ"
                       rows={3}
+                      className={cn(errors.notes && "border-red-500")}
                     />
+                    {errors.notes && (
+                      <p className="text-sm text-red-500">{errors.notes.message}</p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
