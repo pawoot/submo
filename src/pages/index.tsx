@@ -93,10 +93,12 @@ export default function Home() {
                   <p className="text-sm text-slate-600 dark:text-slate-400">จัดการค่าใช้จ่าย Software</p>
                 </div>
               </div>
-              <Button size="lg" className="gap-2">
-                <Plus className="w-5 h-5" />
-                เพิ่ม Subscription
-              </Button>
+              <Link href="/add-subscription">
+                <Button size="lg" className="gap-2">
+                  <Plus className="w-5 h-5" />
+                  เพิ่ม Subscription
+                </Button>
+              </Link>
             </div>
           </div>
         </header>
