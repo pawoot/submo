@@ -110,6 +110,14 @@ export const translations = {
     th: "วันต่ออายุ: ใกล้สุด",
     en: "Next Billing: Soonest"
   },
+  "subscriptions.sortNextBillingDesc": {
+    th: "วันต่ออายุ: ไกลสุด",
+    en: "Next Billing: Furthest"
+  },
+  "subscriptions.sortCategory": {
+    th: "หมวดหมู่",
+    en: "Category"
+  },
   "subscriptions.page": {
     th: "หน้า",
     en: "Page"
