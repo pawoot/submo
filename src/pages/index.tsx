@@ -41,7 +41,7 @@ import {
 } from "@/components/ui/pagination";
 import { Input } from "@/components/ui/input";
 import { Search } from "lucide-react";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon, Filter } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -539,7 +539,7 @@ export default function Home() {
           </div>
 
           {/* กราฟสถิติ */}
-          <SubscriptionCharts subscriptions={displaySubscriptions} />
+          <SubscriptionCharts />
 
           {sortedSubscriptions.length > 0 ? (
             <Card id="subscription-list" className="shadow-sm">

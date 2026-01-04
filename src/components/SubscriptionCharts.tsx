@@ -1,202 +1,228 @@
+import { useState, useEffect, useMemo } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles, CreditCard } from "lucide-react";
-import { useState, useEffect } from "react";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles, CreditCard, Building2 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { subscriptionService } from "@/services/subscriptionService";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Subscription {
-  id: string;
+// Types
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
+  categories?: {
+    id: string;
+    name_en: string;
+    name_th: string;
+    slug: string;
+    icon: string;
+    color: string;
+  } | null;
+  payment_methods?: {
+    id: string;
+    name_en: string;
+    name_th: string;
+    slug: string;
+    icon: string;
+    color: string;
+  } | null;
+};
+
+type Category = Database["public"]["Tables"]["categories"]["Row"];
+type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
+
+interface ChartDataPoint {
   name: string;
   amount: number;
-  currency: string;
-  billing_cycle: string;
-  category: string;
-  payment_method: string;
-  next_billing_date: string;
+  icon: string;
+  color: string;
+  percentage?: string;
 }
 
-interface SubscriptionChartsProps {
-  subscriptions: Subscription[];
-}
+export function SubscriptionCharts() {
+  // Data State
+  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [categories, setCategories] = useState<Category[]>([]);
+  const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [loading, setLoading] = useState(true);
+  
+  // Chart Data State
+  const [categoryChartData, setCategoryChartData] = useState<ChartDataPoint[]>([]);
+  const [paymentChartData, setPaymentChartData] = useState<ChartDataPoint[]>([]);
+  const [calculating, setCalculating] = useState(false);
+  
+  // Context
+  const { preferredCurrency, convertAmount } = useCurrency();
+  const { t, language } = useLanguage();
 
-const COLORS = [
-  "#6366f1", // indigo (Design)
-  "#ec4899", // pink (Development)
-  "#8b5cf6", // purple (Productivity)
-  "#f59e0b", // amber
-  "#10b981", // emerald
-  "#3b82f6", // blue
-  "#ef4444", // red
-  "#06b6d4", // cyan
-  "#84cc16", // lime
-];
-
-const PAYMENT_COLORS: { [key: string]: string } = {
-  "credit-card": "#3b82f6",
-  "debit-card": "#8b5cf6",
-  "bank-transfer": "#10b981",
-  "google-pay": "#4285f4",
-  "apple-pay": "#000000",
-  "paypal": "#0070ba",
-  "crypto": "#f7931a",
-  "other": "#6b7280"
-};
-
-const categoryLabels: { [key: string]: string } = {
-  design: "Design",
-  development: "Development",
-  productivity: "Productivity",
-  entertainment: "Entertainment",
-  storage: "Storage",
-  communication: "Communication",
-  marketing: "Marketing",
-  education: "Education",
-  other: "Other"
-};
-
-const paymentMethodLabels: { [key: string]: { label: string; icon: string } } = {
-  "credit-card": { label: "Credit Card", icon: "💳" },
-  "paypal": { label: "PayPal", icon: "🅿️" },
-  "bank-transfer": { label: "Bank Transfer", icon: "🏦" },
-  "crypto": { label: "Crypto", icon: "₿" },
-  "cash": { label: "Cash", icon: "💵" },
-  "other": { label: "Other", icon: "📱" }
-};
-
-export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
-  const { preferredCurrency } = useCurrency();
-  const { t } = useLanguage();
+  // Filters
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBilling, setSelectedBilling] = useState<string>("all");
   const [timeRange, setTimeRange] = useState<string>("all");
-  const [showFilters, setShowFilters] = useState(false);
 
-  // ดึงหมวดหมู่ทั้งหมดที่มีใน subscriptions
-  const availableCategories = Array.from(new Set(subscriptions.map(sub => sub.category)));
+  // Load Initial Data
+  useEffect(() => {
+    loadData();
+  }, []);
 
-  // กรองข้อมูลตาม filters
-  const filteredSubscriptions = subscriptions.filter(sub => {
-    // กรองตามคำค้นหา
-    if (searchQuery && !sub.name.toLowerCase().includes(searchQuery.toLowerCase())) {
-      return false;
+  const loadData = async () => {
+    try {
+      setLoading(true);
+      const [subsData, catsData, paymentData] = await Promise.all([
+        subscriptionService.getAll(),
+        subscriptionService.getCategories(),
+        subscriptionService.getPaymentMethods()
+      ]);
+      setSubscriptions(subsData);
+      setCategories(catsData);
+      setPaymentMethods(paymentData);
+    } catch (error) {
+      console.error("Error loading data:", error);
+    } finally {
+      setLoading(false);
     }
-
-    // กรองตามหมวดหมู่
-    if (selectedCategory !== "all" && sub.category !== selectedCategory) {
-      return false;
-    }
-
-    // กรองตามรอบชำระ
-    if (selectedBilling !== "all" && sub.billing_cycle !== selectedBilling) {
-      return false;
-    }
-
-    // กรองตามช่วงเวลา
-    if (timeRange !== "all") {
-      const today = new Date();
-      const nextBilling = new Date(sub.next_billing_date);
-      const daysDiff = Math.ceil((nextBilling.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
-
-      if (timeRange === "this-month" && daysDiff > 30) return false;
-      if (timeRange === "this-quarter" && daysDiff > 90) return false;
-      if (timeRange === "this-year" && daysDiff > 365) return false;
-      if (timeRange === "expiring-soon" && daysDiff > 7) return false;
-    }
-
-    return true;
-  });
-
-  // คำนวณค่าใช้จ่ายรายเดือนตามหมวดหมู่
-  const categoryData = filteredSubscriptions.reduce((acc, sub) => {
-    const category = categoryLabels[sub.category] || sub.category;
-    const monthlyCost = sub.billing_cycle === "monthly" ? sub.amount :
-                       sub.billing_cycle === "yearly" ? sub.amount / 12 :
-                       sub.billing_cycle === "quarterly" ? sub.amount / 3 :
-                       sub.billing_cycle === "half-yearly" ? sub.amount / 6 : sub.amount;
-
-    const existing = acc.find(item => item.category === category);
-    if (existing) {
-      existing.cost += monthlyCost;
-      existing.count += 1;
-    } else {
-      acc.push({ category, cost: monthlyCost, count: 1 });
-    }
-    return acc;
-  }, [] as { category: string; cost: number; count: number }[]);
-
-  // เรียงตามค่าใช้จ่ายจากมากไปน้อย
-  categoryData.sort((a, b) => b.cost - a.cost);
-
-  // คำนวณเปอร์เซ็นต์
-  const totalCost = categoryData.reduce((sum, item) => sum + item.cost, 0);
-  const pieData = categoryData.map(item => ({
-    ...item,
-    percentage: ((item.cost / totalCost) * 100).toFixed(0)
-  }));
-
-  // คำนวณค่าใช้จ่ายรายเดือนตามช่องทางการชำระเงิน
-  const paymentMethodData = filteredSubscriptions.reduce((acc, sub) => {
-    const paymentMethod = sub.payment_method || "other";
-    const monthlyCost = sub.billing_cycle === "monthly" ? sub.amount :
-                       sub.billing_cycle === "yearly" ? sub.amount / 12 :
-                       sub.billing_cycle === "quarterly" ? sub.amount / 3 :
-                       sub.billing_cycle === "half-yearly" ? sub.amount / 6 : sub.amount;
-
-    const existing = acc.find(item => item.method === paymentMethod);
-    if (existing) {
-      existing.cost += monthlyCost;
-      existing.count += 1;
-    } else {
-      acc.push({ method: paymentMethod, cost: monthlyCost, count: 1 });
-    }
-    return acc;
-  }, [] as { method: string; cost: number; count: number }[]);
-
-  // เรียงตามค่าใช้จ่ายจากมากไปน้อย
-  paymentMethodData.sort((a, b) => b.cost - a.cost);
-
-  // คำนวณเปอร์เซ็นต์
-  const totalPaymentCost = paymentMethodData.reduce((sum, item) => sum + item.cost, 0);
-  const paymentPieData = paymentMethodData.map(item => ({
-    ...item,
-    percentage: ((item.cost / totalPaymentCost) * 100).toFixed(0)
-  }));
-
-  // Payment method labels and icons
-  const paymentMethodLabels: { [key: string]: { label: string; icon: string; color: string } } = {
-    "credit-card": { label: "Credit Card", icon: "💳", color: "#3b82f6" },
-    "debit-card": { label: "Debit Card", icon: "💳", color: "#8b5cf6" },
-    "bank-transfer": { label: "Bank Transfer", icon: "🏦", color: "#10b981" },
-    "google-pay": { label: "Google Pay", icon: "🅖", color: "#4285f4" },
-    "apple-pay": { label: "Apple Pay", icon: "🍎", color: "#000000" },
-    "paypal": { label: "PayPal", icon: "🅿️", color: "#0070ba" },
-    "crypto": { label: "Cryptocurrency", icon: "₿", color: "#f7931a" },
-    "other": { label: "Other", icon: "📱", color: "#6b7280" }
   };
 
-  // Format payment method data for charts
-  const formattedPaymentData = paymentMethodData.map(item => ({
-    method: paymentMethodLabels[item.method]?.label || item.method,
-    cost: item.cost,
-    count: item.count
-  }));
+  // Helper: Calculate Monthly Cost
+  const calculateMonthlyCost = (sub: Subscription) => {
+    let monthlyCost = sub.amount;
+    switch (sub.billing_cycle) {
+      case "yearly": monthlyCost = sub.amount / 12; break;
+      case "quarterly": monthlyCost = sub.amount / 3; break;
+      case "half-yearly": monthlyCost = sub.amount / 6; break;
+    }
+    return monthlyCost;
+  };
 
-  // Empty State Component สำหรับเมื่อไม่มี Subscription เลย
-  if (subscriptions.length === 0) {
+  // Labels Maps
+  const categoryLabels = useMemo(() => {
+    const labels: { [key: string]: { label: string; icon: string; color: string } } = {};
+    categories.forEach(cat => {
+      labels[cat.id] = {
+        label: language === 'th' ? cat.name_th : cat.name_en,
+        icon: cat.icon,
+        color: cat.color
+      };
+    });
+    return labels;
+  }, [categories, language]);
+
+  const paymentMethodLabels = useMemo(() => {
+    const labels: { [key: string]: { label: string; icon: string; color: string } } = {};
+    paymentMethods.forEach(pm => {
+      labels[pm.id] = {
+        label: language === 'th' ? pm.name_th : pm.name_en,
+        icon: pm.icon,
+        color: pm.color
+      };
+    });
+    return labels;
+  }, [paymentMethods, language]);
+
+  // Filter Subscriptions
+  const filteredSubscriptions = useMemo(() => {
+    return subscriptions.filter((sub) => {
+      if (searchQuery && !sub.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
+      if (selectedCategory !== "all" && sub.category_id !== selectedCategory) return false;
+      if (selectedBilling !== "all" && sub.billing_cycle !== selectedBilling) return false;
+      
+      if (timeRange !== "all") {
+        const nextBilling = new Date(sub.next_billing_date);
+        const now = new Date();
+        const daysUntil = Math.ceil((nextBilling.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+        if (timeRange === "this-month" && daysUntil > 30) return false;
+        if (timeRange === "this-quarter" && daysUntil > 90) return false;
+        if (timeRange === "this-year" && daysUntil > 365) return false;
+        if (timeRange === "expiring-soon" && daysUntil > 7) return false;
+      }
+      return true;
+    });
+  }, [subscriptions, searchQuery, selectedCategory, selectedBilling, timeRange]);
+
+  // Calculate Chart Data (Async)
+  useEffect(() => {
+    const calculateData = async () => {
+      setCalculating(true);
+      try {
+        // 1. Initialize maps
+        const catMap: { [key: string]: number } = {};
+        const payMap: { [key: string]: number } = {};
+
+        // 2. Process each subscription
+        await Promise.all(filteredSubscriptions.map(async (sub) => {
+          const monthlyRaw = calculateMonthlyCost(sub);
+          // Convert to preferred currency
+          const convertedAmount = await convertAmount(monthlyRaw, sub.currency || "THB");
+          
+          // Aggregate Category
+          const catId = sub.category_id || "unknown";
+          catMap[catId] = (catMap[catId] || 0) + convertedAmount;
+
+          // Aggregate Payment Method
+          const payId = sub.payment_method_id || "unknown";
+          payMap[payId] = (payMap[payId] || 0) + convertedAmount;
+        }));
+
+        // 3. Format Category Data
+        const catData = Object.entries(catMap)
+          .map(([id, amount]) => ({
+            name: categoryLabels[id]?.label || t("common.unknown"),
+            amount: amount,
+            icon: categoryLabels[id]?.icon || "📦",
+            color: categoryLabels[id]?.color || "#94a3b8"
+          }))
+          .sort((a, b) => b.amount - a.amount);
+
+        // Add percentages
+        const totalCat = catData.reduce((sum, item) => sum + item.amount, 0);
+        catData.forEach(item => {
+          item.percentage = totalCat > 0 ? ((item.amount / totalCat) * 100).toFixed(0) : "0";
+        });
+
+        // 4. Format Payment Data
+        const payData = Object.entries(payMap)
+          .map(([id, amount]) => ({
+            name: paymentMethodLabels[id]?.label || t("common.unknown"),
+            amount: amount,
+            icon: paymentMethodLabels[id]?.icon || "💳",
+            color: paymentMethodLabels[id]?.color || "#94a3b8"
+          }))
+          .sort((a, b) => b.amount - a.amount);
+
+        // Add percentages
+        const totalPay = payData.reduce((sum, item) => sum + item.amount, 0);
+        payData.forEach(item => {
+          item.percentage = totalPay > 0 ? ((item.amount / totalPay) * 100).toFixed(0) : "0";
+        });
+
+        setCategoryChartData(catData);
+        setPaymentChartData(payData);
+
+      } catch (error) {
+        console.error("Error calculating chart data:", error);
+      } finally {
+        setCalculating(false);
+      }
+    };
+
+    if (!loading) {
+      calculateData();
+    }
+  }, [filteredSubscriptions, preferredCurrency, categoryLabels, paymentMethodLabels, loading, convertAmount, t]);
+
+  // Empty State
+  if (!loading && subscriptions.length === 0) {
     return (
       <div className="mb-8">
         <Card className="border-2 border-dashed border-gray-200 bg-gradient-to-br from-indigo-50/50 via-purple-50/30 to-pink-50/50 shadow-xl overflow-hidden">
           <CardContent className="py-20 px-8">
-            <div className="max-w-2xl mx-auto text-center space-y-6 animate-fade-in">
-              {/* Icon with Animation */}
+            <div className="max-w-2xl mx-auto text-center space-y-6">
               <div className="relative inline-block">
                 <div className="absolute inset-0 bg-gradient-to-r from-indigo-400 to-purple-400 rounded-full blur-2xl opacity-20 animate-pulse"></div>
                 <div className="relative bg-gradient-to-br from-indigo-500 to-purple-600 rounded-full p-8 shadow-2xl">
@@ -204,53 +230,18 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 </div>
                 <Sparkles className="absolute -top-2 -right-2 w-8 h-8 text-yellow-400 animate-bounce" />
               </div>
-
-              {/* Main Heading */}
               <div className="space-y-3">
-                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-                  {t("charts.emptyTitle")}
-                </h2>
-                <p className="text-lg text-gray-600 max-w-md mx-auto leading-relaxed">
-                  {t("charts.emptyDesc")}
-                </p>
+                <h2 className="text-3xl font-bold text-gray-900 tracking-tight">{t("charts.emptyTitle")}</h2>
+                <p className="text-lg text-gray-600 max-w-md mx-auto leading-relaxed">{t("charts.emptyDesc")}</p>
               </div>
-
-              {/* Benefits List */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 pb-4">
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-indigo-100 shadow-sm">
-                  <TrendingUp className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-700">{t("charts.trackSpending")}</p>
-                  <p className="text-xs text-gray-500 mt-1">{t("charts.viewCharts")}</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-purple-100 shadow-sm">
-                  <BarChart3 className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-700">{t("charts.analyzeSpending")}</p>
-                  <p className="text-xs text-gray-500 mt-1">{t("charts.byCategory")}</p>
-                </div>
-                <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-pink-100 shadow-sm">
-                  <PieChartIcon className="w-8 h-8 text-pink-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-700">{t("charts.autoReminders")}</p>
-                  <p className="text-xs text-gray-500 mt-1">{t("charts.beforeDue")}</p>
-                </div>
-              </div>
-
-              {/* CTA Button */}
               <div className="pt-4">
                 <Link href="/add-subscription">
-                  <Button 
-                    size="lg" 
-                    className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
-                  >
+                  <Button size="lg" className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105">
                     <PackagePlus className="w-6 h-6 mr-3" />
                     {t("charts.addFirst")}
                   </Button>
                 </Link>
               </div>
-
-              {/* Helper Text */}
-              <p className="text-sm text-gray-500 pt-4">
-                {t("charts.quickStart")}
-              </p>
             </div>
           </CardContent>
         </Card>
@@ -306,7 +297,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 <SelectItem value="all">{t("filter.all")}</SelectItem>
                 <SelectItem value="monthly">{t("subscriptions.monthly")}</SelectItem>
                 <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
-                <SelectItem value="biannually">{t("subscriptions.halfYearly")}</SelectItem>
+                <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
                 <SelectItem value="yearly">{t("subscriptions.yearly")}</SelectItem>
               </SelectContent>
             </Select>
@@ -321,90 +312,40 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
         </div>
       </div>
 
-      {/* Category Tabs and Filter Toggle */}
+      {/* Category Tabs */}
       <div className="flex items-center justify-between bg-white rounded-xl border-2 border-gray-100 p-4">
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1">
-          <TabsList className="bg-gray-50">
+        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1 w-full">
+          <TabsList className="bg-gray-50 flex flex-wrap h-auto p-1 gap-1">
             <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 font-semibold">
               {t("filter.all")}
             </TabsTrigger>
-            {availableCategories.map((category) => (
+            {categories.map((category) => (
               <TabsTrigger 
-                key={category}
-                value={category} 
-                className="data-[state=active]:bg-white data-[state=active]:text-indigo-600"
+                key={category.id}
+                value={category.id} 
+                className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 gap-2"
               >
-                {t(`category.${category}` as any) || category}
+                <span>{category.icon}</span>
+                <span>{language === 'th' ? category.name_th : category.name_en}</span>
               </TabsTrigger>
             ))}
           </TabsList>
         </Tabs>
-        
-        <Button
-          variant="ghost"
-          size="sm"
-          onClick={() => setShowFilters(!showFilters)}
-          className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-medium"
-        >
-          <Filter className="w-4 h-4 mr-2" />
-          {t("filter.button")}
-        </Button>
       </div>
 
-      {/* Results - Empty State for No Search Results */}
       {filteredSubscriptions.length === 0 ? (
         <Card className="border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-lg">
           <CardContent className="py-16 text-center">
-            <div className="max-w-lg mx-auto space-y-4 animate-fade-in">
-              {/* Icon */}
+            <div className="max-w-lg mx-auto space-y-4">
               <div className="relative inline-block">
                 <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-full p-6 shadow-inner">
                   <Search className="w-16 h-16 text-gray-400" strokeWidth={1.5} />
                 </div>
               </div>
-
-              {/* Message */}
               <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-gray-700">
-                  {t("charts.noResults")}
-                </h3>
-                <p className="text-gray-500 text-base max-w-sm mx-auto">
-                  {t("charts.noResultsDesc")}
-                </p>
+                <h3 className="text-2xl font-bold text-gray-700">{t("charts.noResults")}</h3>
+                <p className="text-gray-500 text-base max-w-sm mx-auto">{t("charts.noResultsDesc")}</p>
               </div>
-
-              {/* Current Filters Display */}
-              <div className="bg-white rounded-lg p-4 border border-gray-200 inline-block text-left">
-                <p className="text-xs font-semibold text-gray-600 mb-2">{t("charts.currentFilters")}</p>
-                <div className="space-y-1 text-sm text-gray-600">
-                  {searchQuery && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400">•</span>
-                      <span>{t("search.label")}: <span className="font-medium text-indigo-600">&quot;{searchQuery}&quot;</span></span>
-                    </div>
-                  )}
-                  {selectedCategory !== "all" && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400">•</span>
-                      <span>{t("addSub.category")}: <span className="font-medium text-indigo-600">{categoryLabels[selectedCategory]}</span></span>
-                    </div>
-                  )}
-                  {selectedBilling !== "all" && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400">•</span>
-                      <span>{t("addSub.billing")}: <span className="font-medium text-indigo-600">{selectedBilling === "monthly" ? t("subscriptions.monthly") : selectedBilling === "yearly" ? t("subscriptions.yearly") : selectedBilling === "quarterly" ? t("subscriptions.quarterly") : t("subscriptions.halfYearly")}</span></span>
-                    </div>
-                  )}
-                  {timeRange !== "all" && (
-                    <div className="flex items-center gap-2">
-                      <span className="text-gray-400">•</span>
-                      <span>{t("filter.timePeriod")}: <span className="font-medium text-indigo-600">{timeRange === "this-month" ? t("charts.thisMonth") : timeRange === "this-quarter" ? t("charts.thisQuarter") : timeRange === "this-year" ? t("charts.thisYear") : t("charts.expiringSoon")}</span></span>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Reset Button */}
               <Button
                 variant="outline"
                 size="lg"
@@ -424,9 +365,8 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
         </Card>
       ) : (
         <>
-          {/* Category Charts Grid - 2 Columns */}
+          {/* Category Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-            {/* Bar Chart - ค่าใช้จ่ายตามหมวดหมู่ */}
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-indigo-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
@@ -435,33 +375,31 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={categoryData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis 
-                      dataKey="category" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                      tick={{ fontSize: 13, fontWeight: 500 }}
-                    />
-                    <YAxis tick={{ fontSize: 13 }} />
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
-                      contentStyle={{ 
-                        backgroundColor: "rgba(255, 255, 255, 0.98)",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-                      }}
-                    />
-                    <Bar dataKey="cost" fill="#6366f1" radius={[12, 12, 0, 0]} />
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[350px] w-full">
+                  {calculating ? (
+                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={categoryChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
+                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+                        />
+                        <Bar dataKey="amount" fill="#6366f1" radius={[8, 8, 0, 0]}>
+                          {categoryChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Pie Chart - สัดส่วนค่าใช้จ่าย */}
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
@@ -470,41 +408,41 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={pieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({ category, percentage }: any) => `${category} ${percentage}%`}
-                      outerRadius={110}
-                      fill="#8884d8"
-                      dataKey="cost"
-                      nameKey="category"
-                    >
-                      {pieData.map((_entry, index) => (
-                        <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
-                      contentStyle={{ 
-                        backgroundColor: "rgba(255, 255, 255, 0.98)",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="h-[350px] w-full">
+                  {calculating ? (
+                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={categoryChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percentage }: any) => `${name} ${percentage}%`}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="amount"
+                          nameKey="name"
+                        >
+                          {categoryChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
+                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
 
-          {/* Payment Method Charts Grid - 2 Columns */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
-            {/* Bar Chart - ช่องทางการชำระเงิน */}
+          {/* Payment Method Charts Grid */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
@@ -513,38 +451,31 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <ResponsiveContainer width="100%" height={350}>
-                  <BarChart data={formattedPaymentData}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                    <XAxis 
-                      dataKey="method" 
-                      angle={-45}
-                      textAnchor="end"
-                      height={100}
-                      tick={{ fontSize: 13, fontWeight: 500 }}
-                    />
-                    <YAxis tick={{ fontSize: 13 }} />
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
-                      contentStyle={{ 
-                        backgroundColor: "rgba(255, 255, 255, 0.98)",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-                      }}
-                    />
-                    <Bar dataKey="cost" radius={[12, 12, 0, 0]}>
-                      {formattedPaymentData.map((entry, index) => {
-                        const originalMethod = paymentMethodData[index].method;
-                        return <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[originalMethod] || "#6b7280"} />;
-                      })}
-                    </Bar>
-                  </BarChart>
-                </ResponsiveContainer>
+                <div className="h-[350px] w-full">
+                  {calculating ? (
+                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <BarChart data={paymentChartData}>
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
+                        <YAxis tick={{ fontSize: 12 }} />
+                        <Tooltip 
+                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
+                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+                        />
+                        <Bar dataKey="amount" fill="#3b82f6" radius={[8, 8, 0, 0]}>
+                          {paymentChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Bar>
+                      </BarChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </CardContent>
             </Card>
 
-            {/* Pie Chart - สัดส่วนช่องทางการชำระเงิน */}
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-green-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
@@ -553,38 +484,38 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <ResponsiveContainer width="100%" height={350}>
-                  <PieChart>
-                    <Pie
-                      data={paymentPieData}
-                      cx="50%"
-                      cy="50%"
-                      labelLine={true}
-                      label={({ method, percentage }: any) => {
-                        const label = paymentMethodLabels[method]?.label || method;
-                        const icon = paymentMethodLabels[method]?.icon || "📱";
-                        return `${icon} ${label} ${percentage}%`;
-                      }}
-                      outerRadius={110}
-                      fill="#8884d8"
-                      dataKey="cost"
-                      nameKey="method"
-                    >
-                      {paymentPieData.map((entry, index) => (
-                        <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[entry.method] || "#6b7280"} />
-                      ))}
-                    </Pie>
-                    <Tooltip 
-                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
-                      contentStyle={{ 
-                        backgroundColor: "rgba(255, 255, 255, 0.98)",
-                        border: "2px solid #e2e8f0",
-                        borderRadius: "12px",
-                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
-                      }}
-                    />
-                  </PieChart>
-                </ResponsiveContainer>
+                <div className="h-[350px] w-full">
+                  {calculating ? (
+                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
+                  ) : (
+                    <ResponsiveContainer width="100%" height="100%">
+                      <PieChart>
+                        <Pie
+                          data={paymentChartData}
+                          cx="50%"
+                          cy="50%"
+                          labelLine={true}
+                          label={({ name, percentage }: any) => {
+                             const label = name;
+                             return `${label} ${percentage}%`;
+                          }}
+                          outerRadius={100}
+                          fill="#8884d8"
+                          dataKey="amount"
+                          nameKey="name"
+                        >
+                          {paymentChartData.map((entry, index) => (
+                            <Cell key={`cell-${index}`} fill={entry.color} />
+                          ))}
+                        </Pie>
+                        <Tooltip 
+                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
+                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+                        />
+                      </PieChart>
+                    </ResponsiveContainer>
+                  )}
+                </div>
               </CardContent>
             </Card>
           </div>
