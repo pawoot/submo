@@ -7,6 +7,7 @@ import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Toolti
 import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles, CreditCard } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
+import { formatCurrency } from "@/lib/utils";
 
 interface Subscription {
   id: string;
@@ -446,7 +447,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                     />
                     <YAxis tick={{ fontSize: 13 }} />
                     <Tooltip 
-                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      formatter={(value: number) => formatCurrency(value)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",
@@ -487,7 +488,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      formatter={(value: number) => formatCurrency(value)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",
@@ -524,7 +525,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                     />
                     <YAxis tick={{ fontSize: 13 }} />
                     <Tooltip 
-                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      formatter={(value: number) => formatCurrency(value)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",
@@ -574,7 +575,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      formatter={(value: number) => formatCurrency(value)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",

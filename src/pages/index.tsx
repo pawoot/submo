@@ -42,6 +42,7 @@ import { useRouter } from "next/router";
 import type { Database } from "@/integrations/supabase/types";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
+import { formatCurrency } from "@/lib/utils";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-asc" | "date-desc" | "category";
@@ -374,7 +375,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                  ${totalMonthly.toFixed(2)}
+                  ${formatCurrency(totalMonthly)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   ≈ ฿{(totalMonthly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
@@ -391,7 +392,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                  ${totalYearly.toFixed(2)}
+                  ${formatCurrency(totalYearly)}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   ≈ ฿{(totalYearly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
@@ -515,13 +516,13 @@ export default function Home() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                              ${Number(sub.amount).toFixed(2)}
+                              ${formatCurrency(Number(sub.amount))}
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-400">
                               {billingCycleLabels[sub.billing_cycle]}
                             </div>
                             <div className="text-xs text-slate-400 mt-1">
-                              ≈ ${monthlyCost.toFixed(2)}/เดือน
+                              ≈ ${formatCurrency(monthlyCost)}/เดือน
                             </div>
                             {isUrgent && (
                               <Badge variant="destructive" className="mt-2 text-xs">
