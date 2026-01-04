@@ -148,18 +148,18 @@ export const subscriptionService = {
     const subscriptions = await this.getAll();
     
     return subscriptions.reduce((total, sub) => {
-      let monthlyCost = sub.price;
+      let monthlyCost = sub.amount;
       
       // Convert to monthly cost based on billing cycle
       switch (sub.billing_cycle) {
         case "yearly":
-          monthlyCost = sub.price / 12;
+          monthlyCost = sub.amount / 12;
           break;
         case "quarterly":
-          monthlyCost = sub.price / 3;
+          monthlyCost = sub.amount / 3;
           break;
         case "half-yearly":
-          monthlyCost = sub.price / 6;
+          monthlyCost = sub.amount / 6;
           break;
         // monthly is default
       }
@@ -178,17 +178,17 @@ export const subscriptionService = {
 
     // Calculate total yearly cost
     const totalYearlyCost = subscriptions.reduce((total, sub) => {
-      let yearlyCost = sub.price;
+      let yearlyCost = sub.amount;
       
       switch (sub.billing_cycle) {
         case "monthly":
-          yearlyCost = sub.price * 12;
+          yearlyCost = sub.amount * 12;
           break;
         case "quarterly":
-          yearlyCost = sub.price * 4;
+          yearlyCost = sub.amount * 4;
           break;
         case "half-yearly":
-          yearlyCost = sub.price * 2;
+          yearlyCost = sub.amount * 2;
           break;
         // yearly is default
       }
