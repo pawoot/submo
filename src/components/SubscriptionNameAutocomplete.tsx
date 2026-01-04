@@ -1,29 +1,27 @@
-import { useState, useEffect } from "react";
+import { 
+  Command, 
+  CommandEmpty, 
+  CommandGroup, 
+  CommandInput, 
+  CommandItem, 
+  CommandList 
+} from "@/components/ui/command";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Button } from "@/components/ui/button";
 import { Check, ChevronsUpDown, Search } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
-import {
-  Command,
-  CommandEmpty,
-  CommandGroup,
-  CommandInput,
-  CommandItem,
-  CommandList,
-} from "@/components/ui/command";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
+import { SubscriptionIcon } from "./SubscriptionIcon";
+import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
+import { useState, useEffect } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
-import type { Database } from "@/integrations/supabase/types";
-
-type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 
 interface SubscriptionNameAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
-  onTemplateSelect?: (template: SubscriptionTemplate) => void;
+  onSelectTemplate: (template: SubscriptionTemplate) => void;
+  templates: SubscriptionTemplate[];
+  error?: string;
   disabled?: boolean;
   selectedTemplate?: SubscriptionTemplate | null;
 }
@@ -31,17 +29,25 @@ interface SubscriptionNameAutocompleteProps {
 export function SubscriptionNameAutocomplete({
   value,
   onChange,
-  onTemplateSelect,
+  onSelectTemplate,
+  templates: initialTemplates,
+  error,
   disabled = false,
-  selectedTemplate: externalSelectedTemplate = null,
+  selectedTemplate
 }: SubscriptionNameAutocompleteProps) {
   const [open, setOpen] = useState(false);
-  const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [templates, setTemplates] = useState<SubscriptionTemplate[]>(initialTemplates || []);
   const [loading, setLoading] = useState(false);
+  const { t } = useLanguage();
 
+  // Load templates if not provided (fallback)
   useEffect(() => {
-    loadTemplates();
-  }, []);
+    if (!initialTemplates || initialTemplates.length === 0) {
+      loadTemplates();
+    } else {
+      setTemplates(initialTemplates);
+    }
+  }, [initialTemplates]);
 
   const loadTemplates = async () => {
     try {
@@ -57,14 +63,8 @@ export function SubscriptionNameAutocomplete({
 
   const handleSelect = (template: SubscriptionTemplate) => {
     onChange(template.name);
+    onSelectTemplate(template);
     setOpen(false);
-    if (onTemplateSelect) {
-      onTemplateSelect(template);
-    }
-  };
-
-  const handleCustomInput = (customValue: string) => {
-    onChange(customValue);
   };
 
   return (
@@ -76,106 +76,60 @@ export function SubscriptionNameAutocomplete({
             role="combobox"
             aria-expanded={open}
             disabled={disabled}
-            className="w-full justify-between"
+            className={cn(
+              "w-full justify-between font-normal",
+              !value && "text-muted-foreground",
+              error && "border-red-500"
+            )}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
-              {externalSelectedTemplate && (
-                <div className="w-6 h-6 rounded overflow-hidden bg-white shadow-sm flex-shrink-0">
-                  <img
-                    src={externalSelectedTemplate.logo_url}
-                    alt={externalSelectedTemplate.name}
-                    className="w-full h-full object-cover"
-                  />
+              {selectedTemplate && (
+                <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
+                   <SubscriptionIcon name={selectedTemplate.name} logoUrl={selectedTemplate.icon_url} className="w-full h-full" />
                 </div>
               )}
               <span className="truncate">
-                {value || "เลือกหรือพิมพ์ชื่อ Subscription"}
+                {value || t("common.select") + " / " + t("common.type_name")}
               </span>
             </div>
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-full p-0" align="start">
+        <PopoverContent className="w-[300px] p-0" align="start">
           <Command>
-            <div className="flex items-center border-b px-3">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
-              <input
-                placeholder="ค้นหาหรือพิมพ์ชื่อใหม่..."
-                value={value}
-                onChange={(e) => handleCustomInput(e.target.value)}
-                className="flex h-11 w-full rounded-md bg-transparent py-3 text-sm outline-none placeholder:text-muted-foreground disabled:cursor-not-allowed disabled:opacity-50"
-              />
-            </div>
+            <CommandInput 
+              placeholder={t("common.search") + "..."} 
+              onValueChange={(val) => {
+                if (!open) setOpen(true);
+                // Allow custom value if not found
+                onChange(val);
+              }}
+            />
             <CommandList>
-              <CommandEmpty>
-                {value ? (
-                  <div className="py-6 text-center text-sm">
-                    <p className="text-muted-foreground">ไม่พบ "{value}" ในระบบ</p>
-                    <p className="text-xs text-muted-foreground mt-1">
-                      กดปุ่ม Enter หรือปิด popup เพื่อใช้ชื่อนี้
-                    </p>
-                  </div>
-                ) : (
-                  "พิมพ์เพื่อค้นหา..."
-                )}
-              </CommandEmpty>
-              {templates.length > 0 && (
-                <CommandGroup heading="เลือกจาก Templates">
-                  {templates
-                    .filter((template) =>
-                      template.name.toLowerCase().includes(value.toLowerCase())
-                    )
-                    .slice(0, 10)
-                    .map((template) => (
-                      <CommandItem
-                        key={template.id}
-                        value={template.name}
-                        onSelect={() => handleSelect(template)}
-                        className="cursor-pointer"
-                      >
-                        <div className="flex items-center gap-3 flex-1">
-                          <div className="w-8 h-8 rounded-lg overflow-hidden bg-white shadow-sm flex-shrink-0">
-                            <img
-                              src={template.logo_url}
-                              alt={template.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                          <div className="flex-1 min-w-0">
-                            <p className="font-medium truncate">{template.name}</p>
-                            <p className="text-xs text-muted-foreground truncate">
-                              {template.category}
-                            </p>
-                          </div>
-                        </div>
-                        <Check
-                          className={cn(
-                            "ml-2 h-4 w-4 flex-shrink-0",
-                            externalSelectedTemplate?.id === template.id
-                              ? "opacity-100"
-                              : "opacity-0"
-                          )}
-                        />
-                      </CommandItem>
-                    ))}
-                </CommandGroup>
-              )}
+              <CommandEmpty>{t("common.no_results")}</CommandEmpty>
+              <CommandGroup heading="Templates">
+                {templates.map((template) => (
+                  <CommandItem
+                    key={template.id}
+                    value={template.name}
+                    onSelect={() => handleSelect(template)}
+                    className="cursor-pointer"
+                  >
+                    <div className="flex items-center gap-2">
+                      <SubscriptionIcon name={template.name} logoUrl={template.icon_url} className="w-5 h-5" />
+                      <span>{template.name}</span>
+                    </div>
+                    {value === template.name && (
+                      <Check className="ml-auto h-4 w-4" />
+                    )}
+                  </CommandItem>
+                ))}
+              </CommandGroup>
             </CommandList>
           </Command>
         </PopoverContent>
       </Popover>
-      
-      {externalSelectedTemplate && (
-        <p className="text-xs text-blue-600 dark:text-blue-400">
-          ✓ ใช้ข้อมูลจาก Template - {externalSelectedTemplate.category}
-        </p>
-      )}
-      
-      {!externalSelectedTemplate && value && (
-        <p className="text-xs text-amber-600 dark:text-amber-400">
-          ⚠️ ชื่อใหม่ - กรุณากรอกข้อมูลเพิ่มเติม
-        </p>
-      )}
+      {error && <p className="text-sm text-red-500">{error}</p>}
     </div>
   );
 }

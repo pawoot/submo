@@ -16,6 +16,7 @@ import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
 import { AuthGuard } from "@/components/AuthGuard";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
+import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
 import { th, enUS } from "date-fns/locale";
@@ -24,9 +25,9 @@ import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
+import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
-type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
@@ -125,57 +126,36 @@ export default function EditSubscription() {
   ];
 
   useEffect(() => {
+    const loadSubscription = async () => {
+      try {
+        const { data, error } = await supabase
+          .from("subscriptions")
+          .select(`
+            *,
+            categories (*),
+            payment_methods (*)
+          `)
+          .eq("id", id)
+          .single();
+
+        if (error) throw error;
+        setSubscription(data);
+      } catch (error) {
+        console.error("Error loading data:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load subscription data",
+          variant: "destructive",
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+
     if (id) {
-      loadData();
+      loadSubscription();
     }
   }, [id]);
-
-  const loadData = async () => {
-    try {
-      const [categories, paymentMethods, subscription] = await Promise.all([
-        subscriptionService.getCategories(),
-        subscriptionService.getPaymentMethods(),
-        subscriptionService.getById(id as string)
-      ]);
-      
-      setDbCategories(categories);
-      setDbPaymentMethods(paymentMethods);
-      setSubscription(subscription);
-
-      if (subscription) {
-        setSharedUsers(subscription.shared_with || []);
-        
-        // Format dates objects from ISO strings
-        const startDateObj = subscription.start_date ? new Date(subscription.start_date) : new Date();
-        const nextBillingDateObj = subscription.next_billing_date ? new Date(subscription.next_billing_date) : new Date();
-
-        // Set form values
-        reset({
-          name: subscription.name,
-          category_id: subscription.category_id || "",
-          description: subscription.description || "",
-          amount: subscription.amount.toString(),
-          currency: subscription.currency,
-          billing_cycle: subscription.billing_cycle,
-          payment_method_id: subscription.payment_method_id || "",
-          card_last_4: subscription.card_last_4 || "",
-          start_date: startDateObj,
-          next_billing_date: nextBillingDateObj,
-          website_url: subscription.website_url || "",
-          notes: subscription.notes || "",
-        });
-      }
-    } catch (error) {
-      console.error("Error loading data:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load subscription data",
-        variant: "destructive",
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const addSharedUser = () => {
     if (!newUserEmail) {
