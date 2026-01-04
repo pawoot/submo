@@ -57,6 +57,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type DisplaySubscription = Subscription & {
@@ -606,9 +607,11 @@ export default function Home() {
                         <div className="flex items-start justify-between pl-2">
                            {/* Icon & Main Info */}
                            <div className="flex gap-3">
-                              <div className="w-10 h-10 md:w-12 md:h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shrink-0 shadow-sm">
-                                {sub.name.charAt(0)}
-                              </div>
+                              <SubscriptionIcon
+                                name={sub.name}
+                                website={sub.website}
+                                className="w-10 h-10 md:w-12 md:h-12 shrink-0 shadow-sm"
+                              />
                               <div>
                                 <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
                                 <div className="flex items-center gap-2 mt-1">
