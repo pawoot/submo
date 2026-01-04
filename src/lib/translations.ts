@@ -231,6 +231,126 @@ export const translations = {
     en: "{days} days left"
   },
 
+  // Search & Filter
+  "search.label": {
+    th: "ค้นหา",
+    en: "Search"
+  },
+  "search.placeholder": {
+    th: "ค้นหาชื่อ Subscription...",
+    en: "Search subscription name..."
+  },
+  "filter.timePeriod": {
+    th: "ช่วงเวลา",
+    en: "Time Period"
+  },
+  "filter.priceRange": {
+    th: "รวมช่วงระเงิน",
+    en: "Price Range"
+  },
+  "filter.all": {
+    th: "ทั้งหมด",
+    en: "All"
+  },
+  "filter.button": {
+    th: "ตัวกรองข้อมูล",
+    en: "Filter"
+  },
+  "filter.apply": {
+    th: "ค้นหา",
+    en: "Apply"
+  },
+
+  // Charts
+  "charts.monthlyByCategory": {
+    th: "ค่าใช้จ่ายรายเดือนตามหมวดหมู่",
+    en: "Monthly Cost by Category"
+  },
+  "charts.categoryDistribution": {
+    th: "สัดส่วนค่าใช้จ่ายตามหมวดหมู่",
+    en: "Cost Distribution by Category"
+  },
+  "charts.paymentMethodCost": {
+    th: "ค่าใช้จ่ายตามช่องทางการชำระเงิน",
+    en: "Cost by Payment Method"
+  },
+  "charts.paymentMethodDistribution": {
+    th: "สัดส่วนการใช้ช่องทางการชำระเงิน",
+    en: "Payment Method Distribution"
+  },
+  "charts.thisMonth": {
+    th: "เดือนนี้",
+    en: "This Month"
+  },
+  "charts.thisQuarter": {
+    th: "ไตรมาสนี้",
+    en: "This Quarter"
+  },
+  "charts.thisYear": {
+    th: "ปีนี้",
+    en: "This Year"
+  },
+  "charts.expiringSoon": {
+    th: "ใกล้หมดอายุ",
+    en: "Expiring Soon"
+  },
+  "charts.noResults": {
+    th: "ไม่พบข้อมูลที่ค้นหา",
+    en: "No Results Found"
+  },
+  "charts.noResultsDesc": {
+    th: "ลองปรับเปลี่ยนเงื่อนไขการค้นหาหรือตัวกรอง",
+    en: "Try adjusting your search or filter criteria"
+  },
+  "charts.currentFilters": {
+    th: "เงื่อนไขที่ใช้:",
+    en: "Current filters:"
+  },
+  "charts.clearFilters": {
+    th: "ล้างตัวกรองทั้งหมด",
+    en: "Clear All Filters"
+  },
+  "charts.emptyTitle": {
+    th: "เริ่มต้นบริหารจัดการ Subscription",
+    en: "Start Managing Your Subscriptions"
+  },
+  "charts.emptyDesc": {
+    th: "ยังไม่มี Subscription ในระบบ เพิ่มรายการแรกของคุณเพื่อเริ่มติดตามค่าใช้จ่าย",
+    en: "No subscriptions yet. Add your first one to start tracking expenses"
+  },
+  "charts.trackSpending": {
+    th: "ติดตามค่าใช้จ่าย",
+    en: "Track Spending"
+  },
+  "charts.viewCharts": {
+    th: "ดูกราฟและสถิติ",
+    en: "View Charts & Stats"
+  },
+  "charts.analyzeSpending": {
+    th: "วิเคราะห์รายจ่าย",
+    en: "Analyze Expenses"
+  },
+  "charts.byCategory": {
+    th: "แยกตามหมวดหมู่",
+    en: "By Category"
+  },
+  "charts.autoReminders": {
+    th: "แจ้งเตือนอัตโนมัติ",
+    en: "Auto Reminders"
+  },
+  "charts.beforeDue": {
+    th: "ก่อนครบกำหนด",
+    en: "Before Due Date"
+  },
+  "charts.addFirst": {
+    th: "เพิ่ม Subscription แรก",
+    en: "Add First Subscription"
+  },
+  "charts.quickStart": {
+    th: "💡 เริ่มต้นง่ายๆ ใช้เวลาแค่ไม่กี่วินาที",
+    en: "💡 Quick and easy to get started"
+  },
+
   // Add Subscription Page
   "addSub.title": {
     th: "เพิ่ม Subscription",
@@ -1335,7 +1455,7 @@ export const translations = {
     en: "Failed to send email"
   },
   "auth.linkSentTo": {
-    th: "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง",
+    th: "เราได้ส่งลิงก์รีเซ็ตไปยัง",
     en: "We sent a password reset link to"
   },
   "auth.checkSpamFolder": {

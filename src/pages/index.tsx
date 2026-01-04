@@ -379,7 +379,7 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div className={`rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-all duration-300 ${
+                <div={`rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-all duration-300 ${
                   scrolled ? "w-8 h-8" : "w-10 h-10"
                 }`}>
                   <CreditCard className={`text-white transition-all duration-300 ${

@@ -9,6 +9,7 @@ import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface Subscription {
   id: string;
@@ -69,6 +70,7 @@ const paymentMethodLabels: { [key: string]: { label: string; icon: string } } = 
 
 export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
   const { preferredCurrency } = useCurrency();
+  const { t } = useLanguage();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBilling, setSelectedBilling] = useState<string>("all");
@@ -202,11 +204,10 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               {/* Main Heading */}
               <div className="space-y-3">
                 <h2 className="text-3xl font-bold text-gray-900 tracking-tight">
-                  เริ่มต้นบริหารจัดการ Subscription
+                  {t("charts.emptyTitle")}
                 </h2>
                 <p className="text-lg text-gray-600 max-w-md mx-auto leading-relaxed">
-                  ยังไม่มี Subscription ในระบบ<br />
-                  เพิ่มรายการแรกของคุณเพื่อเริ่มติดตามค่าใช้จ่าย
+                  {t("charts.emptyDesc")}
                 </p>
               </div>
 
@@ -214,18 +215,18 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               <div className="grid grid-cols-1 md:grid-cols-3 gap-4 pt-6 pb-4">
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-indigo-100 shadow-sm">
                   <TrendingUp className="w-8 h-8 text-indigo-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-700">ติดตามค่าใช้จ่าย</p>
-                  <p className="text-xs text-gray-500 mt-1">ดูกราฟและสถิติ</p>
+                  <p className="text-sm font-semibold text-gray-700">{t("charts.trackSpending")}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t("charts.viewCharts")}</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-purple-100 shadow-sm">
                   <BarChart3 className="w-8 h-8 text-purple-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-700">วิเคราะห์รายจ่าย</p>
-                  <p className="text-xs text-gray-500 mt-1">แยกตามหมวดหมู่</p>
+                  <p className="text-sm font-semibold text-gray-700">{t("charts.analyzeSpending")}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t("charts.byCategory")}</p>
                 </div>
                 <div className="bg-white/80 backdrop-blur rounded-xl p-4 border border-pink-100 shadow-sm">
                   <PieChartIcon className="w-8 h-8 text-pink-600 mx-auto mb-2" />
-                  <p className="text-sm font-semibold text-gray-700">แจ้งเตือนอัตโนมัติ</p>
-                  <p className="text-xs text-gray-500 mt-1">ก่อนครบกำหนด</p>
+                  <p className="text-sm font-semibold text-gray-700">{t("charts.autoReminders")}</p>
+                  <p className="text-xs text-gray-500 mt-1">{t("charts.beforeDue")}</p>
                 </div>
               </div>
 
@@ -237,14 +238,14 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                     className="bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-semibold px-10 py-6 text-lg shadow-lg hover:shadow-xl transition-all duration-300 hover:scale-105"
                   >
                     <PackagePlus className="w-6 h-6 mr-3" />
-                    เพิ่ม Subscription แรก
+                    {t("charts.addFirst")}
                   </Button>
                 </Link>
               </div>
 
               {/* Helper Text */}
               <p className="text-sm text-gray-500 pt-4">
-                💡 เริ่มต้นง่ายๆ ใช้เวลาแค่ไม่กี่วินาที
+                {t("charts.quickStart")}
               </p>
             </div>
           </CardContent>
@@ -260,12 +261,12 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
         <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
           {/* Search Box */}
           <div className="md:col-span-4">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">ค้นหา</label>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">{t("search.label")}</label>
             <div className="relative">
               <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
               <Input
                 type="text"
-                placeholder="ค้นหาชื่อ Subscription..."
+                placeholder={t("search.placeholder")}
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
                 className="pl-10 h-11"
@@ -275,34 +276,34 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
 
           {/* Time Range Dropdown */}
           <div className="md:col-span-3">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">ช่วงเวลา</label>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">{t("filter.timePeriod")}</label>
             <Select value={timeRange} onValueChange={setTimeRange}>
               <SelectTrigger className="h-11">
-                <SelectValue placeholder="ทั้งหมด" />
+                <SelectValue placeholder={t("filter.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">ทั้งหมด</SelectItem>
-                <SelectItem value="this-month">เดือนนี้</SelectItem>
-                <SelectItem value="this-quarter">ไตรมาสนี้</SelectItem>
-                <SelectItem value="this-year">ปีนี้</SelectItem>
-                <SelectItem value="expiring-soon">ใกล้หมดอายุ</SelectItem>
+                <SelectItem value="all">{t("filter.all")}</SelectItem>
+                <SelectItem value="this-month">{t("charts.thisMonth")}</SelectItem>
+                <SelectItem value="this-quarter">{t("charts.thisQuarter")}</SelectItem>
+                <SelectItem value="this-year">{t("charts.thisYear")}</SelectItem>
+                <SelectItem value="expiring-soon">{t("charts.expiringSoon")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
 
           {/* Billing Cycle Dropdown */}
           <div className="md:col-span-3">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">รอบชำระเงิน</label>
+            <label className="text-sm font-medium text-gray-700 mb-2 block">{t("addSub.billing")}</label>
             <Select value={selectedBilling} onValueChange={setSelectedBilling}>
               <SelectTrigger className="h-11">
-                <SelectValue placeholder="ทั้งหมด" />
+                <SelectValue placeholder={t("filter.all")} />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="all">ทั้งหมด</SelectItem>
-                <SelectItem value="monthly">รายเดือน</SelectItem>
-                <SelectItem value="quarterly">ราย 3 เดือน</SelectItem>
-                <SelectItem value="biannually">ราย 6 เดือน</SelectItem>
-                <SelectItem value="yearly">รายปี</SelectItem>
+                <SelectItem value="all">{t("filter.all")}</SelectItem>
+                <SelectItem value="monthly">{t("subscriptions.monthly")}</SelectItem>
+                <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                <SelectItem value="biannually">{t("subscriptions.halfYearly")}</SelectItem>
+                <SelectItem value="yearly">{t("subscriptions.yearly")}</SelectItem>
               </SelectContent>
             </Select>
           </div>
@@ -310,7 +311,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
           {/* Search Button */}
           <div className="md:col-span-2">
             <Button className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
-              ค้นหา
+              {t("common.search")}
             </Button>
           </div>
         </div>
@@ -321,21 +322,21 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
         <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1">
           <TabsList className="bg-gray-50">
             <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 font-semibold">
-              หมวดหมู่
+              {t("filter.all")}
             </TabsTrigger>
             {availableCategories.includes("design") && (
               <TabsTrigger value="design" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">
-                Design
+                {t("category.design")}
               </TabsTrigger>
             )}
             {availableCategories.includes("development") && (
               <TabsTrigger value="development" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">
-                Development
+                {t("category.development")}
               </TabsTrigger>
             )}
             {availableCategories.includes("productivity") && (
               <TabsTrigger value="productivity" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600">
-                Productivity
+                {t("category.productivity")}
               </TabsTrigger>
             )}
           </TabsList>
@@ -348,7 +349,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
           className="text-indigo-600 hover:text-indigo-700 hover:bg-indigo-50 font-medium"
         >
           <Filter className="w-4 h-4 mr-2" />
-          ตัวกรองข้อมูล
+          {t("filter.button")}
         </Button>
       </div>
 
@@ -367,40 +368,39 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               {/* Message */}
               <div className="space-y-2">
                 <h3 className="text-2xl font-bold text-gray-700">
-                  ไม่พบข้อมูลที่ค้นหา
+                  {t("charts.noResults")}
                 </h3>
                 <p className="text-gray-500 text-base max-w-sm mx-auto">
-                  ลองปรับเปลี่ยนเงื่อนไขการค้นหาหรือตัวกรอง<br />
-                  เพื่อแสดงผลลัพธ์ที่ต้องการ
+                  {t("charts.noResultsDesc")}
                 </p>
               </div>
 
               {/* Current Filters Display */}
               <div className="bg-white rounded-lg p-4 border border-gray-200 inline-block text-left">
-                <p className="text-xs font-semibold text-gray-600 mb-2">เงื่อนไขที่ใช้:</p>
+                <p className="text-xs font-semibold text-gray-600 mb-2">{t("charts.currentFilters")}</p>
                 <div className="space-y-1 text-sm text-gray-600">
                   {searchQuery && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400">•</span>
-                      <span>ค้นหา: <span className="font-medium text-indigo-600">&quot;{searchQuery}&quot;</span></span>
+                      <span>{t("search.label")}: <span className="font-medium text-indigo-600">&quot;{searchQuery}&quot;</span></span>
                     </div>
                   )}
                   {selectedCategory !== "all" && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400">•</span>
-                      <span>หมวดหมู่: <span className="font-medium text-indigo-600">{categoryLabels[selectedCategory]}</span></span>
+                      <span>{t("addSub.category")}: <span className="font-medium text-indigo-600">{categoryLabels[selectedCategory]}</span></span>
                     </div>
                   )}
                   {selectedBilling !== "all" && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400">•</span>
-                      <span>รอบชำระ: <span className="font-medium text-indigo-600">{selectedBilling === "monthly" ? "รายเดือน" : selectedBilling === "yearly" ? "รายปี" : selectedBilling === "quarterly" ? "ราย 3 เดือน" : "ราย 6 เดือน"}</span></span>
+                      <span>{t("addSub.billing")}: <span className="font-medium text-indigo-600">{selectedBilling === "monthly" ? t("subscriptions.monthly") : selectedBilling === "yearly" ? t("subscriptions.yearly") : selectedBilling === "quarterly" ? t("subscriptions.quarterly") : t("subscriptions.halfYearly")}</span></span>
                     </div>
                   )}
                   {timeRange !== "all" && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400">•</span>
-                      <span>ช่วงเวลา: <span className="font-medium text-indigo-600">{timeRange === "this-month" ? "เดือนนี้" : timeRange === "this-quarter" ? "ไตรมาสนี้" : timeRange === "this-year" ? "ปีนี้" : "ใกล้หมดอายุ"}</span></span>
+                      <span>{t("filter.timePeriod")}: <span className="font-medium text-indigo-600">{timeRange === "this-month" ? t("charts.thisMonth") : timeRange === "this-quarter" ? t("charts.thisQuarter") : timeRange === "this-year" ? t("charts.thisYear") : t("charts.expiringSoon")}</span></span>
                     </div>
                   )}
                 </div>
@@ -419,7 +419,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                 className="mt-4 border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 font-semibold"
               >
                 <Filter className="w-4 h-4 mr-2" />
-                ล้างตัวกรองทั้งหมด
+                {t("charts.clearFilters")}
               </Button>
             </div>
           </CardContent>
