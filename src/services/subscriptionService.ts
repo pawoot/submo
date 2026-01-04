@@ -2,19 +2,70 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
-  categories?: Database["public"]["Tables"]["categories"]["Row"] | null;
+  categories?: {
+    id: string;
+    name_en: string;
+    name_th: string;
+    slug: string;
+    icon: string;
+    color: string;
+  } | null;
+  payment_methods?: {
+    id: string;
+    name_en: string;
+    name_th: string;
+    slug: string;
+    icon: string;
+    color: string;
+  } | null;
 };
-type SubscriptionInsert = Database["public"]["Tables"]["subscriptions"]["Insert"];
-type SubscriptionUpdate = Database["public"]["Tables"]["subscriptions"]["Update"];
+
+type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export const subscriptionService = {
+  /**
+   * Get all active payment methods
+   */
+  async getPaymentMethods() {
+    const { data, error } = await supabase
+      .from("payment_methods")
+      .select("*")
+      .eq("is_active", true)
+      .order("display_order", { ascending: true });
+
+    if (error) {
+      console.error("Error fetching payment methods:", error);
+      throw error;
+    }
+
+    return data as PaymentMethod[];
+  },
+
   /**
    * Get all subscriptions for the current user
    */
   async getAll(): Promise<Subscription[]> {
     const { data, error } = await supabase
       .from("subscriptions")
-      .select("*, categories(*)")
+      .select(`
+        *,
+        categories!category_id (
+          id,
+          name_en,
+          name_th,
+          slug,
+          icon,
+          color
+        ),
+        payment_methods!payment_method_id (
+          id,
+          name_en,
+          name_th,
+          slug,
+          icon,
+          color
+        )
+      `)
       .order("next_billing_date", { ascending: true });
 
     if (error) {
@@ -22,7 +73,7 @@ export const subscriptionService = {
       throw error;
     }
 
-    return data || [];
+    return data as unknown as Subscription[];
   },
 
   /**
@@ -48,7 +99,25 @@ export const subscriptionService = {
   async getById(id: string): Promise<Subscription | null> {
     const { data, error } = await supabase
       .from("subscriptions")
-      .select("*, categories(*)")
+      .select(`
+        *,
+        categories!category_id (
+          id,
+          name_en,
+          name_th,
+          slug,
+          icon,
+          color
+        ),
+        payment_methods!payment_method_id (
+          id,
+          name_en,
+          name_th,
+          slug,
+          icon,
+          color
+        )
+      `)
       .eq("id", id)
       .single();
 
@@ -57,29 +126,26 @@ export const subscriptionService = {
       throw error;
     }
 
-    return data;
+    return data as unknown as Subscription;
   },
 
   /**
    * Create a new subscription
    */
-  async create(subscription: Omit<SubscriptionInsert, "user_id">): Promise<Subscription> {
+  async create(subscription: Omit<Database["public"]["Tables"]["subscriptions"]["Row"], "id" | "created_at" | "user_id">): Promise<Subscription> {
     const { data: { user } } = await supabase.auth.getUser();
     
     if (!user) {
       throw new Error("User not authenticated");
     }
 
-    // Ensure we send both category_id and legacy category text for compatibility
-    const payload = {
-      ...subscription,
-      user_id: user.id,
-    };
-
     const { data, error } = await supabase
       .from("subscriptions")
-      .insert(payload)
-      .select("*, categories(*)")
+      .insert({
+        ...subscription,
+        user_id: user.id,
+      })
+      .select()
       .single();
 
     if (error) {
@@ -93,12 +159,12 @@ export const subscriptionService = {
   /**
    * Update an existing subscription
    */
-  async update(id: string, subscription: SubscriptionUpdate): Promise<Subscription> {
+  async update(id: string, subscription: Partial<Database["public"]["Tables"]["subscriptions"]["Row"]>): Promise<Subscription> {
     const { data, error } = await supabase
       .from("subscriptions")
       .update(subscription)
       .eq("id", id)
-      .select("*, categories(*)")
+      .select()
       .single();
 
     if (error) {

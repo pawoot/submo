@@ -23,7 +23,7 @@ import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBr
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import type { Database } from "@/integrations/supabase/types";
-import { useForm } from "react-hook-form";
+import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -31,24 +31,25 @@ import { useLanguage } from "@/contexts/LanguageContext";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
+type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
-  const [startDate, setStartDate] = useState<Date>();
-  const [nextBillingDate, setNextBillingDate] = useState<Date>();
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
+  const [dbPaymentMethods, setDbPaymentMethods] = useState<PaymentMethod[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
+  
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, isLoading: currencyLoading } = useCurrency();
   const { t, language } = useLanguage();
 
-  // Validation Schema (Moved inside component to access t function)
+  // Zod Schema - Aligned with DB columns where possible
   const subscriptionSchema = z.object({
     name: z.string()
       .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
@@ -59,7 +60,7 @@ export default function AddSubscription() {
       .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
       .optional()
       .nullable(),
-    cost: z.string()
+    amount: z.string()
       .min(1, t("validation.required"))
       .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
         message: t("validation.positiveNumber")
@@ -69,15 +70,15 @@ export default function AddSubscription() {
       }),
     currency: z.string()
       .min(1, t("validation.required")),
-    billing: z.string()
+    billing_cycle: z.string()
       .min(1, t("validation.required")),
-    paymentMethod: z.string()
+    payment_method_id: z.string()
       .min(1, t("validation.required")),
-    cardLast4: z.string()
+    card_last_4: z.string()
       .max(4, t("validation.maxLength") + " 4")
       .optional()
       .nullable(),
-    website: z.string()
+    website_url: z.string()
       .url(t("validation.invalidUrl"))
       .optional()
       .nullable()
@@ -86,17 +87,17 @@ export default function AddSubscription() {
       .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
       .optional()
       .nullable(),
-    startDate: z.date({
+    start_date: z.date({
       required_error: t("validation.required"),
       invalid_type_error: t("validation.invalidDate"),
     }),
-    nextBillingDate: z.date({
+    next_billing_date: z.date({
       required_error: t("validation.required"),
       invalid_type_error: t("validation.invalidDate"),
     }),
-  }).refine((data) => data.nextBillingDate > data.startDate, {
+  }).refine((data) => data.next_billing_date > data.start_date, {
     message: t("validation.invalidDate"),
-    path: ["nextBillingDate"],
+    path: ["next_billing_date"],
   });
 
   type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
@@ -107,23 +108,27 @@ export default function AddSubscription() {
     formState: { errors },
     setValue,
     watch,
+    control,
   } = useForm<SubscriptionFormData>({
     resolver: zodResolver(subscriptionSchema),
     defaultValues: {
       name: "",
       currency: "USD",
-      billing: "monthly",
-      paymentMethod: "credit-card",
+      billing_cycle: "monthly",
     },
     mode: "onChange",
   });
 
-  // Watch name field from form
+  // Watch name field
   const subscriptionName = watch("name");
+  // Watch dates for calendar state
+  const startDate = watch("start_date");
+  const nextBillingDate = watch("next_billing_date");
 
   useEffect(() => {
     loadPopularTemplates();
     loadCategories();
+    loadPaymentMethods();
   }, []);
 
   useEffect(() => {
@@ -132,27 +137,21 @@ export default function AddSubscription() {
     }
   }, [preferredCurrency, currencyLoading, setValue]);
 
-  // Sync date states with form
-  const handleStartDateChange = (date: Date | undefined) => {
-    setStartDate(date);
-    if (date) {
-      setValue("startDate", date, { shouldValidate: true });
-    }
-  };
-
-  const handleNextBillingDateChange = (date: Date | undefined) => {
-    setNextBillingDate(date);
-    if (date) {
-      setValue("nextBillingDate", date, { shouldValidate: true });
-    }
-  };
-
   const loadCategories = async () => {
     try {
       const cats = await subscriptionService.getCategories();
       setDbCategories(cats);
     } catch (error) {
       console.error("Error loading categories:", error);
+    }
+  };
+
+  const loadPaymentMethods = async () => {
+    try {
+      const methods = await subscriptionService.getPaymentMethods();
+      setDbPaymentMethods(methods);
+    } catch (error) {
+      console.error("Error loading payment methods:", error);
     }
   };
 
@@ -167,27 +166,27 @@ export default function AddSubscription() {
 
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
     setSelectedTemplate(template);
-    setValue("name", template.name);
+    setValue("name", template.name, { shouldValidate: true });
     
     // Auto-select category if slug matches
     if (template.category) {
       const matchingCat = dbCategories.find(c => c.slug === template.category);
       if (matchingCat) {
-        setValue("category_id", matchingCat.id);
+        setValue("category_id", matchingCat.id, { shouldValidate: true });
       }
     }
     
     if (template.default_price) {
-      setValue("cost", template.default_price.toString());
+      setValue("amount", template.default_price.toString(), { shouldValidate: true });
     }
     if (template.default_currency) {
-      setValue("currency", template.default_currency);
+      setValue("currency", template.default_currency, { shouldValidate: true });
     }
     if (template.default_billing_cycle) {
-      setValue("billing", template.default_billing_cycle);
+      setValue("billing_cycle", template.default_billing_cycle, { shouldValidate: true });
     }
     if (template.website_url) {
-      setValue("website", template.website_url);
+      setValue("website_url", template.website_url, { shouldValidate: true });
     }
 
     toast({
@@ -201,19 +200,6 @@ export default function AddSubscription() {
     handleTemplateSelect(template);
   };
 
-  const categories = [
-    { value: "design", label: t("category.design") },
-    { value: "development", label: t("category.development") },
-    { value: "productivity", label: t("category.productivity") },
-    { value: "entertainment", label: t("category.entertainment") },
-    { value: "cloud-storage", label: t("category.cloud-storage") },
-    { value: "gaming", label: t("category.gaming") },
-    { value: "education", label: t("category.education") },
-    { value: "fitness", label: t("category.fitness") },
-    { value: "news", label: t("category.news") },
-    { value: "other", label: t("category.other") }
-  ];
-
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
     { code: "THB", symbol: "฿", name: "Thai Baht" },
@@ -224,24 +210,12 @@ export default function AddSubscription() {
     { code: "SGD", symbol: "S$", name: "Singapore Dollar" },
   ];
 
-  const paymentMethods = [
-    { value: "credit-card", label: t("payment.credit-card") },
-    { value: "debit-card", label: t("payment.debit-card") },
-    { value: "bank-transfer", label: t("payment.bank-transfer") },
-    { value: "google-pay", label: t("payment.google-pay") },
-    { value: "apple-pay", label: t("payment.apple-pay") },
-    { value: "paypal", label: t("payment.paypal") },
-    { value: "crypto", label: t("payment.crypto") },
-    { value: "other", label: t("payment.other") }
-  ];
-
   const addSharedUser = () => {
     if (!newUserEmail) {
       setEmailError(t("validation.required"));
       return;
     }
 
-    // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newUserEmail)) {
       setEmailError(t("validation.invalidEmail"));
@@ -264,44 +238,42 @@ export default function AddSubscription() {
 
   const handleSubmit = async (data: SubscriptionFormData) => {
     setIsSubmitting(true);
-
     try {
-      // Find selected category to get slug for legacy support
       const selectedCategory = dbCategories.find(c => c.id === data.category_id);
-      
-      const subscriptionData = {
+      const selectedPaymentMethod = dbPaymentMethods.find(p => p.id === data.payment_method_id);
+
+      await subscriptionService.create({
         name: data.name,
         category_id: data.category_id,
         category: selectedCategory?.slug || "other", // Legacy support
         description: data.description || null,
-        amount: parseFloat(data.cost),
+        amount: Number(data.amount),
         currency: data.currency,
-        billing_cycle: data.billing,
-        payment_method: data.paymentMethod,
-        card_last_4: data.cardLast4 || null,
-        start_date: format(data.startDate, "yyyy-MM-dd"),
-        next_billing_date: format(data.nextBillingDate, "yyyy-MM-dd"),
-        website_url: data.website || null,
+        billing_cycle: data.billing_cycle,
+        payment_method_id: data.payment_method_id,
+        payment_method: selectedPaymentMethod?.slug || "other", // Legacy support
+        card_last_4: data.card_last_4 || null,
+        start_date: data.start_date.toISOString(),
+        next_billing_date: data.next_billing_date.toISOString(),
+        website_url: data.website_url || null,
         notes: data.notes || null,
-        shared_with: sharedUsers.length > 0 ? sharedUsers : null,
-      };
-
-      await subscriptionService.create(subscriptionData);
-
-      toast({
-        title: t("addSub.success"),
-        description: `${t("common.success")} - ${subscriptionData.name}`,
-        duration: 3000,
+        is_active: true,
+        logo_url: null,
+        shared_with: sharedUsers
       });
 
+      toast({
+        title: t("common.success"),
+        description: t("subscription.add_success"),
+      });
+      
       router.push("/");
     } catch (error) {
       console.error("Error creating subscription:", error);
       toast({
-        title: t("addSub.error"),
-        description: t("toast.createError"),
+        title: t("common.error"),
+        description: t("common.error_occurred"),
         variant: "destructive",
-        duration: 3000,
       });
     } finally {
       setIsSubmitting(false);
@@ -316,7 +288,6 @@ export default function AddSubscription() {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
-        {/* Header */}
         <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
@@ -333,7 +304,6 @@ export default function AddSubscription() {
           </div>
         </header>
 
-        {/* Main Content */}
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
             <div className="space-y-6">
@@ -422,21 +392,27 @@ export default function AddSubscription() {
 
                     <div className="space-y-2">
                       <Label htmlFor="category">{t("addSub.category")} *</Label>
-                      <Select onValueChange={(value) => setValue("category_id", value)} required>
-                        <SelectTrigger id="category" className={cn(errors.category_id && "border-red-500")}>
-                          <SelectValue placeholder={t("addSub.selectCategory")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {dbCategories.map((cat) => (
-                            <SelectItem key={cat.id} value={cat.id}>
-                              <div className="flex items-center gap-2">
-                                <span>{cat.icon}</span>
-                                <span>{language === 'th' ? cat.name_th : cat.name_en}</span>
-                              </div>
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        name="category_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger id="category" className={cn(errors.category_id && "border-red-500")}>
+                              <SelectValue placeholder={t("addSub.selectCategory")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dbCategories.map((cat) => (
+                                <SelectItem key={cat.id} value={cat.id}>
+                                  <div className="flex items-center gap-2">
+                                    <span>{cat.icon}</span>
+                                    <span>{language === 'th' ? cat.name_th : cat.name_en}</span>
+                                  </div>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                       {errors.category_id && (
                         <p className="text-sm text-red-500">{errors.category_id.message}</p>
                       )}
@@ -458,16 +434,16 @@ export default function AddSubscription() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="website">{t("addSub.website")} {t("common.optional")}</Label>
+                    <Label htmlFor="website_url">{t("addSub.website")} {t("common.optional")}</Label>
                     <Input 
-                      id="website"
-                      {...register("website")}
+                      id="website_url"
+                      {...register("website_url")}
                       type="url"
                       placeholder={t("addSub.websitePlaceholder")}
-                      className={cn(errors.website && "border-red-500")}
+                      className={cn(errors.website_url && "border-red-500")}
                     />
-                    {errors.website && (
-                      <p className="text-sm text-red-500">{errors.website.message}</p>
+                    {errors.website_url && (
+                      <p className="text-sm text-red-500">{errors.website_url.message}</p>
                     )}
                   </div>
                 </CardContent>
@@ -481,90 +457,111 @@ export default function AddSubscription() {
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="cost">{t("addSub.cost")} *</Label>
+                      <Label htmlFor="amount">{t("addSub.cost")} *</Label>
                       <Input 
-                        id="cost"
-                        {...register("cost")}
+                        id="amount"
+                        {...register("amount")}
                         type="number" 
                         step="0.01" 
                         placeholder={t("addSub.costPlaceholder")}
-                        className={cn(errors.cost && "border-red-500")}
+                        className={cn(errors.amount && "border-red-500")}
                         required
                       />
-                      {errors.cost && (
-                        <p className="text-sm text-red-500">{errors.cost.message}</p>
+                      {errors.amount && (
+                        <p className="text-sm text-red-500">{errors.amount.message}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="currency">{t("addSub.currency")} *</Label>
-                      <Select onValueChange={(value) => setValue("currency", value)} required defaultValue="USD">
-                        <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
-                          <SelectValue placeholder={t("addSub.selectCurrency")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {currencies.map((curr) => (
-                            <SelectItem key={curr.code} value={curr.code}>
-                              {curr.symbol} {curr.code} - {curr.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
+                      <Controller
+                        name="currency"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
+                              <SelectValue placeholder={t("addSub.selectCurrency")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {currencies.map((curr) => (
+                                <SelectItem key={curr.code} value={curr.code}>
+                                  {curr.symbol} {curr.code} - {curr.name}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
                       {errors.currency && (
                         <p className="text-sm text-red-500">{errors.currency.message}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="billing">{t("addSub.billing")} *</Label>
-                      <Select onValueChange={(value) => setValue("billing", value)} required defaultValue="monthly">
-                        <SelectTrigger id="billing" className={cn(errors.billing && "border-red-500")}>
-                          <SelectValue placeholder={t("addSub.selectBilling")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
-                          <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
-                          <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
-                          <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
-                        </SelectContent>
-                      </Select>
-                      {errors.billing && (
-                        <p className="text-sm text-red-500">{errors.billing.message}</p>
+                      <Label htmlFor="billing_cycle">{t("addSub.billing")} *</Label>
+                      <Controller
+                        name="billing_cycle"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger id="billing_cycle" className={cn(errors.billing_cycle && "border-red-500")}>
+                              <SelectValue placeholder={t("addSub.selectBilling")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
+                              <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
+                              <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                              <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.billing_cycle && (
+                        <p className="text-sm text-red-500">{errors.billing_cycle.message}</p>
                       )}
                     </div>
                   </div>
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="paymentMethod">{t("addSub.paymentMethod")} *</Label>
-                      <Select onValueChange={(value) => setValue("paymentMethod", value)} required defaultValue="credit-card">
-                        <SelectTrigger id="paymentMethod" className={cn(errors.paymentMethod && "border-red-500")}>
-                          <SelectValue placeholder={t("addSub.selectPayment")} />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {paymentMethods.map((method) => (
-                            <SelectItem key={method.value} value={method.value}>
-                              {method.label}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                      {errors.paymentMethod && (
-                        <p className="text-sm text-red-500">{errors.paymentMethod.message}</p>
+                      <Label htmlFor="payment_method_id">{t("subscription.payment_method")}</Label>
+                      <Controller
+                        name="payment_method_id"
+                        control={control}
+                        render={({ field }) => (
+                          <Select onValueChange={field.onChange} value={field.value}>
+                            <SelectTrigger id="payment_method_id" className="w-full h-11">
+                              <SelectValue placeholder={t("payment.select_method")} />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {dbPaymentMethods.map((method) => (
+                                <SelectItem key={method.id} value={method.id}>
+                                  <span className="flex items-center gap-2">
+                                    <span>{method.icon}</span>
+                                    <span>{language === 'th' ? method.name_th : method.name_en}</span>
+                                  </span>
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                      {errors.payment_method_id && (
+                        <p className="text-sm text-red-500">{errors.payment_method_id.message}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cardLast4">{t("addSub.cardNumber")} {t("common.optional")}</Label>
+                      <Label htmlFor="card_last_4">{t("addSub.cardNumber")} {t("common.optional")}</Label>
                       <Input 
-                        id="cardLast4"
-                        {...register("cardLast4")}
+                        id="card_last_4"
+                        {...register("card_last_4")}
                         placeholder={t("addSub.cardPlaceholder")}
                         maxLength={4}
-                        className={cn(errors.cardLast4 && "border-red-500")}
+                        className={cn(errors.card_last_4 && "border-red-500")}
                       />
-                      {errors.cardLast4 && (
-                        <p className="text-sm text-red-500">{errors.cardLast4.message}</p>
+                      {errors.card_last_4 && (
+                        <p className="text-sm text-red-500">{errors.card_last_4.message}</p>
                       )}
                     </div>
                   </div>
@@ -580,74 +577,86 @@ export default function AddSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>{t("addSub.startDate")} *</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !startDate && "text-muted-foreground",
-                              errors.startDate && "border-red-500"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {startDate ? (
-                              format(startDate, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
-                            ) : (
-                              <span>{t("common.select")}</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={startDate}
-                            onSelect={handleStartDateChange}
-                            initialFocus
-                            locale={language === 'th' ? th : enUS}
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {errors.startDate && (
-                        <p className="text-sm text-red-500">{errors.startDate.message}</p>
+                      <Controller
+                        name="start_date"
+                        control={control}
+                        render={({ field }) => (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                  errors.start_date && "border-red-500"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? (
+                                  format(field.value, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
+                                ) : (
+                                  <span>{t("common.select")}</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                                locale={language === 'th' ? th : enUS}
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      />
+                      {errors.start_date && (
+                        <p className="text-sm text-red-500">{errors.start_date.message}</p>
                       )}
                     </div>
 
                     <div className="space-y-2">
                       <Label>{t("addSub.nextBillingDate")} *</Label>
-                      <Popover>
-                        <PopoverTrigger asChild>
-                          <Button
-                            variant="outline"
-                            className={cn(
-                              "w-full justify-start text-left font-normal",
-                              !nextBillingDate && "text-muted-foreground",
-                              errors.nextBillingDate && "border-red-500"
-                            )}
-                          >
-                            <CalendarIcon className="mr-2 h-4 w-4" />
-                            {nextBillingDate ? (
-                              format(nextBillingDate, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
-                            ) : (
-                              <span>{t("common.select")}</span>
-                            )}
-                          </Button>
-                        </PopoverTrigger>
-                        <PopoverContent className="w-auto p-0" align="start">
-                          <Calendar
-                            mode="single"
-                            selected={nextBillingDate}
-                            onSelect={handleNextBillingDateChange}
-                            initialFocus
-                            locale={language === 'th' ? th : enUS}
-                            disabled={(date) =>
-                              startDate ? date <= startDate : false
-                            }
-                          />
-                        </PopoverContent>
-                      </Popover>
-                      {errors.nextBillingDate && (
-                        <p className="text-sm text-red-500">{errors.nextBillingDate.message}</p>
+                      <Controller
+                        name="next_billing_date"
+                        control={control}
+                        render={({ field }) => (
+                          <Popover>
+                            <PopoverTrigger asChild>
+                              <Button
+                                variant="outline"
+                                className={cn(
+                                  "w-full justify-start text-left font-normal",
+                                  !field.value && "text-muted-foreground",
+                                  errors.next_billing_date && "border-red-500"
+                                )}
+                              >
+                                <CalendarIcon className="mr-2 h-4 w-4" />
+                                {field.value ? (
+                                  format(field.value, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
+                                ) : (
+                                  <span>{t("common.select")}</span>
+                                )}
+                              </Button>
+                            </PopoverTrigger>
+                            <PopoverContent className="w-auto p-0" align="start">
+                              <Calendar
+                                mode="single"
+                                selected={field.value}
+                                onSelect={field.onChange}
+                                initialFocus
+                                locale={language === 'th' ? th : enUS}
+                                disabled={(date) =>
+                                  startDate ? date <= startDate : false
+                                }
+                              />
+                            </PopoverContent>
+                          </Popover>
+                        )}
+                      />
+                      {errors.next_billing_date && (
+                        <p className="text-sm text-red-500">{errors.next_billing_date.message}</p>
                       )}
                     </div>
                   </div>
@@ -751,7 +760,6 @@ export default function AddSubscription() {
         </main>
       </div>
 
-      {/* Subscription Template Browser */}
       <SubscriptionTemplateBrowser
         open={showBrowser}
         onOpenChange={setShowBrowser}
