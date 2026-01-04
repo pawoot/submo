@@ -6,13 +6,12 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
-import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
+import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 import { AuthGuard } from "@/components/AuthGuard";
 import { AddSubscriptionSteps } from "@/components/AddSubscriptionSteps";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { Database } from "@/integrations/supabase/types";
 
-type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
@@ -81,8 +80,12 @@ export default function AddSubscription() {
         website_url: data.website_url || null,
         notes: data.notes || null,
         is_active: true,
-        logo_url: null,
-        shared_with: [], // TODO: Add shared users support in step 3 if needed
+        logo_url: data.icon_url || null, // Map icon_url to logo_url for legacy support
+        icon_url: data.icon_url || null, // New field
+        is_template: false,
+        template_id: data.template_id || null, // Link to parent template
+        popularity_score: 0,
+        shared_with: [], 
         updated_at: new Date().toISOString()
       });
 

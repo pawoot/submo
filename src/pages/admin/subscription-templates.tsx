@@ -29,7 +29,7 @@ import {
   X
 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
+import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 import { profileService } from "@/services/profileService";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
@@ -45,7 +45,6 @@ import {
 } from "@/components/ui/pagination";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
-type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type SubscriptionTemplateInsert = Database["public"]["Tables"]["subscription_templates"]["Insert"];
 
 export default function AdminSubscriptionTemplates() {

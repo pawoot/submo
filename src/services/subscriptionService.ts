@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { authService } from "@/services/authService";
 import type { Database } from "@/integrations/supabase/types";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"] & {
@@ -66,6 +67,7 @@ export const subscriptionService = {
           color
         )
       `)
+      .eq("is_template", false)
       .order("next_billing_date", { ascending: true });
 
     if (error) {
@@ -133,7 +135,7 @@ export const subscriptionService = {
    * Create a new subscription
    */
   async create(subscription: Omit<Database["public"]["Tables"]["subscriptions"]["Row"], "id" | "created_at" | "user_id">): Promise<Subscription> {
-    const { data: { user } } = await supabase.auth.getUser();
+    const user = await authService.getCurrentUser();
     
     if (!user) {
       throw new Error("User not authenticated");
@@ -144,6 +146,7 @@ export const subscriptionService = {
       .insert({
         ...subscription,
         user_id: user.id,
+        is_template: false,
       })
       .select()
       .single();
@@ -200,6 +203,7 @@ export const subscriptionService = {
     const { data, error } = await supabase
       .from("subscriptions")
       .select("*")
+      .eq("is_template", false)
       .lte("next_billing_date", futureDate.toISOString())
       .order("next_billing_date", { ascending: true });
 
@@ -218,6 +222,7 @@ export const subscriptionService = {
     const { data, error } = await supabase
       .from("subscriptions")
       .select("*")
+      .eq("is_template", false)
       .eq("category", category)
       .order("next_billing_date", { ascending: true });
 
@@ -298,7 +303,7 @@ export const subscriptionService = {
  * Get all subscriptions for the current user
  */
 export async function getUserSubscriptions(): Promise<Subscription[]> {
-  const user = await getCurrentUser();
+  const user = await authService.getCurrentUser();
   if (!user) {
     throw new Error("User not authenticated");
   }
@@ -312,13 +317,16 @@ export async function getUserSubscriptions(): Promise<Subscription[]> {
         slug,
         name_en,
         name_th,
-        icon
+        icon,
+        color
       ),
       payment_methods!subscriptions_payment_method_id_fkey (
         id,
-        name,
-        type,
-        last_four
+        name_en,
+        name_th,
+        slug,
+        icon,
+        color
       )
     `)
     .eq("user_id", user.id)
@@ -339,7 +347,7 @@ export async function getUserSubscriptions(): Promise<Subscription[]> {
 export async function createSubscription(
   subscription: Omit<Subscription, "id" | "user_id" | "created_at" | "updated_at">
 ): Promise<Subscription> {
-  const user = await getCurrentUser();
+  const user = await authService.getCurrentUser();
   if (!user) {
     throw new Error("User not authenticated");
   }
@@ -358,13 +366,16 @@ export async function createSubscription(
         slug,
         name_en,
         name_th,
-        icon
+        icon,
+        color
       ),
       payment_methods!subscriptions_payment_method_id_fkey (
         id,
-        name,
-        type,
-        last_four
+        name_en,
+        name_th,
+        slug,
+        icon,
+        color
       )
     `)
     .single();
