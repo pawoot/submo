@@ -1,4 +1,5 @@
 import SEO from "@/components/SEO";
+import MobileHeader from "@/components/MobileHeader";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -218,6 +219,7 @@ export default function Home() {
         title="Subscription Manager - จัดการค่าใช้จ่าย Software"
         description="ระบบบริหารจัดการค่าใช้จ่าย Software Subscription ติดตามวันหมดอายุ แบ่งปันค่าใช้จ่าย และดูภาพรวมการใช้เงิน"
       />
+      <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadNotifications} />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
         <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
