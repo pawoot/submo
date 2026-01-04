@@ -145,9 +145,11 @@ export type Database = {
           created_at: string | null
           date_of_birth: string | null
           email: string | null
+          first_name: string | null
           full_name: string | null
           id: string
           kyc_verified: boolean | null
+          last_name: string | null
           phone: string | null
           preferred_currency: string | null
           role: string | null
@@ -160,9 +162,11 @@ export type Database = {
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id: string
           kyc_verified?: boolean | null
+          last_name?: string | null
           phone?: string | null
           preferred_currency?: string | null
           role?: string | null
@@ -175,9 +179,11 @@ export type Database = {
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
+          first_name?: string | null
           full_name?: string | null
           id?: string
           kyc_verified?: boolean | null
+          last_name?: string | null
           phone?: string | null
           preferred_currency?: string | null
           role?: string | null

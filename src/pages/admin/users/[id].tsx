@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { adminUserService } from "@/services/adminUserService";
 import { profileService } from "@/services/profileService";
+import { getCountryDisplay, getCountryFlag, formatFullName, getUserDisplayName } from "@/lib/countryUtils";
 import type { Database } from "@/integrations/supabase/types";
 import {
   ArrowLeft,
@@ -20,6 +21,8 @@ import {
   XCircle,
   TrendingUp,
   AlertCircle,
+  Globe,
+  User,
 } from "lucide-react";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
@@ -203,18 +206,44 @@ export default function UserDetailPage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold">
-                    {userDetail.profile.full_name?.charAt(0).toUpperCase() || "U"}
+                    {getCountryFlag(userDetail.profile.country) || 
+                     userDetail.profile.full_name?.charAt(0).toUpperCase() || 
+                     userDetail.profile.first_name?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div>
                     <h2 className="text-2xl font-bold">
-                      {userDetail.profile.full_name || "ไม่มีชื่อ"}
+                      {getUserDisplayName(
+                        userDetail.profile.full_name,
+                        userDetail.profile.first_name,
+                        userDetail.profile.last_name,
+                        userDetail.profile.email
+                      )}
                     </h2>
+                    {userDetail.profile.country && (
+                      <div className="flex items-center gap-2 mt-1 text-sm text-slate-600 dark:text-slate-400">
+                        <Globe className="w-4 h-4" />
+                        <span>{getCountryDisplay(userDetail.profile.country)}</span>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>
             </CardHeader>
             <CardContent>
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* First Name & Last Name */}
+                {(userDetail.profile.first_name || userDetail.profile.last_name) && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <User className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <p className="text-xs text-slate-500">ชื่อ-นามสกุล</p>
+                      <p className="text-sm font-medium">
+                        {formatFullName(userDetail.profile.first_name, userDetail.profile.last_name)}
+                      </p>
+                    </div>
+                  </div>
+                )}
+
                 {/* Email */}
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
                   <Mail className="w-5 h-5 text-purple-600" />
@@ -225,6 +254,19 @@ export default function UserDetailPage() {
                     </p>
                   </div>
                 </div>
+
+                {/* Country */}
+                {userDetail.profile.country && (
+                  <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                    <Globe className="w-5 h-5 text-purple-600" />
+                    <div>
+                      <p className="text-xs text-slate-500">ประเทศ</p>
+                      <p className="text-sm font-medium">
+                        {getCountryDisplay(userDetail.profile.country)}
+                      </p>
+                    </div>
+                  </div>
+                )}
 
                 {/* Created At */}
                 <div className="flex items-center gap-3 p-3 bg-slate-50 dark:bg-slate-800 rounded-lg">

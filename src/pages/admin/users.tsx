@@ -17,6 +17,7 @@ import { Badge } from "@/components/ui/badge";
 import { useToast } from "@/hooks/use-toast";
 import { adminUserService, UserWithSubscriptions } from "@/services/adminUserService";
 import { profileService } from "@/services/profileService";
+import { getCountryDisplay, formatFullName, getUserDisplayName } from "@/lib/countryUtils";
 import {
   ArrowLeft,
   Search,
@@ -27,6 +28,7 @@ import {
   DollarSign,
   Calendar,
   ArrowUpDown,
+  Globe,
 } from "lucide-react";
 
 export default function AdminUsers() {
@@ -291,8 +293,19 @@ export default function AdminUsers() {
                           <div className="flex-1">
                             <div className="flex items-center gap-2 mb-1">
                               <h3 className="font-semibold text-lg">
-                                {user.full_name || "ไม่มีชื่อ"}
+                                {getUserDisplayName(
+                                  user.full_name,
+                                  user.first_name,
+                                  user.last_name,
+                                  user.email
+                                )}
                               </h3>
+                              {user.country && (
+                                <Badge variant="outline" className="gap-1">
+                                  <Globe className="w-3 h-3" />
+                                  {getCountryDisplay(user.country)}
+                                </Badge>
+                              )}
                             </div>
                             <p className="text-sm text-slate-600 dark:text-slate-400">
                               {user.email || "ไม่มีข้อมูลติดต่อ"}

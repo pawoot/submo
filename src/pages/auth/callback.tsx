@@ -1,6 +1,8 @@
 import { useEffect } from "react";
 import { useRouter } from "next/router";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
+import { profileService } from "@/services/profileService";
 
 export default function AuthCallback() {
   const router = useRouter();
@@ -8,11 +10,55 @@ export default function AuthCallback() {
   useEffect(() => {
     // Handle OAuth callback
     const handleCallback = async () => {
-      // Wait a moment for Supabase to process the session
-      await new Promise(resolve => setTimeout(resolve, 1000));
-      
-      // Redirect to home page
-      router.push("/");
+      try {
+        // Get the current session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error("Session error:", sessionError);
+          router.push("/auth/login");
+          return;
+        }
+
+        if (session?.user) {
+          // Extract user metadata from OAuth provider (Google)
+          const { user } = session;
+          const metadata = user.user_metadata;
+          
+          // Get first name and last name from Google OAuth
+          const firstName = metadata?.given_name || metadata?.first_name || null;
+          const lastName = metadata?.family_name || metadata?.last_name || null;
+          const fullName = metadata?.full_name || 
+                          (firstName && lastName ? `${firstName} ${lastName}` : null) ||
+                          metadata?.name || null;
+          const email = user.email || null;
+
+          // Update profile with OAuth data
+          const { error: updateError } = await supabase
+            .from("profiles")
+            .update({
+              first_name: firstName,
+              last_name: lastName,
+              full_name: fullName,
+              email: email,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", user.id);
+
+          if (updateError) {
+            console.error("Error updating profile:", updateError);
+          }
+        }
+
+        // Wait a moment for processing
+        await new Promise(resolve => setTimeout(resolve, 1000));
+        
+        // Redirect to home page
+        router.push("/");
+      } catch (error) {
+        console.error("Callback error:", error);
+        router.push("/auth/login");
+      }
     };
 
     handleCallback();
