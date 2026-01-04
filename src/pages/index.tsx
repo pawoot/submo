@@ -16,6 +16,7 @@ import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle,
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
+import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 
 interface Subscription {
   id: number;
@@ -245,6 +246,9 @@ export default function Home() {
               </CardContent>
             </Card>
           </div>
+
+          {/* กราฟสถิติ */}
+          <SubscriptionCharts subscriptions={subscriptions} />
 
           {subscriptions.length > 0 ? (
             <Card>
