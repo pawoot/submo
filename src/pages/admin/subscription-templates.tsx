@@ -419,7 +419,7 @@ export default function AdminSubscriptionTemplates() {
                           <Button
                             variant="ghost"
                             size="sm"
-                            onClick={() => handleDelete(template.id)}
+                            onClick={() => handleDelete(template)}
                           >
                             <Trash2 className="w-4 h-4" />
                           </Button>
