@@ -3,8 +3,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles } from "lucide-react";
+import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
+import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles, CreditCard } from "lucide-react";
 import { useState } from "react";
 import Link from "next/link";
 
@@ -15,6 +15,7 @@ interface Subscription {
   currency: string;
   billing_cycle: string;
   category: string;
+  payment_method: string;
   next_billing_date: string;
 }
 
@@ -34,6 +35,15 @@ const COLORS = [
   "#84cc16", // lime
 ];
 
+const PAYMENT_COLORS: { [key: string]: string } = {
+  "credit-card": "#3b82f6",    // blue
+  "paypal": "#8b5cf6",          // purple
+  "bank-transfer": "#10b981",   // green
+  "crypto": "#f59e0b",          // amber
+  "cash": "#6b7280",            // gray
+  "other": "#ec4899"            // pink
+};
+
 const categoryLabels: { [key: string]: string } = {
   design: "Design",
   development: "Development",
@@ -44,6 +54,15 @@ const categoryLabels: { [key: string]: string } = {
   marketing: "Marketing",
   education: "Education",
   other: "Other"
+};
+
+const paymentMethodLabels: { [key: string]: { label: string; icon: string } } = {
+  "credit-card": { label: "Credit Card", icon: "💳" },
+  "paypal": { label: "PayPal", icon: "🅿️" },
+  "bank-transfer": { label: "Bank Transfer", icon: "🏦" },
+  "crypto": { label: "Crypto", icon: "₿" },
+  "cash": { label: "Cash", icon: "💵" },
+  "other": { label: "Other", icon: "📱" }
 };
 
 export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
@@ -114,6 +133,51 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
   const pieData = categoryData.map(item => ({
     ...item,
     percentage: ((item.cost / totalCost) * 100).toFixed(0)
+  }));
+
+  // คำนวณค่าใช้จ่ายรายเดือนตามช่องทางการชำระเงิน
+  const paymentMethodData = filteredSubscriptions.reduce((acc, sub) => {
+    const paymentMethod = sub.payment_method || "other";
+    const monthlyCost = sub.billing_cycle === "monthly" ? sub.amount :
+                       sub.billing_cycle === "yearly" ? sub.amount / 12 :
+                       sub.billing_cycle === "quarterly" ? sub.amount / 3 :
+                       sub.billing_cycle === "half-yearly" ? sub.amount / 6 : sub.amount;
+
+    const existing = acc.find(item => item.method === paymentMethod);
+    if (existing) {
+      existing.cost += monthlyCost;
+      existing.count += 1;
+    } else {
+      acc.push({ method: paymentMethod, cost: monthlyCost, count: 1 });
+    }
+    return acc;
+  }, [] as { method: string; cost: number; count: number }[]);
+
+  // เรียงตามค่าใช้จ่ายจากมากไปน้อย
+  paymentMethodData.sort((a, b) => b.cost - a.cost);
+
+  // คำนวณเปอร์เซ็นต์
+  const totalPaymentCost = paymentMethodData.reduce((sum, item) => sum + item.cost, 0);
+  const paymentPieData = paymentMethodData.map(item => ({
+    ...item,
+    percentage: ((item.cost / totalPaymentCost) * 100).toFixed(0)
+  }));
+
+  // Payment method labels and icons
+  const paymentMethodLabels: { [key: string]: { label: string; icon: string; color: string } } = {
+    "credit-card": { label: "Credit Card", icon: "💳", color: "#3b82f6" },
+    "paypal": { label: "PayPal", icon: "🅿️", color: "#8b5cf6" },
+    "bank-transfer": { label: "Bank Transfer", icon: "🏦", color: "#10b981" },
+    "crypto": { label: "Crypto", icon: "₿", color: "#f59e0b" },
+    "cash": { label: "Cash", icon: "💵", color: "#6b7280" },
+    "other": { label: "Other", icon: "📱", color: "#ec4899" }
+  };
+
+  // Format payment method data for charts
+  const formattedPaymentData = paymentMethodData.map(item => ({
+    method: paymentMethodLabels[item.method]?.label || item.method,
+    cost: item.cost,
+    count: item.count
   }));
 
   // Empty State Component สำหรับเมื่อไม่มี Subscription เลย
@@ -315,7 +379,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                   {searchQuery && (
                     <div className="flex items-center gap-2">
                       <span className="text-gray-400">•</span>
-                      <span>ค้นหา: <span className="font-medium text-indigo-600">"{searchQuery}"</span></span>
+                      <span>ค้นหา: <span className="font-medium text-indigo-600">&quot;{searchQuery}&quot;</span></span>
                     </div>
                   )}
                   {selectedCategory !== "all" && (
@@ -359,7 +423,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
         </Card>
       ) : (
         <>
-          {/* Charts Grid - 2 Columns */}
+          {/* Category Charts Grid - 2 Columns */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             {/* Bar Chart - ค่าใช้จ่ายตามหมวดหมู่ */}
             <Card className="shadow-lg border-2 border-gray-100">
@@ -412,14 +476,101 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       cx="50%"
                       cy="50%"
                       labelLine={true}
-                      label={({ category, percentage }: any) => `${category} ${percentage}%`}
+                      label={({ category, percentage }: { category: string; percentage: string }) => `${category} ${percentage}%`}
                       outerRadius={110}
                       fill="#8884d8"
                       dataKey="cost"
                       nameKey="category"
                     >
-                      {pieData.map((entry, index) => (
+                      {pieData.map((_entry, index) => (
                         <Cell key={`cell-${index}`} fill={COLORS[index % COLORS.length]} />
+                      ))}
+                    </Pie>
+                    <Tooltip 
+                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      contentStyle={{ 
+                        backgroundColor: "rgba(255, 255, 255, 0.98)",
+                        border: "2px solid #e2e8f0",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                      }}
+                    />
+                  </PieChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+          </div>
+
+          {/* Payment Method Charts Grid - 2 Columns */}
+          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-6">
+            {/* Bar Chart - ช่องทางการชำระเงิน */}
+            <Card className="shadow-lg border-2 border-gray-100">
+              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
+                  <CreditCard className="w-6 h-6 text-blue-600" />
+                  ค่าใช้จ่ายตามช่องทางการชำระเงิน
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={350}>
+                  <BarChart data={formattedPaymentData}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
+                    <XAxis 
+                      dataKey="method" 
+                      angle={-45}
+                      textAnchor="end"
+                      height={100}
+                      tick={{ fontSize: 13, fontWeight: 500 }}
+                    />
+                    <YAxis tick={{ fontSize: 13 }} />
+                    <Tooltip 
+                      formatter={(value: number) => `$${value.toFixed(2)}`}
+                      contentStyle={{ 
+                        backgroundColor: "rgba(255, 255, 255, 0.98)",
+                        border: "2px solid #e2e8f0",
+                        borderRadius: "12px",
+                        boxShadow: "0 4px 6px -1px rgba(0, 0, 0, 0.1)"
+                      }}
+                    />
+                    <Bar dataKey="cost" radius={[12, 12, 0, 0]}>
+                      {formattedPaymentData.map((entry, index) => {
+                        const originalMethod = paymentMethodData[index].method;
+                        return <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[originalMethod] || "#6b7280"} />;
+                      })}
+                    </Bar>
+                  </BarChart>
+                </ResponsiveContainer>
+              </CardContent>
+            </Card>
+
+            {/* Pie Chart - สัดส่วนช่องทางการชำระเงิน */}
+            <Card className="shadow-lg border-2 border-gray-100">
+              <CardHeader className="bg-gradient-to-r from-green-50 to-white">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
+                  <PieChartIcon className="w-6 h-6 text-green-600" />
+                  สัดส่วนการใช้ช่องทางการชำระเงิน
+                </CardTitle>
+              </CardHeader>
+              <CardContent className="pt-6">
+                <ResponsiveContainer width="100%" height={350}>
+                  <PieChart>
+                    <Pie
+                      data={paymentPieData}
+                      cx="50%"
+                      cy="50%"
+                      labelLine={true}
+                      label={({ method, percentage }: { method: string; percentage: string }) => {
+                        const label = paymentMethodLabels[method]?.label || method;
+                        const icon = paymentMethodLabels[method]?.icon || "📱";
+                        return `${icon} ${label} ${percentage}%`;
+                      }}
+                      outerRadius={110}
+                      fill="#8884d8"
+                      dataKey="cost"
+                      nameKey="method"
+                    >
+                      {paymentPieData.map((entry, index) => (
+                        <Cell key={`cell-${index}`} fill={PAYMENT_COLORS[entry.method] || "#6b7280"} />
                       ))}
                     </Pie>
                     <Tooltip 
