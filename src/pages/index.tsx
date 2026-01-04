@@ -232,7 +232,7 @@ export default function Home() {
                   <p className="text-sm text-slate-600 dark:text-slate-400">จัดการค่าใช้จ่าย Software</p>
                 </div>
                 {isAdmin && (
-                  <Link href="/admin/subscription-templates">
+                  <Link href="/admin">
                     <Button 
                       variant="outline" 
                       size="sm"
