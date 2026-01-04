@@ -1326,6 +1326,10 @@ export const translations = {
     th: "หรือ",
     en: "or"
   },
+  "common.unknown": {
+    th: "ไม่ระบุ",
+    en: "Unknown"
+  },
 
   // Validation Messages
   "validation.required": {
@@ -1551,6 +1555,116 @@ export const translations = {
   "common.error_occurred": {
     th: "เกิดข้อผิดพลาดขึ้น",
     en: "An error occurred"
+  },
+
+  // Admin Panel
+  "admin.title": {
+    th: "แอดมิน",
+    en: "Admin Panel"
+  },
+  "admin.dashboard": {
+    th: "แดชบอร์ด",
+    en: "Dashboard"
+  },
+  "admin.users": {
+    th: "ผู้ใช้",
+    en: "Users"
+  },
+  "admin.templates": {
+    th: "เทมเพลต Subscription",
+    en: "Subscription Templates"
+  },
+  "admin.categories": {
+    th: "หมวดหมู่",
+    en: "Categories"
+  },
+  "admin.paymentMethods": {
+    th: "วิธีชำระเงิน",
+    en: "Payment Methods"
+  },
+  "admin.addPaymentMethod": {
+    th: "เพิ่มวิธีชำระเงิน",
+    en: "Add Payment Method"
+  },
+  "admin.editPaymentMethod": {
+    th: "แก้ไขวิธีชำระเงิน",
+    en: "Edit Payment Method"
+  },
+  "admin.paymentMethodName": {
+    th: "ชื่อวิธีชำระเงิน",
+    en: "Payment Method Name"
+  },
+  "admin.nameEnglish": {
+    th: "ชื่อภาษาอังกฤษ",
+    en: "English Name"
+  },
+  "admin.nameThai": {
+    th: "ชื่อภาษาไทย",
+    en: "Thai Name"
+  },
+  "admin.slug": {
+    th: "Slug (ไม่ซ้ำ)",
+    en: "Slug (Unique)"
+  },
+  "admin.icon": {
+    th: "ไอคอน",
+    en: "Icon"
+  },
+  "admin.color": {
+    th: "สี",
+    en: "Color"
+  },
+  "admin.active": {
+    th: "ใช้งาน",
+    en: "Active"
+  },
+  "admin.displayOrder": {
+    th: "ลำดับการแสดง",
+    en: "Display Order"
+  },
+  "admin.usageCount": {
+    th: "จำนวนการใช้งาน",
+    en: "Usage Count"
+  },
+  "admin.actions": {
+    th: "จัดการ",
+    en: "Actions"
+  },
+  "admin.statistics": {
+    th: "สถิติ",
+    en: "Statistics"
+  },
+  "admin.totalPaymentMethods": {
+    th: "วิธีชำระเงินทั้งหมด",
+    en: "Total Payment Methods"
+  },
+  "admin.activePaymentMethods": {
+    th: "ใช้งานอยู่",
+    en: "Active"
+  },
+  "admin.mostUsed": {
+    th: "ใช้มากที่สุด",
+    en: "Most Used"
+  },
+  "admin.createSuccess": {
+    th: "สร้างสำเร็จ!",
+    en: "Created successfully!"
+  },
+  "admin.updateSuccess": {
+    th: "อัปเดตสำเร็จ!",
+    en: "Updated successfully!"
+  },
+  "admin.deleteSuccess": {
+    th: "ลบสำเร็จ!",
+    en: "Deleted successfully!"
+  },
+  "admin.confirmDeletePaymentMethod": {
+    th: "คุณแน่ใจหรือไม่ว่าต้องการลบวิธีชำระเงินนี้?",
+    en: "Are you sure you want to delete this payment method?"
+  },
+  "admin.deleteWarning": {
+    th: "การกระทำนี้ไม่สามารถย้อนกลับได้",
+    en: "This action cannot be undone"
   },
 };
 

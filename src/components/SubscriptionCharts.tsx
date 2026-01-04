@@ -42,6 +42,7 @@ interface ChartDataPoint {
   icon: string;
   color: string;
   percentage?: string;
+  [key: string]: any;
 }
 
 export function SubscriptionCharts() {
@@ -170,36 +171,30 @@ export function SubscriptionCharts() {
         }));
 
         // 3. Format Category Data
-        const catData = Object.entries(catMap)
+        const totalCatAmount = Object.values(catMap).reduce((sum, val) => sum + val, 0);
+        
+        const catData: ChartDataPoint[] = Object.entries(catMap)
           .map(([id, amount]) => ({
             name: categoryLabels[id]?.label || t("common.unknown"),
             amount: amount,
             icon: categoryLabels[id]?.icon || "📦",
-            color: categoryLabels[id]?.color || "#94a3b8"
+            color: categoryLabels[id]?.color || "#94a3b8",
+            percentage: totalCatAmount > 0 ? ((amount / totalCatAmount) * 100).toFixed(0) : "0"
           }))
           .sort((a, b) => b.amount - a.amount);
 
-        // Add percentages
-        const totalCat = catData.reduce((sum, item) => sum + item.amount, 0);
-        catData.forEach(item => {
-          item.percentage = totalCat > 0 ? ((item.amount / totalCat) * 100).toFixed(0) : "0";
-        });
-
         // 4. Format Payment Data
-        const payData = Object.entries(payMap)
+        const totalPayAmount = Object.values(payMap).reduce((sum, val) => sum + val, 0);
+
+        const payData: ChartDataPoint[] = Object.entries(payMap)
           .map(([id, amount]) => ({
             name: paymentMethodLabels[id]?.label || t("common.unknown"),
             amount: amount,
             icon: paymentMethodLabels[id]?.icon || "💳",
-            color: paymentMethodLabels[id]?.color || "#94a3b8"
+            color: paymentMethodLabels[id]?.color || "#94a3b8",
+            percentage: totalPayAmount > 0 ? ((amount / totalPayAmount) * 100).toFixed(0) : "0"
           }))
           .sort((a, b) => b.amount - a.amount);
-
-        // Add percentages
-        const totalPay = payData.reduce((sum, item) => sum + item.amount, 0);
-        payData.forEach(item => {
-          item.percentage = totalPay > 0 ? ((item.amount / totalPay) * 100).toFixed(0) : "0";
-        });
 
         setCategoryChartData(catData);
         setPaymentChartData(payData);

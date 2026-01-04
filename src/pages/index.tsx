@@ -39,9 +39,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { Input } from "@/components/ui/input";
-import { Search } from "lucide-react";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon, Filter } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -72,7 +70,6 @@ export default function Home() {
   const [sortedSubscriptions, setSortedSubscriptions] = useState<DisplaySubscription[]>([]);
   const [displaySubscriptions, setDisplaySubscriptions] = useState<DisplaySubscription[]>([]);
   const [totals, setTotals] = useState({ monthly: 0, yearly: 0 });
-  const [searchQuery, setSearchQuery] = useState("");
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -97,11 +94,9 @@ export default function Home() {
         setUser(user);
         setUserEmail(user.email || "");
         
-        // Load profile
         const profileData = await profileService.getCurrentProfile();
         setProfile(profileData);
         
-        // Check if user is admin based on profile role
         if (profileData?.role === "admin") {
           setIsAdmin(true);
         } else {
@@ -134,7 +129,6 @@ export default function Home() {
     loadUserData();
     loadSubscriptions();
 
-    // Add scroll event listener
     const handleScroll = () => {
       const offset = window.scrollY;
       setScrolled(offset > 20);
@@ -144,10 +138,8 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
-  // Process subscriptions when data or currency changes
   useEffect(() => {
     const processSubscriptions = async () => {
-      // Guard: Don't process if currency is still loading
       if (currencyLoading) {
         console.log("⏳ Waiting for currency to load...");
         return;
@@ -184,7 +176,6 @@ export default function Home() {
         console.log("✅ Processed subscriptions:", processed);
         setDisplaySubscriptions(processed);
 
-        // Calculate totals
         const monthly = processed.reduce((sum, sub) => {
           let cost = sub.amount;
           switch (sub.billing_cycle) {
@@ -211,18 +202,8 @@ export default function Home() {
   }, [subscriptions, preferredCurrency, convertAmount, currencyLoading]);
 
   useEffect(() => {
-    let result = [...displaySubscriptions];
+    const result = [...displaySubscriptions];
 
-    // 1. Filter by Search Query
-    if (searchQuery.trim()) {
-      const query = searchQuery.toLowerCase();
-      result = result.filter(sub => 
-        sub.name.toLowerCase().includes(query) || 
-        sub.category.toLowerCase().includes(query)
-      );
-    }
-
-    // 2. Sort
     const getMonthlyCost = (sub: Subscription) => {
       switch (sub.billing_cycle) {
         case "yearly": return sub.amount / 12;
@@ -257,23 +238,20 @@ export default function Home() {
     }
     
     setSortedSubscriptions(result);
-    setCurrentPage(1); // Reset to page 1 when filter/sort changes
-  }, [displaySubscriptions, sortOption, searchQuery]);
+    setCurrentPage(1);
+  }, [displaySubscriptions, sortOption]);
 
-  // Pagination calculations
   const totalPages = Math.ceil(sortedSubscriptions.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedSubscriptions = sortedSubscriptions.slice(startIndex, endIndex);
 
-  // Reset to page 1 when sorting changes
   useEffect(() => {
     setCurrentPage(1);
   }, [sortOption]);
 
   const handlePageChange = (page: number) => {
     setCurrentPage(page);
-    // Scroll to top of subscription list
     const subscriptionList = document.getElementById('subscription-list');
     if (subscriptionList) {
       subscriptionList.scrollIntoView({ behavior: 'smooth', block: 'start' });
@@ -538,8 +516,9 @@ export default function Home() {
             </Card>
           </div>
 
-          {/* กราฟสถิติ */}
-          <SubscriptionCharts />
+          <div className="mb-8">
+            <SubscriptionCharts />
+          </div>
 
           {sortedSubscriptions.length > 0 ? (
             <Card id="subscription-list" className="shadow-sm">
@@ -576,74 +555,69 @@ export default function Home() {
                         key={sub.id}
                         className="bg-white dark:bg-slate-800 rounded-xl border p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
                       >
-                         {/* Left colored accent bar */}
                         <div className={`absolute left-0 top-0 bottom-0 w-1 ${
                           categoryLabels[sub.category] === "Entertainment" ? "bg-purple-500" :
                           categoryLabels[sub.category] === "Productivity" ? "bg-blue-500" : "bg-indigo-500"
                         }`} />
 
                         <div className="flex items-start justify-between pl-2">
-                           {/* Icon & Main Info */}
-                           <div className="flex gap-3">
-                              <SubscriptionIcon
-                                name={sub.name}
-                                website={sub.website_url}
-                                className="w-10 h-10 md:w-12 md:h-12 shrink-0 shadow-sm"
-                              />
-                              <div>
-                                <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
-                                <div className="flex items-center gap-2 mt-1">
-                                  <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-slate-50">
-                                    {categoryLabels[sub.category] || sub.category}
-                                  </Badge>
-                                </div>
+                          <div className="flex gap-3">
+                            <SubscriptionIcon
+                              name={sub.name}
+                              website={sub.website_url}
+                              className="w-10 h-10 md:w-12 md:h-12 shrink-0 shadow-sm"
+                            />
+                            <div>
+                              <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
+                              <div className="flex items-center gap-2 mt-1">
+                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-slate-50">
+                                  {categoryLabels[sub.category] || sub.category}
+                                </Badge>
                               </div>
-                           </div>
+                            </div>
+                          </div>
 
-                           {/* Price (Top Right) */}
-                           <div className="text-right">
-                              <div className="text-lg font-bold text-slate-900 dark:text-white">
-                                {formatCurrency(Number(sub.amount), preferredCurrency)}
-                              </div>
-                              <div className="text-[10px] text-slate-500">
-                                {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
-                                 sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
-                                 billingCycleLabels[sub.billing_cycle]}
-                              </div>
-                           </div>
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-slate-900 dark:text-white">
+                              {formatCurrency(Number(sub.amount), preferredCurrency)}
+                            </div>
+                            <div className="text-[10px] text-slate-500">
+                              {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
+                               sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
+                               billingCycleLabels[sub.billing_cycle]}
+                            </div>
+                          </div>
                         </div>
 
-                        {/* Details Grid (Bottom) */}
                         <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-3 pl-2">
-                            <div>
-                                <p className="text-[10px] text-slate-500 mb-0.5">{t("subscriptions.nextBilling")}</p>
-                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                                  <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                                  {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
-                                    day: "numeric", 
-                                    month: "short",
-                                    year: "2-digit"
-                                  })}
-                                </div>
-                                {isUrgent && (
-                                  <span className="inline-block mt-1 text-[10px] text-white bg-red-500 px-1.5 py-0.5 rounded-sm">
-                                    {t("subscriptions.daysLeft").replace("{days}", daysUntil.toString())}
-                                  </span>
-                                )}
+                          <div>
+                            <p className="text-[10px] text-slate-500 mb-0.5">{t("subscriptions.nextBilling")}</p>
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                              <Calendar className="w-3.5 h-3.5 text-indigo-500" />
+                              {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
+                                day: "numeric", 
+                                month: "short",
+                                year: "2-digit"
+                              })}
                             </div>
-                            
-                            <div>
-                                <p className="text-[10px] text-slate-500 mb-0.5">{t("addSub.paymentMethod")}</p>
-                                <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                                  <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
-                                  <span className="truncate max-w-[100px]">
-                                    {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
-                                  </span>
-                                </div>
+                            {isUrgent && (
+                              <span className="inline-block mt-1 text-[10px] text-white bg-red-500 px-1.5 py-0.5 rounded-sm">
+                                {t("subscriptions.daysLeft").replace("{days}", daysUntil.toString())}
+                              </span>
+                            )}
+                          </div>
+                          
+                          <div>
+                            <p className="text-[10px] text-slate-500 mb-0.5">{t("addSub.paymentMethod")}</p>
+                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
+                              <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
+                              <span className="truncate max-w-[100px]">
+                                {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                              </span>
                             </div>
+                          </div>
                         </div>
 
-                        {/* Action Buttons (Absolute Bottom Right) */}
                         <div className="absolute bottom-3 right-3 flex gap-1">
                           <Link href={`/edit-subscription/${sub.id}`}>
                             <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600">
