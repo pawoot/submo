@@ -119,15 +119,9 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
     <>
       {/* Popular Templates Section */}
       <div className="mb-8">
-        <div className="flex items-center justify-between mb-4">
-          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
-            {t("subscription.popularTemplates")}
-          </h2>
-        </div>
-
-        {/* Popular templates grid - without user counts */}
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
-          {popularTemplates.slice(0, 10).map((template) => (
+        {/* Popular templates grid - without heading, without user counts */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+          {popularTemplates.map((template) => (
             <button
               key={template.id}
               onClick={() => handleTemplateClick(template)}
@@ -160,89 +154,82 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
 
       {/* All Templates Modal */}
       <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
-        <DialogContent className="max-w-4xl max-h-[90vh]">
+        <DialogContent className="max-w-4xl max-h-[80vh]">
           <DialogHeader>
-            <DialogTitle className="flex items-center justify-between">
-              <span>{t("subscriptions.allTemplates")}</span>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setShowAllModal(false)}
-              >
-                <X className="w-4 h-4" />
-              </Button>
-            </DialogTitle>
+            <DialogTitle>{t("subscriptions.browseAllTemplates")}</DialogTitle>
           </DialogHeader>
 
-          {/* Search Bar */}
-          <div className="relative mb-4">
-            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
-            <Input
-              placeholder={t("subscriptions.searchTemplates")}
-              value={searchQuery}
-              onChange={(e) => setSearchQuery(e.target.value)}
-              className="pl-10"
-            />
-          </div>
+          <div className="space-y-4">
+            {/* Search */}
+            <div className="relative">
+              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+              <Input
+                placeholder={t("subscriptions.searchTemplates")}
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                className="pl-10"
+              />
+            </div>
 
-          {/* Template Grid */}
-          <div className="space-y-6 max-h-[400px] overflow-y-auto">
-            {searchQuery && Object.keys(filteredCategories).length === 0 ? (
-              <div className="text-center py-12">
-                <p className="text-slate-500 dark:text-slate-400 mb-4">
-                  {t("subscriptions.noTemplatesFound")}
-                </p>
-                <Button
-                  onClick={() => {
-                    setShowAllModal(false);
-                    // Focus on subscription name input
-                    setTimeout(() => {
-                      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
-                      if (nameInput) {
-                        nameInput.focus();
-                        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                      }
-                    }, 100);
-                  }}
-                  variant="outline"
-                  className="mx-auto"
-                >
-                  {language === 'th' ? '+ เพิ่มบริการใหม่' : '+ Add Custom Service'}
-                </Button>
-              </div>
-            ) : (
-              Object.entries(filteredCategories).map(([category, templates]) => (
-                <div key={category}>
-                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 sticky top-0 bg-white dark:bg-slate-900 py-2">
-                    {category} ({templates.length})
-                  </h3>
-                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {templates.map((template) => (
-                      <button
-                        key={template.id}
-                        onClick={() => {
-                          handleTemplateClick(template);
-                          setShowAllModal(false);
-                        }}
-                        className="flex flex-col items-center gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all"
-                      >
-                        <SubscriptionIcon 
-                          name={template.name}
-                          websiteUrl={template.website_url}
-                          size="md"
-                        />
-                        <span className="text-xs font-medium text-slate-900 dark:text-slate-100 text-center line-clamp-2">
-                          {template.name}
-                        </span>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {template.currency} {template.amount}
-                        </p>
-                      </button>
-                    ))}
-                  </div>
+            {/* Template Grid */}
+            <div className="space-y-6 max-h-[400px] overflow-y-auto">
+              {searchQuery && Object.keys(filteredCategories).length === 0 ? (
+                <div className="text-center py-12">
+                  <p className="text-slate-500 dark:text-slate-400 mb-4">
+                    {t("subscriptions.noTemplatesFound")}
+                  </p>
+                  <Button
+                    onClick={() => {
+                      setShowAllModal(false);
+                      // Focus on subscription name input
+                      setTimeout(() => {
+                        const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+                        if (nameInput) {
+                          nameInput.focus();
+                          nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                        }
+                      }, 100);
+                    }}
+                    variant="outline"
+                    className="mx-auto"
+                  >
+                    {language === 'th' ? '+ เพิ่มบริการใหม่' : '+ Add Custom Service'}
+                  </Button>
                 </div>
-              ))
-            )}
+              ) : (
+                Object.entries(filteredCategories).map(([category, templates]) => (
+                  <div key={category}>
+                    <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 sticky top-0 bg-white dark:bg-slate-900 py-2">
+                      {category} ({templates.length})
+                    </h3>
+                    <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                      {templates.map((template) => (
+                        <button
+                          key={template.id}
+                          onClick={() => {
+                            handleTemplateClick(template);
+                            setShowAllModal(false);
+                          }}
+                          className="flex flex-col items-center gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all"
+                        >
+                          <SubscriptionIcon 
+                            name={template.name}
+                            websiteUrl={template.website_url}
+                            size="md"
+                          />
+                          <span className="text-xs font-medium text-slate-900 dark:text-slate-100 text-center line-clamp-2">
+                            {template.name}
+                          </span>
+                          <p className="text-xs text-slate-500 dark:text-slate-400">
+                            {template.currency} {template.amount}
+                          </p>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
           </div>
         </DialogContent>
       </Dialog>

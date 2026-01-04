@@ -87,6 +87,24 @@ export default function Home() {
   const { preferredCurrency, convertAmount, formatAmount, isLoading: currencyLoading } = useCurrency();
   const { t } = useLanguage();
 
+  const getCategoryColor = (category: string) => {
+    const colors: { [key: string]: string } = {
+      entertainment: "#ef4444", // red-500
+      music: "#22c55e", // green-500
+      productivity: "#3b82f6", // blue-500
+      utilities: "#eab308", // yellow-500
+      design: "#a855f7", // purple-500
+      education: "#f97316", // orange-500
+      gaming: "#ec4899", // pink-500
+      news: "#64748b", // slate-500
+      health: "#14b8a6", // teal-500
+      shopping: "#f43f5e", // rose-500
+      social: "#06b6d4", // cyan-500
+      other: "#94a3b8", // slate-400
+    };
+    return colors[category?.toLowerCase()] || "#94a3b8";
+  };
+
   const loadUserData = async () => {
     try {
       const { data: { user } } = await supabase.auth.getUser();
@@ -551,89 +569,37 @@ export default function Home() {
                     const isUrgent = daysUntil <= 7;
                     
                     return (
-                      <div 
+                      <Link
                         key={sub.id}
-                        className="bg-white dark:bg-slate-800 rounded-xl border p-4 shadow-sm hover:shadow-md transition-all relative overflow-hidden"
+                        href={`/edit-subscription/${sub.id}`}
+                        className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-l-4"
+                        style={{ borderLeftColor: getCategoryColor(sub.category) }}
                       >
-                        <div className={`absolute left-0 top-0 bottom-0 w-1 ${
-                          categoryLabels[sub.category] === "Entertainment" ? "bg-purple-500" :
-                          categoryLabels[sub.category] === "Productivity" ? "bg-blue-500" : "bg-indigo-500"
-                        }`} />
-
-                        <div className="flex items-start justify-between pl-2">
-                          <div className="flex gap-3">
-                            <SubscriptionIcon
-                              name={sub.name}
-                              iconUrl={sub.icon_url}
-                              className="w-10 h-10 md:w-12 md:h-12 shrink-0 shadow-sm"
-                            />
-                            <div>
-                              <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
-                              <div className="flex items-center gap-2 mt-1">
-                                <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-slate-50">
-                                  {categoryLabels[sub.category] || sub.category}
-                                </Badge>
-                              </div>
-                            </div>
-                          </div>
-
-                          <div className="text-right">
-                            <div className="text-lg font-bold text-slate-900 dark:text-white">
-                              {formatCurrency(Number(sub.amount), preferredCurrency)}
-                            </div>
-                            <div className="text-[10px] text-slate-500">
-                              {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
-                               sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
-                               billingCycleLabels[sub.billing_cycle]}
-                            </div>
+                        <SubscriptionIcon
+                          name={sub.name}
+                          websiteUrl={sub.website_url}
+                          size="lg"
+                        />
+                        <div className="flex-1 min-w-0">
+                          <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
+                          <div className="flex items-center gap-2 mt-1">
+                            <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-slate-50">
+                              {categoryLabels[sub.category] || sub.category}
+                            </Badge>
                           </div>
                         </div>
 
-                        <div className="mt-4 pt-3 border-t border-slate-100 dark:border-slate-700 grid grid-cols-2 gap-3 pl-2">
-                          <div>
-                            <p className="text-[10px] text-slate-500 mb-0.5">{t("subscriptions.nextBilling")}</p>
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                              <Calendar className="w-3.5 h-3.5 text-indigo-500" />
-                              {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
-                                day: "numeric", 
-                                month: "short",
-                                year: "2-digit"
-                              })}
-                            </div>
-                            {isUrgent && (
-                              <span className="inline-block mt-1 text-[10px] text-white bg-red-500 px-1.5 py-0.5 rounded-sm">
-                                {t("subscriptions.daysLeft").replace("{days}", daysUntil.toString())}
-                              </span>
-                            )}
+                        <div className="text-right">
+                          <div className="text-lg font-bold text-slate-900 dark:text-white">
+                            {formatCurrency(Number(sub.amount), preferredCurrency)}
                           </div>
-                          
-                          <div>
-                            <p className="text-[10px] text-slate-500 mb-0.5">{t("addSub.paymentMethod")}</p>
-                            <div className="flex items-center gap-1.5 text-xs font-medium text-slate-700 dark:text-slate-300">
-                              <CreditCard className="w-3.5 h-3.5 text-indigo-500" />
-                              <span className="truncate max-w-[100px]">
-                                {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
-                              </span>
-                            </div>
+                          <div className="text-[10px] text-slate-500">
+                            {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
+                             sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
+                             billingCycleLabels[sub.billing_cycle]}
                           </div>
                         </div>
-
-                        <div className="absolute bottom-3 right-3 flex gap-1">
-                          <Link href={`/edit-subscription/${sub.id}`}>
-                            <Button variant="ghost" size="icon" className="h-8 w-8 text-slate-400 hover:text-indigo-600">
-                              <Edit className="w-4 h-4" />
-                            </Button>
-                          </Link>
-                          <Button 
-                            variant="ghost" 
-                            size="icon"
-                            onClick={() => setDeleteId(sub.id)}
-                            className="h-8 w-8 text-slate-400 hover:text-red-600"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </Button>
-                        </div>
-                      </div>
+                      </Link>
                     );
                   })}
                 </div>
