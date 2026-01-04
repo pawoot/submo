@@ -298,26 +298,38 @@ export default function ProfilePage() {
     try {
       await authService.signOut();
       router.push("/auth/login");
+      toast({
+        title: t("nav.logout"),
+        description: t("toast.logoutSuccess"),
+      });
     } catch (error) {
-      console.error("Error logging out:", error);
+      console.error("Error signing out:", error);
+      toast({
+        title: t("common.error"),
+        description: t("toast.logoutError"),
+        variant: "destructive",
+      });
     }
   };
 
   const handleDeleteAccount = async () => {
     try {
-      await profileService.deleteAccount();
+      const { error } = await supabase.auth.admin.deleteUser(user?.id || "");
+      
+      if (error) throw error;
+      
+      await authService.signOut();
+      router.push("/auth/login");
       
       toast({
-        title: t("profile.accountDeleted"),
-        description: t("profile.thankYou"),
+        title: t("toast.accountDeleted"),
+        description: t("toast.accountDeletedDesc"),
       });
-
-      router.push("/auth/login");
     } catch (error) {
       console.error("Error deleting account:", error);
       toast({
         title: t("common.error"),
-        description: t("toast.deleteError"),
+        description: t("toast.accountDeleteError"),
         variant: "destructive",
       });
     }
@@ -681,6 +693,31 @@ export default function ProfilePage() {
               </Card>
             </div>
           </div>
+
+          {/* Logout Button */}
+          <Card className="border-red-200 bg-red-50/50">
+            <CardContent className="p-6">
+              <div className="flex items-center justify-between">
+                <div>
+                  <h3 className="text-lg font-semibold text-gray-900 mb-1">
+                    {t("profile.logout")}
+                  </h3>
+                  <p className="text-sm text-gray-600">
+                    {t("profile.logoutDesc")}
+                  </p>
+                </div>
+                <Button
+                  variant="destructive"
+                  size="lg"
+                  onClick={handleLogout}
+                  className="gap-2 bg-red-600 hover:bg-red-700"
+                >
+                  <LogOut className="w-5 h-5" />
+                  {t("nav.logout")}
+                </Button>
+              </div>
+            </CardContent>
+          </Card>
         </main>
       </div>
 

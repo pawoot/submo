@@ -549,7 +549,7 @@ export const translations = {
 
   // Profile Page
   "profile.title": {
-    th: "โปรไฟล์",
+    th: "ตั้งค่าโปรไฟล์",
     en: "Profile"
   },
   "profile.personalInfo": {
@@ -1666,6 +1666,42 @@ export const translations = {
     th: "การกระทำนี้ไม่สามารถย้อนกลับได้",
     en: "This action cannot be undone"
   },
+
+  // Toast Messages - Logout & Account
+  "toast.logoutSuccess": {
+    th: "ออกจากระบบสำเร็จ",
+    en: "Logged out successfully"
+  },
+  "toast.logoutError": {
+    th: "ไม่สามารถออกจากระบบได้",
+    en: "Failed to logout"
+  },
+  "toast.accountDeleted": {
+    th: "ลบบัญชีสำเร็จ",
+    en: "Account deleted successfully"
+  },
+  "toast.accountDeletedDesc": {
+    th: "บัญชีของคุณถูกลบอย่างถาวร",
+    en: "Your account has been permanently deleted"
+  },
+  "toast.accountDeleteError": {
+    th: "ไม่สามารถลบบัญชีได้",
+    en: "Failed to delete account"
+  },
+
+  // Profile - Logout Section
+  "profile.logout": {
+    th: "ออกจากระบบ",
+    en: "Logout"
+  },
+  "profile.logoutDesc": {
+    th: "ออกจากระบบบนอุปกรณ์นี้",
+    en: "Sign out from your account on this device"
+  },
+  "profile.confirmDelete": {
+    th: "ยืนยันการลบบัญชี",
+    en: "Confirm Account Deletion"
+  }
 };
 
 export type TranslationKey = keyof typeof translations;
