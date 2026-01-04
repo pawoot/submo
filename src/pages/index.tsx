@@ -86,7 +86,7 @@ export default function Home() {
   const [itemsPerPage] = useState(10);
   const { toast } = useToast();
   const router = useRouter();
-  const { preferredCurrency, convertAmount, formatAmount } = useCurrency();
+  const { preferredCurrency, convertAmount, formatAmount, isLoading: currencyLoading } = useCurrency();
   const { t } = useLanguage();
 
   const loadUserData = async () => {
@@ -142,6 +142,12 @@ export default function Home() {
   // Process subscriptions when data or currency changes
   useEffect(() => {
     const processSubscriptions = async () => {
+      // Guard: Don't process if currency is still loading
+      if (currencyLoading) {
+        console.log("⏳ Waiting for currency to load...");
+        return;
+      }
+
       if (subscriptions.length === 0) {
         setDisplaySubscriptions([]);
         setSortedSubscriptions([]);
@@ -197,7 +203,7 @@ export default function Home() {
     };
 
     processSubscriptions();
-  }, [subscriptions, preferredCurrency, convertAmount]);
+  }, [subscriptions, preferredCurrency, convertAmount, currencyLoading]);
 
   useEffect(() => {
     let result = [...displaySubscriptions];
