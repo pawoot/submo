@@ -5,9 +5,10 @@ import { Loader2 } from "lucide-react";
 
 interface AuthGuardProps {
   children: React.ReactNode;
+  requireAdmin?: boolean;
 }
 
-export function AuthGuard({ children }: AuthGuardProps) {
+export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [authenticated, setAuthenticated] = useState(false);
@@ -20,8 +21,12 @@ export function AuthGuard({ children }: AuthGuardProps) {
         if (event === "SIGNED_OUT") {
           router.push("/auth/login");
         } else if (event === "SIGNED_IN") {
-          setAuthenticated(true);
-          setLoading(false);
+          if (requireAdmin) {
+            checkAdminStatus(session?.user?.id);
+          } else {
+            setAuthenticated(true);
+            setLoading(false);
+          }
         }
       }
     );
@@ -29,14 +34,18 @@ export function AuthGuard({ children }: AuthGuardProps) {
     return () => {
       authListener.subscription.unsubscribe();
     };
-  }, [router]);
+  }, [router, requireAdmin]);
 
   async function checkAuth() {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
-        setAuthenticated(true);
+        if (requireAdmin) {
+          await checkAdminStatus(session.user.id);
+        } else {
+          setAuthenticated(true);
+        }
       } else {
         router.push("/auth/login");
       }
@@ -45,6 +54,30 @@ export function AuthGuard({ children }: AuthGuardProps) {
       router.push("/auth/login");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function checkAdminStatus(userId?: string) {
+    if (!userId) {
+      router.push("/");
+      return;
+    }
+
+    try {
+      const { data: profile } = await supabase
+        .from("profiles")
+        .select("role")
+        .eq("id", userId)
+        .single();
+
+      if (profile?.role === "admin") {
+        setAuthenticated(true);
+      } else {
+        router.push("/");
+      }
+    } catch (error) {
+      console.error("Admin check error:", error);
+      router.push("/");
     }
   }
 
