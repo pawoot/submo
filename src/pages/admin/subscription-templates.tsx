@@ -277,7 +277,7 @@ export default function AdminSubscriptionTemplates() {
     setFormData({
       name: template.name,
       category_id: template.category_id,
-      amount: template.amount,
+      amount: template.amount?.toString() || "0",
       currency: template.currency,
       billing_cycle: template.billing_cycle,
       website: template.website_url || "",
