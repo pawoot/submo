@@ -117,14 +117,14 @@ export default function AdminSubscriptionTemplates() {
     try {
       const { data } = await supabase
         .from("categories")
-        .select("id, name_en, slug")
+        .select("id, name_en, name_th, slug")
         .eq("is_active", true)
         .order("display_order");
         
       if (data) {
         setCategories(data.map(c => ({
           id: c.id,
-          name: c.name_en,
+          name: c.name_en, // Use name_en as default
           slug: c.slug
         })));
       }
@@ -395,7 +395,7 @@ export default function AdminSubscriptionTemplates() {
                       </TableCell>
                       <TableCell>
                         <Badge variant="outline">
-                          {categories.find((c) => c.id === template.category_id)?.name || "-"}
+                          {template.categories?.name_en || "-"}
                         </Badge>
                       </TableCell>
                       <TableCell>

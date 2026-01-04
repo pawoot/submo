@@ -81,6 +81,21 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
     }
   };
 
+  // Group templates by category
+  const groupTemplatesByCategory = (templates: SubscriptionTemplate[]) => {
+    const grouped: Record<string, SubscriptionTemplate[]> = {};
+    
+    templates.forEach(template => {
+      const categoryName = template.categories?.name_en || "Other";
+      if (!grouped[categoryName]) {
+        grouped[categoryName] = [];
+      }
+      grouped[categoryName].push(template);
+    });
+
+    return grouped;
+  };
+
   const filteredCategories = Object.entries(allTemplatesByCategory).reduce((acc, [category, templates]) => {
     const filtered = templates.filter(template =>
       template.name.toLowerCase().includes(searchQuery.toLowerCase())
@@ -232,6 +247,9 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
                           </p>
                           <p className="text-xs text-muted-foreground mb-1">
                             {template.currency} {template.default_amount}
+                          </p>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                            {template.categories?.name_en}
                           </p>
                           {template.usage_count > 0 && (
                             <Badge variant="secondary" className="text-xs">

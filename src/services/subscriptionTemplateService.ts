@@ -5,7 +5,7 @@ export type SubscriptionTemplate = {
   id: string;
   name: string;
   category_id: string;
-  default_amount: number; // Keep this for API compatibility
+  amount: number;
   currency: string;
   billing_cycle: "monthly" | "yearly" | "quarterly" | "half-yearly";
   website_url: string | null;
@@ -14,29 +14,24 @@ export type SubscriptionTemplate = {
   is_active: boolean;
   categories: {
     id: string;
-    name: string;
     slug: string;
-    name_en?: string;
-    name_th?: string;
+    name_en: string;
+    name_th: string;
     color?: string;
     icon?: string;
   } | null;
-  // Compatibility fields
-  amount?: number; // Maps to database 'amount' column
-  icon_url?: string;
 };
 
 export const subscriptionTemplateService = {
   // Create a new template
   async createTemplate(template: Partial<SubscriptionTemplate>): Promise<SubscriptionTemplate> {
-    // Map default_amount to amount for database
     const dbPayload: any = {
       name: template.name,
       category_id: template.category_id,
-      amount: template.default_amount ?? template.amount ?? 0, // Use 'amount' column
+      amount: template.amount ?? 0,
       currency: template.currency,
       billing_cycle: template.billing_cycle,
-      website_url: template.website_url ?? template.icon_url,
+      website_url: template.website_url,
       description: template.description,
       is_template: true,
       usage_count: 0,
@@ -50,7 +45,6 @@ export const subscriptionTemplateService = {
         *,
         categories (
           id,
-          name,
           slug,
           name_en,
           name_th,
@@ -69,23 +63,10 @@ export const subscriptionTemplateService = {
     const updateData: any = {};
     if (updates.name) updateData.name = updates.name;
     if (updates.category_id) updateData.category_id = updates.category_id;
-    
-    // Handle amount field mapping
-    if (updates.default_amount !== undefined) {
-      updateData.amount = updates.default_amount;
-    } else if (updates.amount !== undefined) {
-      updateData.amount = updates.amount;
-    }
-    
+    if (updates.amount !== undefined) updateData.amount = updates.amount;
     if (updates.currency) updateData.currency = updates.currency;
     if (updates.billing_cycle) updateData.billing_cycle = updates.billing_cycle;
-    
-    if (updates.website_url !== undefined) {
-      updateData.website_url = updates.website_url;
-    } else if (updates.icon_url !== undefined) {
-      updateData.website_url = updates.icon_url;
-    }
-
+    if (updates.website_url !== undefined) updateData.website_url = updates.website_url;
     if (updates.description !== undefined) updateData.description = updates.description;
     if (updates.is_active !== undefined) updateData.is_active = updates.is_active;
 
@@ -97,7 +78,6 @@ export const subscriptionTemplateService = {
         *,
         categories (
           id,
-          name,
           slug,
           name_en,
           name_th,
@@ -129,7 +109,6 @@ export const subscriptionTemplateService = {
         *,
         categories (
           id,
-          name,
           slug,
           name_en,
           name_th,
@@ -150,7 +129,7 @@ export const subscriptionTemplateService = {
       id: item.id,
       name: item.name,
       category_id: item.category_id,
-      default_amount: item.amount, // Map 'amount' to 'default_amount' for API
+      amount: item.amount,
       currency: item.currency,
       billing_cycle: item.billing_cycle,
       website_url: item.website_url,
@@ -159,16 +138,12 @@ export const subscriptionTemplateService = {
       is_active: item.is_active ?? true,
       categories: item.categories ? {
         id: item.categories.id,
-        name: item.categories.name,
-        slug: item.categories.slug || "",
+        slug: item.categories.slug,
         name_en: item.categories.name_en,
         name_th: item.categories.name_th,
         color: item.categories.color,
         icon: item.categories.icon
-      } : null,
-      // Backwards compatibility
-      amount: item.amount,
-      icon_url: item.website_url
+      } : null
     };
   },
 
@@ -180,7 +155,6 @@ export const subscriptionTemplateService = {
         *,
         categories (
           id,
-          name,
           slug,
           name_en,
           name_th,
@@ -201,10 +175,10 @@ export const subscriptionTemplateService = {
   async getAllTemplatesByCategory(): Promise<Record<string, SubscriptionTemplate[]>> {
     const templates = await this.getAllTemplates();
 
-    // Group by category
+    // Group by category name (use name_en as default)
     const grouped: Record<string, SubscriptionTemplate[]> = {};
     templates.forEach(template => {
-      const categoryName = template.categories?.name || "Other";
+      const categoryName = template.categories?.name_en || "Other";
       if (!grouped[categoryName]) {
         grouped[categoryName] = [];
       }
