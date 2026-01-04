@@ -18,61 +18,21 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import type { Database } from "@/integrations/supabase/types";
 import { format, parseISO } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
-
-// Validation Schema
-const subscriptionSchema = z.object({
-  name: z.string()
-    .min(2, "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร")
-    .max(100, "ชื่อต้องไม่เกิน 100 ตัวอักษร"),
-  category: z.string()
-    .min(1, "กรุณาเลือกหมวดหมู่"),
-  description: z.string()
-    .max(500, "รายละเอียดต้องไม่เกิน 500 ตัวอักษร")
-    .optional()
-    .nullable(),
-  cost: z.string()
-    .min(1, "กรุณากรอกจำนวนเงิน")
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: "จำนวนเงินต้องมากกว่า 0"
-    })
-    .refine((val) => Number(val) <= 999999.99, {
-      message: "จำนวนเงินต้องไม่เกิน 999,999.99"
-    }),
-  currency: z.string()
-    .min(1, "กรุณาเลือกสกุลเงิน"),
-  billing: z.string()
-    .min(1, "กรุณาเลือกรอบการชำระเงิน"),
-  paymentMethod: z.string()
-    .min(1, "กรุณาเลือกวิธีการชำระเงิน"),
-  cardLast4: z.string()
-    .max(4, "เลขท้ายบัตรต้องไม่เกิน 4 หลัก")
-    .optional()
-    .nullable(),
-  website: z.string()
-    .url("รูปแบบ URL ไม่ถูกต้อง")
-    .optional()
-    .nullable()
-    .or(z.literal("")),
-  notes: z.string()
-    .max(500, "หมายเหตุต้องไม่เกิน 500 ตัวอักษร")
-    .optional()
-    .nullable(),
-});
-
-type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
 
 export default function EditSubscription() {
   const router = useRouter();
   const { id } = router.query;
   const { toast } = useToast();
+  const { t, language } = useLanguage();
 
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
@@ -85,6 +45,48 @@ export default function EditSubscription() {
   const [dateError, setDateError] = useState("");
   const [subscriptionName, setSubscriptionName] = useState("");
 
+  // Validation Schema (Moved inside component to access t function)
+  const subscriptionSchema = z.object({
+    name: z.string()
+      .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
+      .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
+    category: z.string()
+      .min(1, t("validation.required")),
+    description: z.string()
+      .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
+      .optional()
+      .nullable(),
+    cost: z.string()
+      .min(1, t("validation.required"))
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: t("validation.positiveNumber")
+      })
+      .refine((val) => Number(val) <= 999999.99, {
+        message: t("validation.maxLength") + " 999,999.99"
+      }),
+    currency: z.string()
+      .min(1, t("validation.required")),
+    billing: z.string()
+      .min(1, t("validation.required")),
+    paymentMethod: z.string()
+      .min(1, t("validation.required")),
+    cardLast4: z.string()
+      .max(4, t("validation.maxLength") + " 4")
+      .optional()
+      .nullable(),
+    website: z.string()
+      .url(t("validation.invalidUrl"))
+      .optional()
+      .nullable()
+      .or(z.literal("")),
+    notes: z.string()
+      .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
+      .optional()
+      .nullable(),
+  });
+
+  type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
+
   const {
     register,
     handleSubmit: handleFormSubmit,
@@ -96,8 +98,16 @@ export default function EditSubscription() {
   });
 
   const categories = [
-    "Design", "Development", "Productivity", "Entertainment", 
-    "Storage", "Communication", "Marketing", "Education", "Other"
+    { value: "design", label: t("category.design") },
+    { value: "development", label: t("category.development") },
+    { value: "productivity", label: t("category.productivity") },
+    { value: "entertainment", label: t("category.entertainment") },
+    { value: "cloud-storage", label: t("category.cloud-storage") },
+    { value: "gaming", label: t("category.gaming") },
+    { value: "education", label: t("category.education") },
+    { value: "fitness", label: t("category.fitness") },
+    { value: "news", label: t("category.news") },
+    { value: "other", label: t("category.other") }
   ];
 
   const currencies = [
@@ -111,8 +121,12 @@ export default function EditSubscription() {
   ];
 
   const paymentMethods = [
-    "Credit Card", "Debit Card", "PayPal", "Bank Transfer", 
-    "Google Pay", "Apple Pay", "Cryptocurrency", "Other"
+    { value: "credit-card", label: t("payment.credit-card") },
+    { value: "debit-card", label: t("payment.debit-card") },
+    { value: "paypal", label: t("payment.paypal") },
+    { value: "bank-transfer", label: t("payment.bank-transfer") },
+    { value: "promptpay", label: t("payment.promptpay") },
+    { value: "other", label: t("payment.other") }
   ];
 
   useEffect(() => {
@@ -148,8 +162,8 @@ export default function EditSubscription() {
         });
       } else {
         toast({
-          title: "❌ ไม่พบข้อมูล",
-          description: "ไม่พบ Subscription ที่ต้องการแก้ไข",
+          title: t("common.error"),
+          description: t("editSub.notFound"),
           variant: "destructive",
           duration: 3000,
         });
@@ -158,8 +172,8 @@ export default function EditSubscription() {
     } catch (error) {
       console.error("Error loading subscription:", error);
       toast({
-        title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถโหลดข้อมูลได้",
+        title: t("common.error"),
+        description: t("editSub.loadError"),
         variant: "destructive",
         duration: 3000,
       });
@@ -170,19 +184,19 @@ export default function EditSubscription() {
 
   const addSharedUser = () => {
     if (!newUserEmail) {
-      setEmailError("กรุณากรอกอีเมล");
+      setEmailError(t("validation.required"));
       return;
     }
 
     // Email validation
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
     if (!emailRegex.test(newUserEmail)) {
-      setEmailError("รูปแบบอีเมลไม่ถูกต้อง");
+      setEmailError(t("validation.invalidEmail"));
       return;
     }
 
     if (sharedUsers.includes(newUserEmail)) {
-      setEmailError("อีเมลนี้มีอยู่ในรายการแล้ว");
+      setEmailError(t("addSub.emailInUse"));
       return;
     }
 
@@ -216,8 +230,8 @@ export default function EditSubscription() {
     }
 
     toast({
-      title: "✅ เปลี่ยนบริการสำเร็จ!",
-      description: `อัพเดทข้อมูลจาก ${template.name} แล้ว`,
+      title: t("addSub.templateSelected"),
+      description: t("addSub.templateSelectedDesc"),
       duration: 3000,
     });
   };
@@ -225,10 +239,10 @@ export default function EditSubscription() {
   const handleSubmit = async (data: SubscriptionFormData) => {
     // Validate dates
     if (!startDate || !nextBillingDate) {
-      setDateError("กรุณาเลือกวันที่เริ่มต้นและวันต่ออายุถัดไป");
+      setDateError(t("validation.required"));
       toast({
-        title: "❌ กรุณาเลือกวันที่",
-        description: "กรุณาเลือกวันเริ่มต้นและวันต่ออายุถัดไป",
+        title: t("common.error"),
+        description: t("validation.required"),
         variant: "destructive",
         duration: 3000,
       });
@@ -236,10 +250,10 @@ export default function EditSubscription() {
     }
 
     if (nextBillingDate <= startDate) {
-      setDateError("วันต่ออายุต้องหลังวันเริ่มต้น");
+      setDateError(t("validation.invalidDate"));
       toast({
-        title: "❌ วันที่ไม่ถูกต้อง",
-        description: "วันต่ออายุต้องหลังวันเริ่มต้น",
+        title: t("common.error"),
+        description: t("validation.invalidDate"),
         variant: "destructive",
         duration: 3000,
       });
@@ -269,8 +283,8 @@ export default function EditSubscription() {
       await subscriptionService.update(id as string, updateData);
 
       toast({
-        title: "✅ อัปเดตสำเร็จ!",
-        description: `อัปเดต ${updateData.name} เรียบร้อยแล้ว`,
+        title: t("editSub.success"),
+        description: t("toast.updateSuccess"),
         duration: 3000,
       });
 
@@ -278,8 +292,8 @@ export default function EditSubscription() {
     } catch (error) {
       console.error("Error updating subscription:", error);
       toast({
-        title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถอัปเดตข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
+        title: t("common.error"),
+        description: t("editSub.updateError"),
         variant: "destructive",
         duration: 3000,
       });
@@ -294,7 +308,7 @@ export default function EditSubscription() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-lg text-gray-600">กำลังโหลดข้อมูล...</p>
+            <p className="text-lg text-gray-600">{t("common.loading")}</p>
           </div>
         </div>
       </AuthGuard>
@@ -308,8 +322,8 @@ export default function EditSubscription() {
   return (
     <AuthGuard>
       <SEO 
-        title="แก้ไข Subscription - Subscription Manager"
-        description="แก้ไขข้อมูล Subscription และจัดการรายละเอียด"
+        title={t("editSub.title") + " - Submo.ai"}
+        description={t("editSub.title")}
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
@@ -323,8 +337,8 @@ export default function EditSubscription() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">แก้ไข Subscription</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{subscription.name}</p>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("editSub.title")}</h1>
+                <p className="text-sm text-slate-600 dark:text-slate-400">{subscription?.name}</p>
               </div>
             </div>
           </div>
@@ -337,12 +351,12 @@ export default function EditSubscription() {
               {/* Basic Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>ข้อมูลพื้นฐาน</CardTitle>
+                  <CardTitle>{t("addSub.basicInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="name">ชื่อ Subscription *</Label>
+                      <Label htmlFor="name">{t("addSub.name")} *</Label>
                       <SubscriptionNameAutocomplete
                         value={subscriptionName}
                         onChange={setSubscriptionName}
@@ -359,15 +373,18 @@ export default function EditSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="category">หมวดหมู่ *</Label>
-                      <Select {...register("category")} required defaultValue={subscription.category}>
+                      <Label htmlFor="category">{t("addSub.category")} *</Label>
+                      <Select 
+                        onValueChange={(value) => setValue("category", value)}
+                        defaultValue={subscription.category}
+                      >
                         <SelectTrigger id="category" className={cn(errors.category && "border-red-500")}>
-                          <SelectValue placeholder="เลือกหมวดหมู่" />
+                          <SelectValue placeholder={t("addSub.selectCategory")} />
                         </SelectTrigger>
                         <SelectContent>
                           {categories.map((cat) => (
-                            <SelectItem key={cat} value={cat.toLowerCase()}>
-                              {cat}
+                            <SelectItem key={cat.value} value={cat.value}>
+                              {cat.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -379,11 +396,11 @@ export default function EditSubscription() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="description">รายละเอียด</Label>
+                    <Label htmlFor="description">{t("addSub.notes")}</Label>
                     <Textarea 
                       id="description"
                       {...register("description")}
-                      placeholder="รายละเอียดเพิ่มเติม (ถ้ามี)"
+                      placeholder={t("addSub.notesPlaceholder")}
                       rows={3}
                       className={cn(errors.description && "border-red-500")}
                     />
@@ -393,12 +410,12 @@ export default function EditSubscription() {
                   </div>
 
                   <div className="space-y-2">
-                    <Label htmlFor="website">เว็บไซต์</Label>
+                    <Label htmlFor="website">{t("addSub.website")}</Label>
                     <Input 
                       id="website"
                       {...register("website")}
                       type="url"
-                      placeholder="https://example.com"
+                      placeholder={t("addSub.websitePlaceholder")}
                       className={cn(errors.website && "border-red-500")}
                     />
                     {errors.website && (
@@ -411,18 +428,18 @@ export default function EditSubscription() {
               {/* Pricing Information */}
               <Card>
                 <CardHeader>
-                  <CardTitle>ข้อมูลราคาและการชำระเงิน</CardTitle>
+                  <CardTitle>{t("addSub.pricingInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="cost">ราคา *</Label>
+                      <Label htmlFor="cost">{t("addSub.cost")} *</Label>
                       <Input 
                         id="cost"
                         {...register("cost")}
                         type="number" 
                         step="0.01" 
-                        placeholder="0.00"
+                        placeholder={t("addSub.costPlaceholder")}
                         className={cn(errors.cost && "border-red-500")}
                         required
                       />
@@ -432,10 +449,13 @@ export default function EditSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="currency">สกุลเงิน *</Label>
-                      <Select {...register("currency")} required defaultValue={subscription.currency}>
+                      <Label htmlFor="currency">{t("addSub.currency")} *</Label>
+                      <Select 
+                        onValueChange={(value) => setValue("currency", value)}
+                        defaultValue={subscription.currency}
+                      >
                         <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
-                          <SelectValue placeholder="เลือกสกุลเงิน" />
+                          <SelectValue placeholder={t("addSub.selectCurrency")} />
                         </SelectTrigger>
                         <SelectContent>
                           {currencies.map((curr) => (
@@ -451,16 +471,19 @@ export default function EditSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="billing">รอบการชำระ *</Label>
-                      <Select {...register("billing")} required defaultValue={subscription.billing_cycle}>
+                      <Label htmlFor="billing">{t("addSub.billing")} *</Label>
+                      <Select 
+                        onValueChange={(value) => setValue("billing", value)}
+                        defaultValue={subscription.billing_cycle}
+                      >
                         <SelectTrigger id="billing" className={cn(errors.billing && "border-red-500")}>
-                          <SelectValue placeholder="เลือกรอบ" />
+                          <SelectValue placeholder={t("addSub.selectBilling")} />
                         </SelectTrigger>
                         <SelectContent>
-                          <SelectItem value="monthly">รายเดือน</SelectItem>
-                          <SelectItem value="yearly">รายปี</SelectItem>
-                          <SelectItem value="quarterly">ราย 3 เดือน</SelectItem>
-                          <SelectItem value="half-yearly">ราย 6 เดือน</SelectItem>
+                          <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
+                          <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
+                          <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                          <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
                         </SelectContent>
                       </Select>
                       {errors.billing && (
@@ -471,15 +494,18 @@ export default function EditSubscription() {
 
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label htmlFor="paymentMethod">ช่องทางการชำระเงิน *</Label>
-                      <Select {...register("paymentMethod")} required defaultValue={subscription.payment_method}>
+                      <Label htmlFor="paymentMethod">{t("addSub.paymentMethod")} *</Label>
+                      <Select 
+                        onValueChange={(value) => setValue("paymentMethod", value)}
+                        defaultValue={subscription.payment_method}
+                      >
                         <SelectTrigger id="paymentMethod" className={cn(errors.paymentMethod && "border-red-500")}>
-                          <SelectValue placeholder="เลือกช่องทาง" />
+                          <SelectValue placeholder={t("addSub.selectPayment")} />
                         </SelectTrigger>
                         <SelectContent>
                           {paymentMethods.map((method) => (
-                            <SelectItem key={method} value={method.toLowerCase().replace(/\s+/g, "-")}>
-                              {method}
+                            <SelectItem key={method.value} value={method.value}>
+                              {method.label}
                             </SelectItem>
                           ))}
                         </SelectContent>
@@ -490,11 +516,11 @@ export default function EditSubscription() {
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="cardLast4">เลขท้าย 4 หลัก (ถ้ามี)</Label>
+                      <Label htmlFor="cardLast4">{t("addSub.cardNumber")} {t("common.optional")}</Label>
                       <Input 
                         id="cardLast4"
                         {...register("cardLast4")}
-                        placeholder="1234"
+                        placeholder={t("addSub.cardPlaceholder")}
                         maxLength={4}
                         className={cn(errors.cardLast4 && "border-red-500")}
                       />
@@ -509,12 +535,12 @@ export default function EditSubscription() {
               {/* Billing Dates */}
               <Card>
                 <CardHeader>
-                  <CardTitle>วันที่เริ่มต้นและต่ออายุ</CardTitle>
+                  <CardTitle>{t("addSub.paymentInfo")}</CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
-                      <Label>วันเริ่มต้น *</Label>
+                      <Label>{t("addSub.startDate")} *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -527,9 +553,9 @@ export default function EditSubscription() {
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {startDate ? (
-                              format(startDate, "d MMMM yyyy", { locale: th })
+                              format(startDate, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
                             ) : (
-                              <span>เลือกวันที่</span>
+                              <span>{t("common.select")}</span>
                             )}
                           </Button>
                         </PopoverTrigger>
@@ -539,14 +565,14 @@ export default function EditSubscription() {
                             selected={startDate}
                             onSelect={setStartDate}
                             initialFocus
-                            locale={th}
+                            locale={language === 'th' ? th : enUS}
                           />
                         </PopoverContent>
                       </Popover>
                     </div>
 
                     <div className="space-y-2">
-                      <Label>วันต่ออายุถัดไป *</Label>
+                      <Label>{t("addSub.nextBillingDate")} *</Label>
                       <Popover>
                         <PopoverTrigger asChild>
                           <Button
@@ -559,9 +585,9 @@ export default function EditSubscription() {
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {nextBillingDate ? (
-                              format(nextBillingDate, "d MMMM yyyy", { locale: th })
+                              format(nextBillingDate, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
                             ) : (
-                              <span>เลือกวันที่</span>
+                              <span>{t("common.select")}</span>
                             )}
                           </Button>
                         </PopoverTrigger>
@@ -571,7 +597,7 @@ export default function EditSubscription() {
                             selected={nextBillingDate}
                             onSelect={setNextBillingDate}
                             initialFocus
-                            locale={th}
+                            locale={language === 'th' ? th : enUS}
                             disabled={(date) =>
                               startDate ? date < startDate : false
                             }
@@ -592,14 +618,14 @@ export default function EditSubscription() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Users className="w-5 h-5" />
-                    แบ่งปันค่าใช้จ่าย
+                    {t("addSub.sharedUsers")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex gap-2">
                     <div className="flex-1">
                       <Input 
-                        placeholder="อีเมลผู้ใช้งานร่วม"
+                        placeholder={t("addSub.sharedUsersPlaceholder")}
                         value={newUserEmail}
                         onChange={(e) => {
                           setNewUserEmail(e.target.value);
@@ -628,7 +654,7 @@ export default function EditSubscription() {
 
                   {sharedUsers.length > 0 && (
                     <div className="space-y-2">
-                      <Label>ผู้ใช้งานร่วม ({sharedUsers.length} คน)</Label>
+                      <Label>{t("addSub.sharedUsers")} ({sharedUsers.length})</Label>
                       <div className="flex flex-wrap gap-2">
                         {sharedUsers.map((email) => (
                           <Badge 
@@ -652,7 +678,7 @@ export default function EditSubscription() {
 
                   {sharedUsers.length === 0 && (
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      ยังไม่มีผู้ใช้งานร่วม
+                      {t("addSub.sharedUsersPlaceholder")}
                     </p>
                   )}
                 </CardContent>
@@ -662,19 +688,19 @@ export default function EditSubscription() {
               <div className="flex gap-4 justify-end pt-4">
                 <Link href="/">
                   <Button type="button" variant="outline" size="lg" disabled={isSubmitting}>
-                    ยกเลิก
+                    {t("common.cancel")}
                   </Button>
                 </Link>
                 <Button type="submit" size="lg" className="gap-2" disabled={isSubmitting}>
                   {isSubmitting ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      กำลังบันทึก...
+                      {t("editSub.submitting")}
                     </>
                   ) : (
                     <>
                       <Save className="w-5 h-5" />
-                      บันทึกการเปลี่ยนแปลง
+                      {t("editSub.submit")}
                     </>
                   )}
                 </Button>

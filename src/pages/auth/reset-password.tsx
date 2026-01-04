@@ -10,10 +10,12 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { authService } from "@/services/authService";
 import { Lock, Loader2, Eye, EyeOff, CheckCircle2, AlertCircle } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ResetPasswordPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -30,15 +32,15 @@ export default function ResetPasswordPage() {
       if (!session) {
         // No valid session - redirect to forgot password
         toast({
-          title: "Invalid or Expired Link",
-          description: "Please request a new password reset link",
+          title: t("auth.invalidLink"),
+          description: t("auth.requestNewLink"),
           variant: "destructive",
         });
         router.push("/auth/forgot-password");
       }
     };
     checkSession();
-  }, [router, toast]);
+  }, [router, toast, t]);
 
   // Password strength checker
   useEffect(() => {
@@ -65,17 +67,17 @@ export default function ResetPasswordPage() {
 
     // Validation
     if (newPassword.length < 8) {
-      setError("รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร");
+      setError(t("auth.weakPassword"));
       return;
     }
 
     if (newPassword !== confirmPassword) {
-      setError("รหัสผ่านไม่ตรงกัน");
+      setError(t("auth.passwordMismatch"));
       return;
     }
 
     if (passwordStrength === "weak") {
-      setError("รหัสผ่านไม่ปลอดภัยเพียงพอ กรุณาใช้รหัสผ่านที่แข็งแกร่งกว่านี้");
+      setError(t("auth.weakPasswordDesc"));
       return;
     }
 
@@ -87,15 +89,15 @@ export default function ResetPasswordPage() {
       if (error) {
         setError(error.message);
         toast({
-          title: "เปลี่ยนรหัสผ่านไม่สำเร็จ",
+          title: t("auth.changePasswordFailed"),
           description: error.message,
           variant: "destructive",
         });
       } else {
         setSuccess(true);
         toast({
-          title: "เปลี่ยนรหัสผ่านสำเร็จ!",
-          description: "กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...",
+          title: t("auth.passwordChanged"),
+          description: t("auth.redirectingLogin"),
         });
 
         // Redirect to login after 3 seconds
@@ -104,7 +106,7 @@ export default function ResetPasswordPage() {
         }, 3000);
       }
     } catch (err) {
-      setError("เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน");
+      setError(t("auth.changePasswordError"));
     } finally {
       setLoading(false);
     }
@@ -114,8 +116,8 @@ export default function ResetPasswordPage() {
     return (
       <>
         <SEO 
-          title="เปลี่ยนรหัสผ่านสำเร็จ - Submo.ai"
-          description="เปลี่ยนรหัสผ่านของคุณสำเร็จแล้ว"
+          title={`${t("auth.passwordChanged")} - Submo.ai`}
+          description={t("auth.passwordChangedDesc")}
         />
         
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -126,10 +128,10 @@ export default function ResetPasswordPage() {
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-gray-900">เปลี่ยนรหัสผ่านสำเร็จ!</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t("auth.passwordChanged")}</h2>
                 <p className="text-gray-600">
-                  รหัสผ่านของคุณถูกเปลี่ยนเรียบร้อยแล้ว<br />
-                  กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...
+                  {t("auth.passwordChangedDesc")}<br />
+                  {t("auth.redirectingLogin")}
                 </p>
               </div>
 
@@ -143,7 +145,7 @@ export default function ResetPasswordPage() {
                 asChild
               >
                 <Link href="/auth/login">
-                  ไปที่หน้าเข้าสู่ระบบ
+                  {t("auth.backToLogin")}
                 </Link>
               </Button>
             </CardContent>
@@ -156,8 +158,8 @@ export default function ResetPasswordPage() {
   return (
     <>
       <SEO 
-        title="เปลี่ยนรหัสผ่าน - Submo.ai"
-        description="ตั้งรหัสผ่านใหม่สำหรับบัญชีของคุณ"
+        title={`${t("auth.resetPassword")} - Submo.ai`}
+        description={t("auth.enterNewPassword")}
       />
       
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -168,10 +170,10 @@ export default function ResetPasswordPage() {
                 <Lock className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                ตั้งรหัสผ่านใหม่
+                {t("auth.resetPassword")}
               </CardTitle>
               <CardDescription className="text-base">
-                กรุณากรอกรหัสผ่านใหม่ของคุณ
+                {t("auth.enterNewPassword")}
               </CardDescription>
             </CardHeader>
 
@@ -186,7 +188,7 @@ export default function ResetPasswordPage() {
               <form onSubmit={handleResetPassword} className="space-y-4">
                 {/* New Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="newPassword">รหัสผ่านใหม่</Label>
+                  <Label htmlFor="newPassword">{t("auth.newPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -217,21 +219,21 @@ export default function ResetPasswordPage() {
                         <div className={`h-1 flex-1 rounded ${passwordStrength === "strong" ? "bg-green-500" : "bg-gray-200"}`}></div>
                       </div>
                       <p className={`text-xs ${passwordStrength === "weak" ? "text-red-600" : passwordStrength === "medium" ? "text-yellow-600" : "text-green-600"}`}>
-                        {passwordStrength === "weak" && "รหัสผ่านอย่างอ่อน"}
-                        {passwordStrength === "medium" && "รหัสผ่านปานกลาง"}
-                        {passwordStrength === "strong" && "รหัสผ่านแข็งแกร่ง"}
+                        {passwordStrength === "weak" && t("auth.strength.weak")}
+                        {passwordStrength === "medium" && t("auth.strength.medium")}
+                        {passwordStrength === "strong" && t("auth.strength.strong")}
                       </p>
                     </div>
                   )}
 
                   <p className="text-xs text-gray-500">
-                    รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร และควรประกอบด้วยตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษ
+                    {t("auth.passwordRequirements")}
                   </p>
                 </div>
 
                 {/* Confirm Password */}
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">ยืนยันรหัสผ่านใหม่</Label>
+                  <Label htmlFor="confirmPassword">{t("auth.confirmNewPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -256,7 +258,7 @@ export default function ResetPasswordPage() {
                   {/* Password Match Indicator */}
                   {confirmPassword && (
                     <p className={`text-xs ${newPassword === confirmPassword ? "text-green-600" : "text-red-600"}`}>
-                      {newPassword === confirmPassword ? "✓ รหัสผ่านตรงกัน" : "✗ รหัสผ่านไม่ตรงกัน"}
+                      {newPassword === confirmPassword ? `✓ ${t("auth.passwordMatch")}` : `✗ ${t("auth.passwordMismatchDesc")}`}
                     </p>
                   )}
                 </div>
@@ -269,10 +271,10 @@ export default function ResetPasswordPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      กำลังเปลี่ยนรหัสผ่าน...
+                      {t("auth.changingPassword")}
                     </>
                   ) : (
-                    "เปลี่ยนรหัสผ่าน"
+                    t("auth.changePassword")
                   )}
                 </Button>
               </form>
@@ -281,9 +283,9 @@ export default function ResetPasswordPage() {
 
           {/* Info */}
           <p className="text-sm text-gray-600 text-center mt-6">
-            จำรหัสผ่านได้แล้ว?{" "}
+            {t("auth.rememberPassword")}{" "}
             <Link href="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-semibold">
-              เข้าสู่ระบบ
+              {t("auth.login")}
             </Link>
           </p>
         </div>

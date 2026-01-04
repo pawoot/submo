@@ -9,9 +9,11 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { authService } from "@/services/authService";
 import { Mail, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function ForgotPasswordPage() {
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -28,19 +30,19 @@ export default function ForgotPasswordPage() {
       if (error) {
         setError(error.message);
         toast({
-          title: "ส่งอีเมลไม่สำเร็จ",
+          title: t("auth.sendEmailError"),
           description: error.message,
           variant: "destructive",
         });
       } else {
         setSuccess(true);
         toast({
-          title: "ส่งอีเมลสำเร็จ!",
-          description: "กรุณาตรวจสอบอีเมลเพื่อรีเซ็ตรหัสผ่าน",
+          title: t("auth.emailSent"),
+          description: t("auth.checkEmailDesc"),
         });
       }
     } catch (err) {
-      setError("เกิดข้อผิดพลาดในการส่งอีเมล");
+      setError(t("auth.sendEmailError"));
     } finally {
       setLoading(false);
     }
@@ -50,8 +52,8 @@ export default function ForgotPasswordPage() {
     return (
       <>
         <SEO 
-          title="ตรวจสอบอีเมล - Submo.ai"
-          description="ตรวจสอบอีเมลเพื่อรีเซ็ตรหัสผ่าน"
+          title={`${t("auth.checkEmail")} - Submo.ai`}
+          description={t("auth.checkEmailDesc")}
         />
         
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -62,18 +64,18 @@ export default function ForgotPasswordPage() {
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-gray-900">ตรวจสอบอีเมลของคุณ</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t("auth.checkEmail")}</h2>
                 <p className="text-gray-600">
-                  เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง<br />
+                  {t("auth.linkSentTo")}<br />
                   <span className="font-semibold text-indigo-600">{email}</span>
                 </p>
               </div>
 
               <Alert className="bg-blue-50 border-blue-200">
                 <AlertDescription className="text-sm text-gray-700">
-                  📧 กรุณาคลิกลิงก์ในอีเมลเพื่อรีเซ็ตรหัสผ่าน<br />
+                  📧 {t("auth.checkEmailDesc")}<br />
                   <span className="text-xs text-gray-500 mt-2 block">
-                    ไม่เห็นอีเมล? ตรวจสอบในโฟลเดอร์ Spam
+                    {t("auth.checkSpamFolder")}
                   </span>
                 </AlertDescription>
               </Alert>
@@ -84,7 +86,7 @@ export default function ForgotPasswordPage() {
                 asChild
               >
                 <Link href="/auth/login">
-                  กลับไปหน้าเข้าสู่ระบบ
+                  {t("auth.backToLogin")}
                 </Link>
               </Button>
             </CardContent>
@@ -97,8 +99,8 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <SEO 
-        title="ลืมรหัสผ่าน - Submo.ai"
-        description="รีเซ็ตรหัสผ่านของคุณ"
+        title={`${t("auth.forgotPassword")} - Submo.ai`}
+        description={t("auth.forgotPasswordDesc")}
       />
       
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -106,7 +108,7 @@ export default function ForgotPasswordPage() {
           {/* Back Link */}
           <Link href="/auth/login" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            กลับไปหน้าเข้าสู่ระบบ
+            {t("auth.backToLogin")}
           </Link>
 
           <Card className="shadow-2xl border-0">
@@ -115,10 +117,10 @@ export default function ForgotPasswordPage() {
                 <Mail className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                ลืมรหัสผ่าน?
+                {t("auth.forgotPassword")}
               </CardTitle>
               <CardDescription className="text-base">
-                ใส่อีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน
+                {t("auth.forgotPasswordDesc")}
               </CardDescription>
             </CardHeader>
 
@@ -131,7 +133,7 @@ export default function ForgotPasswordPage() {
 
               <form onSubmit={handleResetPassword} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">อีเมล</Label>
+                  <Label htmlFor="email">{t("auth.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
@@ -155,10 +157,10 @@ export default function ForgotPasswordPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      กำลังส่งอีเมล...
+                      {t("auth.sendingEmail")}
                     </>
                   ) : (
-                    "ส่งลิงก์รีเซ็ตรหัสผ่าน"
+                    t("auth.sendResetLink")
                   )}
                 </Button>
               </form>
@@ -167,9 +169,9 @@ export default function ForgotPasswordPage() {
 
           {/* Info */}
           <p className="text-sm text-gray-600 text-center mt-6">
-            จำรหัสผ่านได้แล้ว?{" "}
+            {t("auth.rememberPassword")}{" "}
             <Link href="/auth/login" className="text-indigo-600 hover:text-indigo-700 font-semibold">
-              เข้าสู่ระบบ
+              {t("auth.login")}
             </Link>
           </p>
         </div>

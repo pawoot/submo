@@ -14,6 +14,7 @@ import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
 import { Mail, Lock, Chrome, Loader2, ArrowLeft, CheckCircle2, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 // Country list in Thai
 const COUNTRIES = [
@@ -63,6 +64,7 @@ const COUNTRIES = [
 export default function SignUpPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { t, language } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -109,11 +111,11 @@ export default function SignUpPage() {
 
   const validatePassword = () => {
     if (password.length < 6) {
-      setError("รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร");
+      setError(t("auth.weakPassword"));
       return false;
     }
     if (password !== confirmPassword) {
-      setError("รหัสผ่านไม่ตรงกัน");
+      setError(t("auth.passwordMismatch"));
       return false;
     }
     return true;
@@ -124,12 +126,12 @@ export default function SignUpPage() {
     setError("");
 
     if (!acceptTerms) {
-      setError("กรุณายอมรับข้อกำหนดและเงื่อนไข");
+      setError(t("validation.required"));
       return;
     }
 
     if (!country) {
-      setError("กรุณาเลือกประเทศ");
+      setError(t("validation.required"));
       return;
     }
 
@@ -145,7 +147,7 @@ export default function SignUpPage() {
       if (error) {
         setError(error.message);
         toast({
-          title: "สมัครสมาชิกไม่สำเร็จ",
+          title: t("auth.signupError"),
           description: error.message,
           variant: "destructive",
         });
@@ -159,12 +161,12 @@ export default function SignUpPage() {
 
         setSuccess(true);
         toast({
-          title: "สมัครสมาชิกสำเร็จ!",
-          description: "กรุณาตรวจสอบอีเมลเพื่อยืนยันบัญชี",
+          title: t("auth.signupSuccess"),
+          description: t("auth.checkEmail"),
         });
       }
     } catch (err) {
-      setError("เกิดข้อผิดพลาดในการสมัครสมาชิก");
+      setError(t("auth.signupError"));
     } finally {
       setLoading(false);
     }
@@ -180,7 +182,7 @@ export default function SignUpPage() {
       if (error) {
         setError(error.message);
         toast({
-          title: "สมัครสมาชิกไม่สำเร็จ",
+          title: t("auth.signupError"),
           description: error.message,
           variant: "destructive",
         });
@@ -188,7 +190,7 @@ export default function SignUpPage() {
       }
       // If successful, user will be redirected to Google OAuth
     } catch (err) {
-      setError("เกิดข้อผิดพลาดในการสมัครสมาชิกด้วย Google");
+      setError(t("auth.signupError"));
       setGoogleLoading(false);
     }
   };
@@ -197,8 +199,8 @@ export default function SignUpPage() {
     return (
       <>
         <SEO 
-          title="ยืนยันอีเมล - Subscription Manager"
-          description="ยืนยันอีเมลเพื่อเข้าใช้งานระบบ"
+          title={t("auth.checkEmail") + " - Submo.ai"}
+          description={t("auth.resetLinkSent")}
         />
         
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -209,18 +211,18 @@ export default function SignUpPage() {
               </div>
               
               <div className="space-y-2">
-                <h2 className="text-2xl font-bold text-gray-900">ตรวจสอบอีเมลของคุณ</h2>
+                <h2 className="text-2xl font-bold text-gray-900">{t("auth.checkEmail")}</h2>
                 <p className="text-gray-600">
-                  เราได้ส่งลิงก์ยืนยันไปยัง<br />
+                  {t("auth.resetLinkSent")}<br />
                   <span className="font-semibold text-indigo-600">{email}</span>
                 </p>
               </div>
 
               <Alert className="bg-blue-50 border-blue-200">
                 <AlertDescription className="text-sm text-gray-700">
-                  📧 กรุณาคลิกลิงก์ในอีเมลเพื่อยืนยันบัญชีของคุณ<br />
+                  📧 {t("auth.checkEmail")}<br />
                   <span className="text-xs text-gray-500 mt-2 block">
-                    ไม่เห็นอีเมล? ตรวจสอบในโฟลเดอร์ Spam
+                    {t("auth.checkSpam")}
                   </span>
                 </AlertDescription>
               </Alert>
@@ -230,7 +232,7 @@ export default function SignUpPage() {
                 className="w-full"
                 onClick={() => router.push("/auth/login")}
               >
-                ไปหน้าเข้าสู่ระบบ
+                {t("auth.backToLogin")}
               </Button>
             </CardContent>
           </Card>
@@ -242,8 +244,8 @@ export default function SignUpPage() {
   return (
     <>
       <SEO 
-        title="สมัครสมาชิก - Subscription Manager"
-        description="สมัครสมาชิกเพื่อเริ่มจัดการ Software Subscriptions"
+        title={t("auth.signup") + " - Submo.ai"}
+        description={t("home.seo.description")}
       />
       
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -251,7 +253,7 @@ export default function SignUpPage() {
           {/* Back to Home */}
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            กลับหน้าแรก
+            {t("common.back")}
           </Link>
 
           <Card className="shadow-2xl border-0">
@@ -260,10 +262,10 @@ export default function SignUpPage() {
                 <Mail className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                สมัครสมาชิก
+                {t("auth.signup")}
               </CardTitle>
               <CardDescription className="text-base">
-                เริ่มต้นจัดการ Subscriptions ของคุณวันนี้
+                {t("home.description")}
               </CardDescription>
             </CardHeader>
 
@@ -285,12 +287,12 @@ export default function SignUpPage() {
                 {googleLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    กำลังเชื่อมต่อ...
+                    {t("auth.signingUp")}
                   </>
                 ) : (
                   <>
                     <Chrome className="mr-2 h-5 w-5 text-red-500" />
-                    สมัครด้วย Google
+                    {t("auth.signup")} Google
                   </>
                 )}
               </Button>
@@ -300,20 +302,20 @@ export default function SignUpPage() {
                   <Separator />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">หรือ</span>
+                  <span className="bg-white px-2 text-gray-500">{t("common.or")}</span>
                 </div>
               </div>
 
               {/* Email/Password Form */}
               <form onSubmit={handleEmailSignUp} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">อีเมล</Label>
+                  <Label htmlFor="email">{t("auth.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t("auth.emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -324,13 +326,13 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">รหัสผ่าน</Label>
+                  <Label htmlFor="password">{t("auth.password")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
                       id="password"
                       type="password"
-                      placeholder="อย่างน้อย 6 ตัวอักษร"
+                      placeholder={t("auth.passwordPlaceholder")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -342,13 +344,13 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="confirmPassword">ยืนยันรหัสผ่าน</Label>
+                  <Label htmlFor="confirmPassword">{t("auth.confirmPassword")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
                       id="confirmPassword"
                       type="password"
-                      placeholder="ยืนยันรหัสผ่านอีกครั้ง"
+                      placeholder={t("auth.confirmPassword")}
                       value={confirmPassword}
                       onChange={(e) => setConfirmPassword(e.target.value)}
                       required
@@ -360,7 +362,7 @@ export default function SignUpPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="country">ประเทศ</Label>
+                  <Label htmlFor="country">{t("profile.country")}</Label>
                   <div className="relative">
                     <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400 z-10" />
                     <Select
@@ -369,15 +371,14 @@ export default function SignUpPage() {
                       disabled={loading || googleLoading || detectingCountry}
                     >
                       <SelectTrigger className="pl-10 h-12">
-                        <SelectValue placeholder={detectingCountry ? "กำลังตรวจสอบ..." : "เลือกประเทศ"} />
+                        <SelectValue placeholder={detectingCountry ? t("common.loading") : t("common.select")} />
                       </SelectTrigger>
                       <SelectContent className="max-h-[300px]">
                         {COUNTRIES.map((country) => (
                           <SelectItem key={country.code} value={country.code}>
                             <span className="flex items-center gap-2">
                               <span className="text-lg">{country.flag}</span>
-                              <span className="text-base">{country.name}</span>
-                              <span className="text-xs text-gray-500">({country.nameEn})</span>
+                              <span className="text-base">{language === "th" ? country.name : country.nameEn}</span>
                             </span>
                           </SelectItem>
                         ))}
@@ -387,7 +388,7 @@ export default function SignUpPage() {
                   {detectingCountry && (
                     <p className="text-xs text-gray-500 flex items-center gap-1">
                       <Loader2 className="w-3 h-3 animate-spin" />
-                      กำลังตรวจสอบประเทศจาก IP ของคุณ...
+                      {t("common.loading")}
                     </p>
                   )}
                 </div>
@@ -403,10 +404,7 @@ export default function SignUpPage() {
                     htmlFor="terms"
                     className="text-sm text-gray-600 cursor-pointer"
                   >
-                    ฉันยอมรับ{" "}
-                    <Link href="/terms" className="text-indigo-600 hover:text-indigo-700 font-medium">
-                      ข้อกำหนดและเงื่อนไข
-                    </Link>
+                    {t("validation.required")}
                   </label>
                 </div>
 
@@ -418,10 +416,10 @@ export default function SignUpPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      กำลังสมัครสมาชิก...
+                      {t("auth.signingUp")}
                     </>
                   ) : (
-                    "สมัครสมาชิก"
+                    t("auth.signup")
                   )}
                 </Button>
               </form>
@@ -430,12 +428,12 @@ export default function SignUpPage() {
             <CardFooter className="flex flex-col space-y-4">
               <Separator />
               <div className="text-center text-sm text-gray-600">
-                มีบัญชีอยู่แล้ว?{" "}
+                {t("auth.hasAccount")}{" "}
                 <Link 
                   href="/auth/login" 
                   className="text-indigo-600 hover:text-indigo-700 font-semibold"
                 >
-                  เข้าสู่ระบบ
+                  {t("auth.login")}
                 </Link>
               </div>
             </CardFooter>
@@ -445,7 +443,7 @@ export default function SignUpPage() {
           <Card className="mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
             <CardContent className="pt-6">
               <p className="text-sm text-gray-600 text-center">
-                🔒 ข้อมูลของคุณปลอดภัยด้วย Supabase Authentication
+                🔒 {t("home.description")}
               </p>
             </CardContent>
           </Card>

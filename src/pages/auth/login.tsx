@@ -11,10 +11,12 @@ import { Separator } from "@/components/ui/separator";
 import { authService } from "@/services/authService";
 import { Mail, Lock, Chrome, Loader2, ArrowLeft } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 export default function LoginPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
@@ -43,19 +45,19 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
         toast({
-          title: "เข้าสู่ระบบไม่สำเร็จ",
+          title: t("auth.loginError"),
           description: error.message,
           variant: "destructive",
         });
       } else if (user) {
         toast({
-          title: "เข้าสู่ระบบสำเร็จ",
-          description: `ยินดีต้อนรับกลับ ${user.email}`,
+          title: t("auth.loginSuccess"),
+          description: `${t("home.welcome")} ${user.email}`,
         });
         router.push("/");
       }
     } catch (err) {
-      setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบ");
+      setError(t("auth.loginError"));
     } finally {
       setLoading(false);
     }
@@ -71,7 +73,7 @@ export default function LoginPage() {
       if (error) {
         setError(error.message);
         toast({
-          title: "เข้าสู่ระบบไม่สำเร็จ",
+          title: t("auth.loginError"),
           description: error.message,
           variant: "destructive",
         });
@@ -79,7 +81,7 @@ export default function LoginPage() {
       }
       // If successful, user will be redirected to Google OAuth
     } catch (err) {
-      setError("เกิดข้อผิดพลาดในการเข้าสู่ระบบด้วย Google");
+      setError(t("auth.loginError"));
       setGoogleLoading(false);
     }
   };
@@ -87,8 +89,8 @@ export default function LoginPage() {
   return (
     <>
       <SEO 
-        title="เข้าสู่ระบบ - Subscription Manager"
-        description="เข้าสู่ระบบเพื่อจัดการ Software Subscriptions ของคุณ"
+        title={t("auth.login") + " - Submo.ai"}
+        description={t("home.seo.description")}
       />
       
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-purple-50 to-pink-50 p-4">
@@ -96,7 +98,7 @@ export default function LoginPage() {
           {/* Back to Home */}
           <Link href="/" className="inline-flex items-center gap-2 text-sm text-gray-600 hover:text-indigo-600 mb-6 transition-colors">
             <ArrowLeft className="w-4 h-4" />
-            กลับหน้าแรก
+            {t("common.back")}
           </Link>
 
           <Card className="shadow-2xl border-0">
@@ -105,10 +107,10 @@ export default function LoginPage() {
                 <Lock className="w-8 h-8 text-white" />
               </div>
               <CardTitle className="text-3xl font-bold bg-gradient-to-r from-indigo-600 to-purple-600 bg-clip-text text-transparent">
-                เข้าสู่ระบบ
+                {t("auth.login")}
               </CardTitle>
               <CardDescription className="text-base">
-                ยินดีต้อนรับกลับสู่ Subscription Manager
+                {t("home.welcome")}
               </CardDescription>
             </CardHeader>
 
@@ -130,12 +132,12 @@ export default function LoginPage() {
                 {googleLoading ? (
                   <>
                     <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                    กำลังเชื่อมต่อ...
+                    {t("auth.loggingIn")}
                   </>
                 ) : (
                   <>
                     <Chrome className="mr-2 h-5 w-5 text-red-500" />
-                    เข้าสู่ระบบด้วย Google
+                    {t("auth.login")} Google
                   </>
                 )}
               </Button>
@@ -145,20 +147,20 @@ export default function LoginPage() {
                   <Separator />
                 </div>
                 <div className="relative flex justify-center text-xs uppercase">
-                  <span className="bg-white px-2 text-gray-500">หรือ</span>
+                  <span className="bg-white px-2 text-gray-500">{t("common.or")}</span>
                 </div>
               </div>
 
               {/* Email/Password Form */}
               <form onSubmit={handleEmailLogin} className="space-y-4">
                 <div className="space-y-2">
-                  <Label htmlFor="email">อีเมล</Label>
+                  <Label htmlFor="email">{t("auth.email")}</Label>
                   <div className="relative">
                     <Mail className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
                       id="email"
                       type="email"
-                      placeholder="your@email.com"
+                      placeholder={t("auth.emailPlaceholder")}
                       value={email}
                       onChange={(e) => setEmail(e.target.value)}
                       required
@@ -169,13 +171,13 @@ export default function LoginPage() {
                 </div>
 
                 <div className="space-y-2">
-                  <Label htmlFor="password">รหัสผ่าน</Label>
+                  <Label htmlFor="password">{t("auth.password")}</Label>
                   <div className="relative">
                     <Lock className="absolute left-3 top-3 h-5 w-5 text-gray-400" />
                     <Input
                       id="password"
                       type="password"
-                      placeholder="••••••••"
+                      placeholder={t("auth.passwordPlaceholder")}
                       value={password}
                       onChange={(e) => setPassword(e.target.value)}
                       required
@@ -190,7 +192,7 @@ export default function LoginPage() {
                     href="/auth/forgot-password" 
                     className="text-sm text-indigo-600 hover:text-indigo-700 font-medium"
                   >
-                    ลืมรหัสผ่าน?
+                    {t("auth.forgotPassword")}
                   </Link>
                 </div>
 
@@ -202,10 +204,10 @@ export default function LoginPage() {
                   {loading ? (
                     <>
                       <Loader2 className="mr-2 h-5 w-5 animate-spin" />
-                      กำลังเข้าสู่ระบบ...
+                      {t("auth.loggingIn")}
                     </>
                   ) : (
-                    "เข้าสู่ระบบ"
+                    t("auth.login")
                   )}
                 </Button>
               </form>
@@ -214,12 +216,12 @@ export default function LoginPage() {
             <CardFooter className="flex flex-col space-y-4">
               <Separator />
               <div className="text-center text-sm text-gray-600">
-                ยังไม่มีบัญชี?{" "}
+                {t("auth.noAccount")}{" "}
                 <Link 
                   href="/auth/signup" 
                   className="text-indigo-600 hover:text-indigo-700 font-semibold"
                 >
-                  สมัครสมาชิก
+                  {t("auth.signup")}
                 </Link>
               </div>
             </CardFooter>
@@ -229,7 +231,7 @@ export default function LoginPage() {
           <Card className="mt-6 bg-gradient-to-br from-indigo-50 to-purple-50 border-indigo-200">
             <CardContent className="pt-6">
               <p className="text-sm text-gray-600 text-center">
-                🔒 ข้อมูลของคุณปลอดภัยด้วย Supabase Authentication
+                🔒 {t("home.description")}
               </p>
             </CardContent>
           </Card>

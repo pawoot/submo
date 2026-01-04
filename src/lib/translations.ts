@@ -418,6 +418,14 @@ export const translations = {
     th: "ไม่พบ Subscription",
     en: "Subscription not found"
   },
+  "editSub.loadError": {
+    th: "ไม่สามารถโหลดข้อมูลได้",
+    en: "Failed to load subscription data"
+  },
+  "editSub.updateError": {
+    th: "ไม่สามารถอัปเดตข้อมูลได้",
+    en: "Failed to update subscription"
+  },
 
   // Profile Page
   "profile.title": {
@@ -476,6 +484,166 @@ export const translations = {
     th: "เกิดข้อผิดพลาดในการบันทึก",
     en: "Error saving changes"
   },
+  "profile.myProfile": {
+    th: "โปรไฟล์ของฉัน",
+    en: "My Profile"
+  },
+  "profile.manageAccount": {
+    th: "จัดการข้อมูลส่วนตัวและการตั้งค่า",
+    en: "Manage your personal information and settings"
+  },
+  "profile.usageStats": {
+    th: "สถิติการใช้งาน",
+    en: "Usage Statistics"
+  },
+  "profile.totalSubs": {
+    th: "Subscriptions ทั้งหมด",
+    en: "Total Subscriptions"
+  },
+  "profile.activeSubs": {
+    th: "กำลังใช้งาน",
+    en: "Active Subscriptions"
+  },
+  "profile.monthlyCost": {
+    th: "ค่าใช้จ่ายรายเดือน",
+    en: "Monthly Cost"
+  },
+  "profile.yearlyCost": {
+    th: "ค่าใช้จ่ายรายปี",
+    en: "Yearly Cost"
+  },
+  "profile.updateInfo": {
+    th: "อัปเดตข้อมูลโปรไฟล์ของคุณ",
+    en: "Update your profile information"
+  },
+  "profile.avatarUrl": {
+    th: "URL รูปโปรไฟล์",
+    en: "Avatar URL"
+  },
+  "profile.avatarUploadDesc": {
+    th: "หรือคลิกที่รูปด้านซ้ายเพื่ออัปโหลดรูปใหม่",
+    en: "Or click the avatar on the left to upload a new one"
+  },
+  "profile.security": {
+    th: "ความปลอดภัย",
+    en: "Security"
+  },
+  "profile.changePasswordDesc": {
+    th: "เปลี่ยนรหัสผ่านเพื่อความปลอดภัยของบัญชี",
+    en: "Change your password to secure your account"
+  },
+  "profile.currencySettings": {
+    th: "การตั้งค่าสกุลเงิน",
+    en: "Currency Settings"
+  },
+  "profile.selectCurrencyDesc": {
+    th: "เลือกสกุลเงินที่ต้องการแสดงในระบบ",
+    en: "Select the currency you want to display"
+  },
+  "profile.displayCurrency": {
+    th: "สกุลเงินที่แสดง",
+    en: "Display Currency"
+  },
+  "profile.currencyAutoConvert": {
+    th: "ระบบจะแปลงค่าเงินทั้งหมดเป็นสกุลที่คุณเลือกโดยอัตโนมัติ",
+    en: "System will automatically convert all amounts to your selected currency"
+  },
+  "profile.currentCurrency": {
+    th: "สกุลเงินปัจจุบัน",
+    en: "Current Currency"
+  },
+  "profile.dangerZone": {
+    th: "Danger Zone",
+    en: "Danger Zone"
+  },
+  "profile.irreversibleAction": {
+    th: "การดำเนินการเหล่านี้ไม่สามารถย้อนกลับได้",
+    en: "This action cannot be undone"
+  },
+  "profile.deleteAccount": {
+    th: "ลบบัญชีถาวร",
+    en: "Delete Account Permanently"
+  },
+  "profile.deleteConfirmTitle": {
+    th: "คุณแน่ใจหรือไม่?",
+    en: "Are you sure?"
+  },
+  "profile.deleteConfirmDesc": {
+    th: "การลบบัญชีจะทำให้ข้อมูลทั้งหมดของคุณถูกลบอย่างถาวร รวมถึง:",
+    en: "Deleting your account will permanently remove all your data, including:"
+  },
+  "profile.deleteHistory": {
+    th: "ประวัติการใช้งาน",
+    en: "Usage history"
+  },
+  "profile.cannotUndo": {
+    th: "การกระทำนี้ไม่สามารถยกเลิกได้",
+    en: "This action cannot be undone"
+  },
+  "profile.confirmDelete": {
+    th: "ยืนยันการลบบัญชี",
+    en: "Confirm Account Deletion"
+  },
+  "profile.memberSince": {
+    th: "สมาชิกตั้งแต่",
+    en: "Member since"
+  },
+  "profile.fileTooLarge": {
+    th: "ไฟล์ใหญ่เกินไป",
+    en: "File too large"
+  },
+  "profile.fileTooLargeDesc": {
+    th: "กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 2MB",
+    en: "Please select a file smaller than 2MB"
+  },
+  "profile.invalidFileType": {
+    th: "ไฟล์ไม่ถูกต้อง",
+    en: "Invalid file type"
+  },
+  "profile.invalidFileTypeDesc": {
+    th: "กรุณาเลือกไฟล์รูปภาพเท่านั้น",
+    en: "Please select an image file only"
+  },
+  "profile.avatarUploaded": {
+    th: "อัปโหลดรูปโปรไฟล์เรียบร้อยแล้ว",
+    en: "Avatar uploaded successfully"
+  },
+  "profile.passwordMismatch": {
+    th: "รหัสผ่านไม่ตรงกัน",
+    en: "Passwords do not match"
+  },
+  "profile.passwordMismatchDesc": {
+    th: "กรุณากรอกรหัสผ่านให้ตรงกันทั้งสองช่อง",
+    en: "Please enter matching passwords in both fields"
+  },
+  "profile.passwordTooShort": {
+    th: "รหัสผ่านสั้นเกินไป",
+    en: "Password too short"
+  },
+  "profile.passwordTooShortDesc": {
+    th: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+    en: "Password must be at least 6 characters long"
+  },
+  "profile.currencyUpdated": {
+    th: "เปลี่ยนสกุลเงินเรียบร้อยแล้ว",
+    en: "Currency updated successfully"
+  },
+  "profile.accountDeleted": {
+    th: "บัญชีถูกลบแล้ว",
+    en: "Account deleted"
+  },
+  "profile.thankYou": {
+    th: "ขอบคุณที่ใช้บริการ",
+    en: "Thank you for using our service"
+  },
+  "profile.noName": {
+    th: "ไม่ระบุชื่อ",
+    en: "No Name"
+  },
+  "profile.country": {
+    th: "ประเทศ",
+    en: "Country"
+  },
 
   // Notifications Page
   "notif.title": {
@@ -513,6 +681,178 @@ export const translations = {
   "notif.deleted": {
     th: "ลบการแจ้งเตือนแล้ว",
     en: "Notification deleted"
+  },
+  "notif.backToHome": {
+    th: "กลับไปหน้าหลัก",
+    en: "Back to Home"
+  },
+  "notif.pageTitle": {
+    th: "การตั้งค่าการแจ้งเตือน",
+    en: "Notification Settings"
+  },
+  "notif.pageDesc": {
+    th: "จัดการการแจ้งเตือนและดูประวัติการแจ้งเตือนทั้งหมด",
+    en: "Manage notifications and view history"
+  },
+  "notif.new": {
+    th: "ใหม่",
+    en: "New"
+  },
+  "notif.history": {
+    th: "ประวัติ",
+    en: "History"
+  },
+  "notif.emailDesc": {
+    th: "รับการแจ้งเตือนผ่านอีเมลของคุณ",
+    en: "Receive notifications via email"
+  },
+  "notif.enableEmail": {
+    th: "เปิดใช้งานการแจ้งเตือนทางอีเมล",
+    en: "Enable email notifications"
+  },
+  "notif.beforeDue": {
+    th: "แจ้งเตือนก่อนครบกำหนดชำระ:",
+    en: "Remind before due date:"
+  },
+  "notif.7days": {
+    th: "7 วันก่อนครบกำหนด",
+    en: "7 days before due"
+  },
+  "notif.3days": {
+    th: "3 วันก่อนครบกำหนด",
+    en: "3 days before due"
+  },
+  "notif.1day": {
+    th: "1 วันก่อนครบกำหนด",
+    en: "1 day before due"
+  },
+  "notif.onDueDate": {
+    th: "วันครบกำหนด",
+    en: "On due date"
+  },
+  "notif.otherNotifs": {
+    th: "การแจ้งเตือนอื่นๆ:",
+    en: "Other notifications:"
+  },
+  "notif.monthlySummary": {
+    th: "สรุปรายเดือน",
+    en: "Monthly summary"
+  },
+  "notif.priceChanges": {
+    th: "การเปลี่ยนแปลงราคา",
+    en: "Price changes"
+  },
+  "notif.pushDesc": {
+    th: "รับการแจ้งเตือนบนเบราว์เซอร์แบบ Real-time",
+    en: "Receive real-time browser notifications"
+  },
+  "notif.pushUnsupported": {
+    th: "เบราว์เซอร์ของคุณไม่รองรับ Push Notifications",
+    en: "Your browser does not support Push Notifications"
+  },
+  "notif.pushDenied": {
+    th: "คุณได้ปิดการอนุญาต Push Notifications",
+    en: "You have denied Push Notifications"
+  },
+  "notif.pushDeniedDesc": {
+    th: "กรุณาเปิดใช้งานในการตั้งค่าเบราว์เซอร์",
+    en: "Please enable in browser settings"
+  },
+  "notif.enablePush": {
+    th: "เปิดใช้งาน Push Notifications",
+    en: "Enable Push Notifications"
+  },
+  "notif.pushGranted": {
+    th: "ได้รับอนุญาตแล้ว",
+    en: "Permission granted"
+  },
+  "notif.enable": {
+    th: "เปิดใช้งาน",
+    en: "Enable"
+  },
+  "notif.preferences": {
+    th: "ความชอบการแจ้งเตือน",
+    en: "Notification Preferences"
+  },
+  "notif.preferencesDesc": {
+    th: "ตั้งค่าเวลาและช่วงเวลาการแจ้งเตือน",
+    en: "Set notification time and quiet hours"
+  },
+  "notif.time": {
+    th: "เวลาที่ต้องการรับการแจ้งเตือน",
+    en: "Preferred notification time"
+  },
+  "notif.timeDesc": {
+    th: "การแจ้งเตือนจะถูกส่งในช่วงเวลาที่กำหนด",
+    en: "Notifications will be sent at this time"
+  },
+  "notif.quietHours": {
+    th: "Quiet Hours (ช่วงเวลาไม่รับการแจ้งเตือน)",
+    en: "Quiet Hours (Do not disturb)"
+  },
+  "notif.start": {
+    th: "เริ่ม",
+    en: "Start"
+  },
+  "notif.end": {
+    th: "สิ้นสุด",
+    en: "End"
+  },
+  "notif.quietHoursDesc": {
+    th: "ในช่วงเวลานี้จะไม่มีการแจ้งเตือน (ถ้าไม่ระบุจะรับการแจ้งเตือนตลอด 24 ชม.)",
+    en: "No notifications during these hours (leave blank for 24/7 notifications)"
+  },
+  "notif.timezone": {
+    th: "Timezone",
+    en: "Timezone"
+  },
+  "notif.timezoneDesc": {
+    th: "Timezone จะถูกตั้งค่าอัตโนมัติตามเบราว์เซอร์ของคุณ",
+    en: "Timezone is automatically set based on your browser"
+  },
+  "notif.historyTitle": {
+    th: "ประวัติการแจ้งเตือน",
+    en: "Notification History"
+  },
+  "notif.showing": {
+    th: "แสดง",
+    en: "Showing"
+  },
+  "notif.recent": {
+    th: "รายการล่าสุด",
+    en: "recent items"
+  },
+  "notif.saved": {
+    th: "บันทึกสำเร็จ",
+    en: "Saved successfully"
+  },
+  "notif.settingsSaved": {
+    th: "การตั้งค่าถูกบันทึกเรียบร้อยแล้ว",
+    en: "Settings saved successfully"
+  },
+  "notif.pushEnabled": {
+    th: "เปิดใช้งาน Push Notifications",
+    en: "Push Notifications Enabled"
+  },
+  "notif.pushEnabledDesc": {
+    th: "คุณจะได้รับการแจ้งเตือนบนเบราว์เซอร์",
+    en: "You will receive notifications on your browser"
+  },
+  "notif.pushError": {
+    th: "ไม่สามารถเปิดใช้งานได้",
+    en: "Failed to enable"
+  },
+  "notif.email": {
+    th: "Email",
+    en: "Email"
+  },
+  "notif.push": {
+    th: "Push",
+    en: "Push"
+  },
+  "notif.inApp": {
+    th: "In-App",
+    en: "In-App"
   },
 
   // Auth Pages
@@ -553,11 +893,11 @@ export const translations = {
     en: "Already have an account?"
   },
   "auth.resetPassword": {
-    th: "รีเซ็ตรหัสผ่าน",
+    th: "ตั้งรหัสผ่านใหม่",
     en: "Reset Password"
   },
   "auth.sendResetLink": {
-    th: "ส่งลิงก์รีเซ็ต",
+    th: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
     en: "Send Reset Link"
   },
   "auth.backToLogin": {
@@ -629,7 +969,7 @@ export const translations = {
     en: "Check your email"
   },
   "auth.resetLinkSent": {
-    th: "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง",
+    th: "เราได้ส่งลิงก์รีเซ็ตไปยัง",
     en: "We've sent a password reset link to"
   },
   "auth.checkSpam": {
@@ -850,6 +1190,10 @@ export const translations = {
     th: "(จำเป็น)",
     en: "(Required)"
   },
+  "common.or": {
+    th: "หรือ",
+    en: "or"
+  },
 
   // Validation Messages
   "validation.required": {
@@ -903,8 +1247,16 @@ export const translations = {
     en: "Updated successfully!"
   },
   "toast.updateError": {
-    th: "อัพเดตไม่สำเร็จ",
+    th: "อัปเดตไม่สำเร็จ",
     en: "Failed to update"
+  },
+  "toast.errorLoading": {
+    th: "ไม่สามารถโหลดข้อมูลได้",
+    en: "Failed to load data"
+  },
+  "toast.errorLoadingDesc": {
+    th: "กรุณาลองใหม่อีกครั้งในภายหลัง",
+    en: "Please try again later"
   },
   "toast.createSuccess": {
     th: "สร้างสำเร็จ!",
@@ -955,6 +1307,126 @@ export const translations = {
   "time.justNow": {
     th: "เมื่อสักครู่",
     en: "Just now"
+  },
+
+  // Auth - Forgot Password
+  "auth.forgotPasswordDesc": {
+    th: "ใส่อีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
+    en: "Enter your email to receive a password reset link"
+  },
+  "auth.sendResetLink": {
+    th: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
+    en: "Send Reset Link"
+  },
+  "auth.sendingEmail": {
+    th: "กำลังส่งอีเมล...",
+    en: "Sending email..."
+  },
+  "auth.emailSent": {
+    th: "ส่งอีเมลสำเร็จ!",
+    en: "Email Sent!"
+  },
+  "auth.checkEmailDesc": {
+    th: "กรุณาตรวจสอบอีเมลเพื่อรีเซ็ตรหัสผ่าน",
+    en: "Please check your email to reset password"
+  },
+  "auth.sendEmailError": {
+    th: "ส่งอีเมลไม่สำเร็จ",
+    en: "Failed to send email"
+  },
+  "auth.linkSentTo": {
+    th: "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง",
+    en: "We sent a password reset link to"
+  },
+  "auth.checkSpamFolder": {
+    th: "ไม่เห็นอีเมล? ตรวจสอบในโฟลเดอร์ Spam",
+    en: "Don't see the email? Check your Spam folder"
+  },
+  "auth.rememberPassword": {
+    th: "จำรหัสผ่านได้แล้ว?",
+    en: "Remember your password?"
+  },
+
+  // Auth - Reset Password
+  "auth.resetPassword": {
+    th: "ตั้งรหัสผ่านใหม่",
+    en: "Reset Password"
+  },
+  "auth.enterNewPassword": {
+    th: "กรุณากรอกรหัสผ่านใหม่ของคุณ",
+    en: "Please enter your new password"
+  },
+  "auth.newPassword": {
+    th: "รหัสผ่านใหม่",
+    en: "New Password"
+  },
+  "auth.confirmNewPassword": {
+    th: "ยืนยันรหัสผ่านใหม่",
+    en: "Confirm New Password"
+  },
+  "auth.changePassword": {
+    th: "เปลี่ยนรหัสผ่าน",
+    en: "Change Password"
+  },
+  "auth.changingPassword": {
+    th: "กำลังเปลี่ยนรหัสผ่าน...",
+    en: "Changing password..."
+  },
+  "auth.passwordChanged": {
+    th: "เปลี่ยนรหัสผ่านสำเร็จ!",
+    en: "Password Changed!"
+  },
+  "auth.passwordChangedDesc": {
+    th: "รหัสผ่านของคุณถูกเปลี่ยนเรียบร้อยแล้ว",
+    en: "Your password has been changed successfully"
+  },
+  "auth.redirectingLogin": {
+    th: "กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...",
+    en: "Redirecting to login..."
+  },
+  "auth.weakPasswordDesc": {
+    th: "รหัสผ่านไม่ปลอดภัยเพียงพอ กรุณาใช้รหัสผ่านที่แข็งแกร่งกว่านี้",
+    en: "Password is too weak. Please use a stronger password."
+  },
+  "auth.passwordMatch": {
+    th: "รหัสผ่านตรงกัน",
+    en: "Passwords match"
+  },
+  "auth.passwordMismatchDesc": {
+    th: "รหัสผ่านไม่ตรงกัน",
+    en: "Passwords do not match"
+  },
+  "auth.passwordRequirements": {
+    th: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร และควรประกอบด้วยตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษ",
+    en: "Password must be at least 8 characters long and should contain uppercase, lowercase, numbers, and special characters"
+  },
+  "auth.strength.weak": {
+    th: "รหัสผ่านอย่างอ่อน",
+    en: "Weak password"
+  },
+  "auth.strength.medium": {
+    th: "รหัสผ่านปานกลาง",
+    en: "Medium password"
+  },
+  "auth.strength.strong": {
+    th: "รหัสผ่านแข็งแกร่ง",
+    en: "Strong password"
+  },
+  "auth.invalidLink": {
+    th: "ลิงก์ไม่ถูกต้องหรือหมดอายุ",
+    en: "Invalid or Expired Link"
+  },
+  "auth.requestNewLink": {
+    th: "กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่",
+    en: "Please request a new password reset link"
+  },
+  "auth.changePasswordError": {
+    th: "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน",
+    en: "Error changing password"
+  },
+  "auth.changePasswordFailed": {
+    th: "เปลี่ยนรหัสผ่านไม่สำเร็จ",
+    en: "Failed to change password"
   },
 };
 

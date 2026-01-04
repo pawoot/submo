@@ -26,6 +26,7 @@ import {
   Loader2
 } from "lucide-react";
 import type { Database } from "@/integrations/supabase/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 type NotificationSettings = Database["public"]["Tables"]["notification_settings"]["Row"];
 type Notification = Database["public"]["Tables"]["notifications"]["Row"];
@@ -33,6 +34,7 @@ type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 export default function NotificationsPage() {
   const router = useRouter();
   const { toast } = useToast();
+  const { t } = useLanguage();
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [settings, setSettings] = useState<NotificationSettings | null>(null);
@@ -59,8 +61,8 @@ export default function NotificationsPage() {
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถโหลดข้อมูลได้",
+        title: t("toast.errorLoading"),
+        description: t("toast.errorLoadingDesc"),
         variant: "destructive",
       });
     } finally {
@@ -83,14 +85,14 @@ export default function NotificationsPage() {
       });
       setSettings(updatedSettings);
       toast({
-        title: "✅ บันทึกสำเร็จ",
-        description: "การตั้งค่าถูกบันทึกเรียบร้อยแล้ว",
+        title: t("notif.saved"),
+        description: t("notif.settingsSaved"),
       });
     } catch (error) {
       console.error("Error updating settings:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถบันทึกการตั้งค่าได้",
+        title: t("common.error"),
+        description: t("profile.error"),
         variant: "destructive",
       });
     } finally {
@@ -105,21 +107,21 @@ export default function NotificationsPage() {
         await handleSettingChange("push_enabled", true);
         checkPushPermission();
         toast({
-          title: "✅ เปิดใช้งาน Push Notifications",
-          description: "คุณจะได้รับการแจ้งเตือนบนเบราว์เซอร์",
+          title: t("notif.pushEnabled"),
+          description: t("notif.pushEnabledDesc"),
         });
       } else {
         toast({
-          title: "ไม่สามารถเปิดใช้งานได้",
-          description: "กรุณาอนุญาตการแจ้งเตือนในการตั้งค่าเบราว์เซอร์",
+          title: t("notif.pushError"),
+          description: t("notif.pushDeniedDesc"),
           variant: "destructive",
         });
       }
     } catch (error) {
       console.error("Error enabling push:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถเปิดใช้งาน Push Notifications ได้",
+        title: t("common.error"),
+        description: t("notif.pushError"),
         variant: "destructive",
       });
     }
@@ -143,14 +145,14 @@ export default function NotificationsPage() {
       setNotifications(notifications.map(n => ({ ...n, is_read: true })));
       setUnreadCount(0);
       toast({
-        title: "✅ ทำเครื่องหมายทั้งหมดแล้ว",
-        description: "ทำเครื่องหมายว่าอ่านแล้วทั้งหมด",
+        title: t("common.success"),
+        description: t("notif.markedAllRead"),
       });
     } catch (error) {
       console.error("Error marking all as read:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถทำเครื่องหมายได้",
+        title: t("common.error"),
+        description: t("toast.updateError"),
         variant: "destructive",
       });
     }
@@ -161,14 +163,14 @@ export default function NotificationsPage() {
       await notificationService.deleteNotification(notificationId);
       setNotifications(notifications.filter(n => n.id !== notificationId));
       toast({
-        title: "✅ ลบสำเร็จ",
-        description: "ลบการแจ้งเตือนเรียบร้อยแล้ว",
+        title: t("notif.saved"),
+        description: t("notif.deleted"),
       });
     } catch (error) {
       console.error("Error deleting notification:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถลบการแจ้งเตือนได้",
+        title: t("common.error"),
+        description: t("toast.deleteError"),
         variant: "destructive",
       });
     }
@@ -182,10 +184,10 @@ export default function NotificationsPage() {
     const diffInHours = Math.floor(diffInMs / 3600000);
     const diffInDays = Math.floor(diffInMs / 86400000);
 
-    if (diffInMinutes < 1) return "เมื่อสักครู่";
-    if (diffInMinutes < 60) return `${diffInMinutes} นาทีที่แล้ว`;
-    if (diffInHours < 24) return `${diffInHours} ชั่วโมงที่แล้ว`;
-    if (diffInDays < 7) return `${diffInDays} วันที่แล้ว`;
+    if (diffInMinutes < 1) return t("time.justNow");
+    if (diffInMinutes < 60) return `${diffInMinutes} ${t("time.minutesAgo")}`;
+    if (diffInHours < 24) return `${diffInHours} ${t("time.hoursAgo")}`;
+    if (diffInDays < 7) return `${diffInDays} ${t("time.daysAgo")}`;
     return date.toLocaleDateString("th-TH", { 
       year: "numeric", 
       month: "short", 
@@ -226,8 +228,8 @@ export default function NotificationsPage() {
   return (
     <AuthGuard>
       <SEO 
-        title="การตั้งค่าการแจ้งเตือน | Subscription Manager"
-        description="จัดการการตั้งค่าการแจ้งเตือนและประวัติการแจ้งเตือน"
+        title={t("notif.title") + " - Submo.ai"}
+        description={t("notif.pageDesc")}
       />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50">
         <main className="max-w-6xl mx-auto px-4 py-8">
@@ -239,20 +241,20 @@ export default function NotificationsPage() {
               className="mb-4"
             >
               <ArrowLeft className="w-4 h-4 mr-2" />
-              กลับไปหน้าหลัก
+              {t("notif.backToHome")}
             </Button>
             <div className="flex items-center justify-between">
               <div>
                 <h1 className="text-3xl font-bold text-gray-900 mb-2">
-                  การตั้งค่าการแจ้งเตือน
+                  {t("notif.pageTitle")}
                 </h1>
                 <p className="text-gray-600">
-                  จัดการการแจ้งเตือนและดูประวัติการแจ้งเตือนทั้งหมด
+                  {t("notif.pageDesc")}
                 </p>
               </div>
               {unreadCount > 0 && (
                 <Badge variant="destructive" className="text-lg px-4 py-2">
-                  {unreadCount} ใหม่
+                  {unreadCount} {t("notif.new")}
                 </Badge>
               )}
             </div>
@@ -262,11 +264,11 @@ export default function NotificationsPage() {
             <TabsList className="grid w-full grid-cols-2">
               <TabsTrigger value="settings">
                 <Bell className="w-4 h-4 mr-2" />
-                ตั้งค่า
+                {t("nav.settings")}
               </TabsTrigger>
               <TabsTrigger value="history">
                 <Clock className="w-4 h-4 mr-2" />
-                ประวัติ ({notifications.length})
+                {t("notif.history")} ({notifications.length})
               </TabsTrigger>
             </TabsList>
 
@@ -280,9 +282,9 @@ export default function NotificationsPage() {
                       <Mail className="w-5 h-5 text-blue-600" />
                     </div>
                     <div>
-                      <CardTitle>การแจ้งเตือนทางอีเมล</CardTitle>
+                      <CardTitle>{t("notif.email")}</CardTitle>
                       <CardDescription>
-                        รับการแจ้งเตือนผ่านอีเมลของคุณ
+                        {t("notif.emailDesc")}
                       </CardDescription>
                     </div>
                   </div>
@@ -290,7 +292,7 @@ export default function NotificationsPage() {
                 <CardContent className="space-y-6">
                   <div className="flex items-center justify-between">
                     <Label htmlFor="email_enabled" className="text-base font-medium">
-                      เปิดใช้งานการแจ้งเตือนทางอีเมล
+                      {t("notif.enableEmail")}
                     </Label>
                     <Switch
                       id="email_enabled"
@@ -304,10 +306,10 @@ export default function NotificationsPage() {
                     <>
                       <Separator />
                       <div className="space-y-4">
-                        <p className="text-sm font-medium text-gray-700">แจ้งเตือนก่อนครบกำหนดชำระ:</p>
+                        <p className="text-sm font-medium text-gray-700">{t("notif.beforeDue")}</p>
                         
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="email_7_days_before">7 วันก่อนครบกำหนด</Label>
+                          <Label htmlFor="email_7_days_before">{t("notif.7days")}</Label>
                           <Switch
                             id="email_7_days_before"
                             checked={settings.email_7_days_before || false}
@@ -317,7 +319,7 @@ export default function NotificationsPage() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="email_3_days_before">3 วันก่อนครบกำหนด</Label>
+                          <Label htmlFor="email_3_days_before">{t("notif.3days")}</Label>
                           <Switch
                             id="email_3_days_before"
                             checked={settings.email_3_days_before || false}
@@ -327,7 +329,7 @@ export default function NotificationsPage() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="email_1_day_before">1 วันก่อนครบกำหนด</Label>
+                          <Label htmlFor="email_1_day_before">{t("notif.1day")}</Label>
                           <Switch
                             id="email_1_day_before"
                             checked={settings.email_1_day_before || false}
@@ -337,7 +339,7 @@ export default function NotificationsPage() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="email_on_due_date">วันครบกำหนด</Label>
+                          <Label htmlFor="email_on_due_date">{t("notif.onDueDate")}</Label>
                           <Switch
                             id="email_on_due_date"
                             checked={settings.email_on_due_date || false}
@@ -350,10 +352,10 @@ export default function NotificationsPage() {
                       <Separator />
 
                       <div className="space-y-4">
-                        <p className="text-sm font-medium text-gray-700">การแจ้งเตือนอื่นๆ:</p>
+                        <p className="text-sm font-medium text-gray-700">{t("notif.otherNotifs")}</p>
 
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="email_monthly_summary">สรุปรายเดือน</Label>
+                          <Label htmlFor="email_monthly_summary">{t("notif.monthlySummary")}</Label>
                           <Switch
                             id="email_monthly_summary"
                             checked={settings.email_monthly_summary || false}
@@ -363,7 +365,7 @@ export default function NotificationsPage() {
                         </div>
 
                         <div className="flex items-center justify-between">
-                          <Label htmlFor="email_price_changes">การเปลี่ยนแปลงราคา</Label>
+                          <Label htmlFor="email_price_changes">{t("notif.priceChanges")}</Label>
                           <Switch
                             id="email_price_changes"
                             checked={settings.email_price_changes || false}
@@ -385,9 +387,9 @@ export default function NotificationsPage() {
                       <Smartphone className="w-5 h-5 text-purple-600" />
                     </div>
                     <div>
-                      <CardTitle>Push Notifications</CardTitle>
+                      <CardTitle>{t("notif.push")}</CardTitle>
                       <CardDescription>
-                        รับการแจ้งเตือนบนเบราว์เซอร์แบบ Real-time
+                        {t("notif.pushDesc")}
                       </CardDescription>
                     </div>
                   </div>
@@ -396,16 +398,16 @@ export default function NotificationsPage() {
                   {!notificationService.isPushSupported() ? (
                     <div className="p-4 bg-yellow-50 border border-yellow-200 rounded-lg">
                       <p className="text-sm text-yellow-800">
-                        ⚠️ เบราว์เซอร์ของคุณไม่รองรับ Push Notifications
+                        ⚠️ {t("notif.pushUnsupported")}
                       </p>
                     </div>
                   ) : pushPermission === "denied" ? (
                     <div className="p-4 bg-red-50 border border-red-200 rounded-lg">
                       <p className="text-sm text-red-800 mb-2">
-                        🚫 คุณได้ปิดการอนุญาต Push Notifications
+                        🚫 {t("notif.pushDenied")}
                       </p>
                       <p className="text-xs text-red-600">
-                        กรุณาเปิดใช้งานในการตั้งค่าเบราว์เซอร์
+                        {t("notif.pushDeniedDesc")}
                       </p>
                     </div>
                   ) : (
@@ -413,15 +415,15 @@ export default function NotificationsPage() {
                       <div className="flex items-center justify-between">
                         <div>
                           <Label htmlFor="push_enabled" className="text-base font-medium">
-                            เปิดใช้งาน Push Notifications
+                            {t("notif.enablePush")}
                           </Label>
                           {pushPermission === "granted" && (
-                            <p className="text-xs text-green-600 mt-1">✓ ได้รับอนุญาตแล้ว</p>
+                            <p className="text-xs text-green-600 mt-1">✓ {t("notif.pushGranted")}</p>
                           )}
                         </div>
                         {pushPermission !== "granted" ? (
                           <Button onClick={handleEnablePush} size="sm">
-                            เปิดใช้งาน
+                            {t("notif.enable")}
                           </Button>
                         ) : (
                           <Switch
@@ -437,10 +439,10 @@ export default function NotificationsPage() {
                         <>
                           <Separator />
                           <div className="space-y-4">
-                            <p className="text-sm font-medium text-gray-700">แจ้งเตือนก่อนครบกำหนดชำระ:</p>
+                            <p className="text-sm font-medium text-gray-700">{t("notif.beforeDue")}</p>
                             
                             <div className="flex items-center justify-between">
-                              <Label htmlFor="push_7_days_before">7 วันก่อนครบกำหนด</Label>
+                              <Label htmlFor="push_7_days_before">{t("notif.7days")}</Label>
                               <Switch
                                 id="push_7_days_before"
                                 checked={settings.push_7_days_before || false}
@@ -450,7 +452,7 @@ export default function NotificationsPage() {
                             </div>
 
                             <div className="flex items-center justify-between">
-                              <Label htmlFor="push_3_days_before">3 วันก่อนครบกำหนด</Label>
+                              <Label htmlFor="push_3_days_before">{t("notif.3days")}</Label>
                               <Switch
                                 id="push_3_days_before"
                                 checked={settings.push_3_days_before || false}
@@ -460,7 +462,7 @@ export default function NotificationsPage() {
                             </div>
 
                             <div className="flex items-center justify-between">
-                              <Label htmlFor="push_1_day_before">1 วันก่อนครบกำหนด</Label>
+                              <Label htmlFor="push_1_day_before">{t("notif.1day")}</Label>
                               <Switch
                                 id="push_1_day_before"
                                 checked={settings.push_1_day_before || false}
@@ -470,7 +472,7 @@ export default function NotificationsPage() {
                             </div>
 
                             <div className="flex items-center justify-between">
-                              <Label htmlFor="push_on_due_date">วันครบกำหนด</Label>
+                              <Label htmlFor="push_on_due_date">{t("notif.onDueDate")}</Label>
                               <Switch
                                 id="push_on_due_date"
                                 checked={settings.push_on_due_date || false}
@@ -494,9 +496,9 @@ export default function NotificationsPage() {
                       <Clock className="w-5 h-5 text-indigo-600" />
                     </div>
                     <div>
-                      <CardTitle>ความชอบการแจ้งเตือน</CardTitle>
+                      <CardTitle>{t("notif.preferences")}</CardTitle>
                       <CardDescription>
-                        ตั้งค่าเวลาและช่วงเวลาการแจ้งเตือน
+                        {t("notif.preferencesDesc")}
                       </CardDescription>
                     </div>
                   </div>
@@ -505,7 +507,7 @@ export default function NotificationsPage() {
                   <div className="space-y-2">
                     <Label htmlFor="notification_time">
                       <Clock className="w-4 h-4 inline mr-2" />
-                      เวลาที่ต้องการรับการแจ้งเตือน
+                      {t("notif.time")}
                     </Label>
                     <input
                       type="time"
@@ -515,7 +517,7 @@ export default function NotificationsPage() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
                     />
                     <p className="text-xs text-gray-500">
-                      การแจ้งเตือนจะถูกส่งในช่วงเวลาที่กำหนด
+                      {t("notif.timeDesc")}
                     </p>
                   </div>
 
@@ -524,11 +526,11 @@ export default function NotificationsPage() {
                   <div className="space-y-4">
                     <Label>
                       <Moon className="w-4 h-4 inline mr-2" />
-                      Quiet Hours (ช่วงเวลาไม่รับการแจ้งเตือน)
+                      {t("notif.quietHours")}
                     </Label>
                     <div className="grid grid-cols-2 gap-4">
                       <div className="space-y-2">
-                        <Label htmlFor="quiet_hours_start" className="text-sm">เริ่ม</Label>
+                        <Label htmlFor="quiet_hours_start" className="text-sm">{t("notif.start")}</Label>
                         <input
                           type="time"
                           id="quiet_hours_start"
@@ -538,7 +540,7 @@ export default function NotificationsPage() {
                         />
                       </div>
                       <div className="space-y-2">
-                        <Label htmlFor="quiet_hours_end" className="text-sm">สิ้นสุด</Label>
+                        <Label htmlFor="quiet_hours_end" className="text-sm">{t("notif.end")}</Label>
                         <input
                           type="time"
                           id="quiet_hours_end"
@@ -549,7 +551,7 @@ export default function NotificationsPage() {
                       </div>
                     </div>
                     <p className="text-xs text-gray-500">
-                      ในช่วงเวลานี้จะไม่มีการแจ้งเตือน (ถ้าไม่ระบุจะรับการแจ้งเตือนตลอด 24 ชม.)
+                      {t("notif.quietHoursDesc")}
                     </p>
                   </div>
 
@@ -558,7 +560,7 @@ export default function NotificationsPage() {
                   <div className="space-y-2">
                     <Label htmlFor="timezone">
                       <Globe className="w-4 h-4 inline mr-2" />
-                      Timezone
+                      {t("notif.timezone")}
                     </Label>
                     <input
                       type="text"
@@ -568,7 +570,7 @@ export default function NotificationsPage() {
                       className="w-full px-4 py-2 border border-gray-300 rounded-lg bg-gray-50"
                     />
                     <p className="text-xs text-gray-500">
-                      Timezone จะถูกตั้งค่าอัตโนมัติตามเบราว์เซอร์ของคุณ
+                      {t("notif.timezoneDesc")}
                     </p>
                   </div>
                 </CardContent>
@@ -581,9 +583,9 @@ export default function NotificationsPage() {
                 <CardHeader>
                   <div className="flex items-center justify-between">
                     <div>
-                      <CardTitle>ประวัติการแจ้งเตือน</CardTitle>
+                      <CardTitle>{t("notif.historyTitle")}</CardTitle>
                       <CardDescription>
-                        แสดง {notifications.length} รายการล่าสุด
+                        {t("notif.showing")} {notifications.length} {t("notif.recent")}
                       </CardDescription>
                     </div>
                     {unreadCount > 0 && (
@@ -593,7 +595,7 @@ export default function NotificationsPage() {
                         onClick={handleMarkAllAsRead}
                       >
                         <CheckCheck className="w-4 h-4 mr-2" />
-                        ทำเครื่องหมายทั้งหมด
+                        {t("notif.markAllRead")}
                       </Button>
                     )}
                   </div>
@@ -602,9 +604,9 @@ export default function NotificationsPage() {
                   {notifications.length === 0 ? (
                     <div className="text-center py-12">
                       <BellOff className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-                      <p className="text-gray-500 mb-2">ยังไม่มีการแจ้งเตือน</p>
+                      <p className="text-gray-500 mb-2">{t("notif.empty")}</p>
                       <p className="text-sm text-gray-400">
-                        การแจ้งเตือนจะแสดงที่นี่เมื่อคุณได้รับ
+                        {t("notif.emptyDesc")}
                       </p>
                     </div>
                   ) : (
@@ -655,9 +657,9 @@ export default function NotificationsPage() {
                                 <span>{formatDate(notification.sent_at)}</span>
                                 <span>•</span>
                                 <Badge variant="outline" className="text-xs">
-                                  {notification.channel === "email" && "📧 Email"}
-                                  {notification.channel === "push" && "📱 Push"}
-                                  {notification.channel === "in_app" && "🔔 In-App"}
+                                  {notification.channel === "email" && `📧 ${t("notif.email")}`}
+                                  {notification.channel === "push" && `📱 ${t("notif.push")}`}
+                                  {notification.channel === "in_app" && `🔔 ${t("notif.inApp")}`}
                                 </Badge>
                               </div>
                             </div>

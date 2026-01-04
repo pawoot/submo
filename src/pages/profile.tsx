@@ -67,7 +67,7 @@ export default function ProfilePage() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const { preferredCurrency, setPreferredCurrency } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const [profile, setProfile] = useState<{
     id: string;
@@ -182,16 +182,16 @@ export default function ProfilePage() {
       });
 
       toast({
-        title: "สำเร็จ!",
-        description: "อัปเดตโปรไฟล์เรียบร้อยแล้ว",
+        title: t("common.success"),
+        description: t("profile.success"),
       });
 
       loadProfile();
     } catch (error) {
       console.error("Error updating profile:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถอัปเดตโปรไฟล์ได้",
+        title: t("common.error"),
+        description: t("profile.error"),
         variant: "destructive",
       });
     } finally {
@@ -206,8 +206,8 @@ export default function ProfilePage() {
     // Validate file size (max 2MB)
     if (file.size > 2 * 1024 * 1024) {
       toast({
-        title: "ไฟล์ใหญ่เกินไป",
-        description: "กรุณาเลือกไฟล์ที่มีขนาดไม่เกิน 2MB",
+        title: t("profile.fileTooLarge"),
+        description: t("profile.fileTooLargeDesc"),
         variant: "destructive",
       });
       return;
@@ -216,8 +216,8 @@ export default function ProfilePage() {
     // Validate file type
     if (!file.type.startsWith("image/")) {
       toast({
-        title: "ไฟล์ไม่ถูกต้อง",
-        description: "กรุณาเลือกไฟล์รูปภาพเท่านั้น",
+        title: t("profile.invalidFileType"),
+        description: t("profile.invalidFileTypeDesc"),
         variant: "destructive",
       });
       return;
@@ -232,16 +232,16 @@ export default function ProfilePage() {
       await profileService.updateProfile({ avatar_url: avatarUrl });
 
       toast({
-        title: "สำเร็จ!",
-        description: "อัปโหลดรูปโปรไฟล์เรียบร้อยแล้ว",
+        title: t("common.success"),
+        description: t("profile.avatarUploaded"),
       });
 
       loadProfile();
     } catch (error) {
       console.error("Error uploading avatar:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถอัปโหลดรูปภาพได้",
+        title: t("common.error"),
+        description: t("profile.error"),
         variant: "destructive",
       });
     } finally {
@@ -254,8 +254,8 @@ export default function ProfilePage() {
 
     if (passwordData.newPassword !== passwordData.confirmPassword) {
       toast({
-        title: "รหัสผ่านไม่ตรงกัน",
-        description: "กรุณากรอกรหัสผ่านให้ตรงกันทั้งสองช่อง",
+        title: t("profile.passwordMismatch"),
+        description: t("profile.passwordMismatchDesc"),
         variant: "destructive",
       });
       return;
@@ -263,8 +263,8 @@ export default function ProfilePage() {
 
     if (passwordData.newPassword.length < 6) {
       toast({
-        title: "รหัสผ่านสั้นเกินไป",
-        description: "รหัสผ่านต้องมีอย่างน้อย 6 ตัวอักษร",
+        title: t("profile.passwordTooShort"),
+        description: t("profile.passwordTooShortDesc"),
         variant: "destructive",
       });
       return;
@@ -276,8 +276,8 @@ export default function ProfilePage() {
       await profileService.changePassword(passwordData.newPassword);
 
       toast({
-        title: "สำเร็จ!",
-        description: "เปลี่ยนรหัสผ่านเรียบร้อยแล้ว",
+        title: t("common.success"),
+        description: t("auth.passwordChanged"),
       });
 
       setPasswordData({ newPassword: "", confirmPassword: "" });
@@ -285,8 +285,8 @@ export default function ProfilePage() {
     } catch (error) {
       console.error("Error changing password:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถเปลี่ยนรหัสผ่านได้",
+        title: t("common.error"),
+        description: t("profile.error"),
         variant: "destructive",
       });
     } finally {
@@ -308,16 +308,16 @@ export default function ProfilePage() {
       await profileService.deleteAccount();
       
       toast({
-        title: "บัญชีถูกลบแล้ว",
-        description: "ขอบคุณที่ใช้บริการ",
+        title: t("profile.accountDeleted"),
+        description: t("profile.thankYou"),
       });
 
       router.push("/auth/login");
     } catch (error) {
       console.error("Error deleting account:", error);
       toast({
-        title: "เกิดข้อผิดพลาด",
-        description: "ไม่สามารถลบบัญชีได้",
+        title: t("common.error"),
+        description: t("toast.deleteError"),
         variant: "destructive",
       });
     }
@@ -329,7 +329,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">กำลังโหลด...</p>
+            <p className="text-gray-600">{t("common.loading")}</p>
           </div>
         </div>
       </AuthGuard>
@@ -338,7 +338,7 @@ export default function ProfilePage() {
 
   return (
     <AuthGuard>
-      <SEO title="โปรไฟล์ผู้ใช้" description="จัดการข้อมูลโปรไฟล์และการตั้งค่าบัญชีของคุณ" />
+      <SEO title={t("profile.title") + " - Submo.ai"} description={t("profile.manageAccount")} />
       
       {/* Mobile Header */}
       <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
@@ -352,18 +352,18 @@ export default function ProfilePage() {
                 <Link href="/">
                   <Button variant="ghost" size="sm">
                     <ArrowLeft className="h-4 w-4 mr-2" />
-                    กลับ
+                    {t("common.back")}
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">โปรไฟล์ของฉัน</h1>
-                  <p className="text-sm text-gray-600">จัดการข้อมูลส่วนตัวและการตั้งค่า</p>
+                  <h1 className="text-2xl font-bold text-gray-900">{t("profile.myProfile")}</h1>
+                  <p className="text-sm text-gray-600">{t("profile.manageAccount")}</p>
                 </div>
               </div>
 
               <Button variant="outline" onClick={handleLogout}>
                 <LogOut className="h-4 w-4 mr-2" />
-                ออกจากระบบ
+                {t("nav.logout")}
               </Button>
             </div>
           </div>
@@ -399,13 +399,13 @@ export default function ProfilePage() {
                     </div>
 
                     <h2 className="text-xl font-bold text-gray-900 mb-1">
-                      {profile?.full_name || "ไม่ระบุชื่อ"}
+                      {profile?.full_name || t("profile.noName")}
                     </h2>
                     <p className="text-sm text-gray-600 mb-3">{profile?.email}</p>
 
                     <Badge variant="secondary" className="mb-4">
                       <Calendar className="h-3 w-3 mr-1" />
-                      สมาชิกตั้งแต่ {new Date(profile?.created_at || "").toLocaleDateString("th-TH", { year: "numeric", month: "long" })}
+                      {t("profile.memberSince")} {new Date(profile?.created_at || "").toLocaleDateString(language === 'th' ? "th-TH" : "en-US", { year: "numeric", month: "long" })}
                     </Badge>
                   </div>
                 </CardContent>
@@ -416,26 +416,26 @@ export default function ProfilePage() {
                 <CardHeader className="pb-3">
                   <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
                     <Package className="h-4 w-4" />
-                    สถิติการใช้งาน
+                    {t("profile.usageStats")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">Subscriptions ทั้งหมด</span>
+                    <span className="text-sm text-gray-600">{t("profile.totalSubs")}</span>
                     <span className="text-2xl font-bold text-gray-900">{stats.totalSubscriptions}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">กำลังใช้งาน</span>
+                    <span className="text-sm text-gray-600">{t("profile.activeSubs")}</span>
                     <span className="text-2xl font-bold text-green-600">{stats.activeSubscriptions}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">ค่าใช้จ่ายรายเดือน</span>
+                    <span className="text-sm text-gray-600">{t("profile.monthlyCost")}</span>
                     <span className="text-xl font-bold text-indigo-600">{formatCurrency(stats.totalMonthlySpend, preferredCurrency)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">ค่าใช้จ่ายรายปี</span>
+                    <span className="text-sm text-gray-600">{t("profile.yearlyCost")}</span>
                     <span className="text-xl font-bold text-purple-600">{formatCurrency(stats.totalYearlySpend, preferredCurrency)}</span>
                   </div>
                 </CardContent>
@@ -449,16 +449,16 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <User className="h-5 w-5" />
-                    ข้อมูลส่วนตัว
+                    {t("profile.personalInfo")}
                   </CardTitle>
-                  <CardDescription>อัปเดตข้อมูลโปรไฟล์ของคุณ</CardDescription>
+                  <CardDescription>{t("profile.updateInfo")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <form onSubmit={handleUpdateProfile} className="space-y-4">
                     <div className="space-y-2">
                       <Label htmlFor="email">
                         <Mail className="h-4 w-4 inline mr-2" />
-                        อีเมล
+                        {t("profile.email")}
                       </Label>
                       <Input
                         id="email"
@@ -467,25 +467,25 @@ export default function ProfilePage() {
                         disabled
                         className="bg-gray-50"
                       />
-                      <p className="text-xs text-gray-500">อีเมลไม่สามารถเปลี่ยนแปลงได้</p>
+                      <p className="text-xs text-gray-500">{t("profile.cannotUndo")}</p>
                     </div>
 
                     <div className="space-y-2">
                       <Label htmlFor="full_name">
                         <User className="h-4 w-4 inline mr-2" />
-                        ชื่อ-นามสกุล
+                        {t("profile.fullName")}
                       </Label>
                       <Input
                         id="full_name"
                         type="text"
-                        placeholder="กรอกชื่อ-นามสกุล"
+                        placeholder={t("auth.fullNamePlaceholder")}
                         value={formData.full_name}
                         onChange={(e) => setFormData(prev => ({ ...prev, full_name: e.target.value }))}
                       />
                     </div>
 
                     <div className="space-y-2">
-                      <Label htmlFor="avatar_url">URL รูปโปรไฟล์</Label>
+                      <Label htmlFor="avatar_url">{t("profile.avatarUrl")}</Label>
                       <Input
                         id="avatar_url"
                         type="url"
@@ -493,12 +493,12 @@ export default function ProfilePage() {
                         value={formData.avatar_url}
                         onChange={(e) => setFormData(prev => ({ ...prev, avatar_url: e.target.value }))}
                       />
-                      <p className="text-xs text-gray-500">หรือคลิกที่รูปด้านซ้ายเพื่ออัปโหลดรูปใหม่</p>
+                      <p className="text-xs text-gray-500">{t("profile.avatarUploadDesc")}</p>
                     </div>
 
                     <Button type="submit" disabled={saving} className="w-full">
                       <Save className="h-4 w-4 mr-2" />
-                      {saving ? "กำลังบันทึก..." : "บันทึกการเปลี่ยนแปลง"}
+                      {saving ? t("profile.saving") : t("profile.saveChanges")}
                     </Button>
                   </form>
                 </CardContent>
@@ -509,25 +509,25 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <Lock className="h-5 w-5" />
-                    ความปลอดภัย
+                    {t("profile.security")}
                   </CardTitle>
-                  <CardDescription>เปลี่ยนรหัสผ่านเพื่อความปลอดภัยของบัญชี</CardDescription>
+                  <CardDescription>{t("profile.changePasswordDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   {!showPasswordForm ? (
                     <Button variant="outline" onClick={() => setShowPasswordForm(true)} className="w-full">
                       <Shield className="h-4 w-4 mr-2" />
-                      เปลี่ยนรหัสผ่าน
+                      {t("auth.changePassword")}
                     </Button>
                   ) : (
                     <form onSubmit={handleChangePassword} className="space-y-4">
                       <div className="space-y-2">
-                        <Label htmlFor="new_password">รหัสผ่านใหม่</Label>
+                        <Label htmlFor="new_password">{t("auth.newPassword")}</Label>
                         <div className="relative">
                           <Input
                             id="new_password"
                             type={showPassword ? "text" : "password"}
-                            placeholder="กรอกรหัสผ่านใหม่"
+                            placeholder={t("auth.passwordPlaceholder")}
                             value={passwordData.newPassword}
                             onChange={(e) => setPasswordData(prev => ({ ...prev, newPassword: e.target.value }))}
                             required
@@ -544,12 +544,12 @@ export default function ProfilePage() {
                       </div>
 
                       <div className="space-y-2">
-                        <Label htmlFor="confirm_password">ยืนยันรหัสผ่านใหม่</Label>
+                        <Label htmlFor="confirm_password">{t("auth.confirmNewPassword")}</Label>
                         <div className="relative">
                           <Input
                             id="confirm_password"
                             type={showConfirmPassword ? "text" : "password"}
-                            placeholder="กรอกรหัสผ่านอีกครั้ง"
+                            placeholder={t("auth.confirmPassword")}
                             value={passwordData.confirmPassword}
                             onChange={(e) => setPasswordData(prev => ({ ...prev, confirmPassword: e.target.value }))}
                             required
@@ -567,7 +567,7 @@ export default function ProfilePage() {
 
                       <div className="flex gap-2">
                         <Button type="submit" disabled={saving} className="flex-1">
-                          {saving ? "กำลังบันทึก..." : "บันทึก"}
+                          {saving ? t("common.loading") : t("common.save")}
                         </Button>
                         <Button
                           type="button"
@@ -578,7 +578,7 @@ export default function ProfilePage() {
                           }}
                           className="flex-1"
                         >
-                          ยกเลิก
+                          {t("common.cancel")}
                         </Button>
                       </div>
                     </form>
@@ -591,21 +591,21 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle className="flex items-center gap-2">
                     <CreditCard className="h-5 w-5" />
-                    💱 การตั้งค่าสกุลเงิน
+                    💱 {t("profile.currencySettings")}
                   </CardTitle>
-                  <CardDescription>เลือกสกุลเงินที่ต้องการแสดงในระบบ</CardDescription>
+                  <CardDescription>{t("profile.selectCurrencyDesc")}</CardDescription>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="space-y-2">
-                    <Label htmlFor="currency">สกุลเงินที่แสดง</Label>
+                    <Label htmlFor="currency">{t("profile.displayCurrency")}</Label>
                     <Select
                       value={preferredCurrency}
                       onValueChange={async (value) => {
                         try {
                           await setPreferredCurrency(value);
                           toast({
-                            title: "✅ สำเร็จ!",
-                            description: "เปลี่ยนสกุลเงินเรียบร้อยแล้ว",
+                            title: t("common.success"),
+                            description: t("profile.currencyUpdated"),
                           });
                           
                           // Reload page to update all displays
@@ -613,15 +613,15 @@ export default function ProfilePage() {
                         } catch (error) {
                           console.error("Error updating currency:", error);
                           toast({
-                            title: "เกิดข้อผิดพลาด",
-                            description: "ไม่สามารถเปลี่ยนสกุลเงินได้",
+                            title: t("common.error"),
+                            description: t("profile.error"),
                             variant: "destructive",
                           });
                         }
                       }}
                     >
                       <SelectTrigger id="currency">
-                        <SelectValue placeholder="เลือกสกุลเงิน" />
+                        <SelectValue placeholder={t("common.select")} />
                       </SelectTrigger>
                       <SelectContent>
                         {SUPPORTED_CURRENCIES.map((currency) => (
@@ -636,7 +636,7 @@ export default function ProfilePage() {
                       </SelectContent>
                     </Select>
                     <p className="text-xs text-gray-500">
-                      ระบบจะแปลงค่าเงินทั้งหมดเป็นสกุลที่คุณเลือกโดยอัตโนมัติ
+                      {t("profile.currencyAutoConvert")}
                     </p>
                   </div>
 
@@ -645,13 +645,13 @@ export default function ProfilePage() {
                       <div className="text-2xl">{SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.flag}</div>
                       <div>
                         <p className="font-semibold text-blue-900">
-                          สกุลเงินปัจจุบัน: {preferredCurrency}
+                          {t("profile.currentCurrency")}: {preferredCurrency}
                         </p>
                         <p className="text-sm text-blue-700">
                           {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.name}
                         </p>
                         <p className="text-xs text-blue-600 mt-1">
-                          ตัวอย่าง: {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.symbol}1,000.00
+                          Example: {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.symbol}1,000.00
                         </p>
                       </div>
                     </div>
@@ -664,9 +664,9 @@ export default function ProfilePage() {
                 <CardHeader>
                   <CardTitle className="text-red-600 flex items-center gap-2">
                     <Trash2 className="h-5 w-5" />
-                    Danger Zone
+                    {t("profile.dangerZone")}
                   </CardTitle>
-                  <CardDescription>การดำเนินการเหล่านี้ไม่สามารถย้อนกลับได้</CardDescription>
+                  <CardDescription>{t("profile.irreversibleAction")}</CardDescription>
                 </CardHeader>
                 <CardContent>
                   <Button
@@ -675,7 +675,7 @@ export default function ProfilePage() {
                     className="w-full"
                   >
                     <Trash2 className="h-4 w-4 mr-2" />
-                    ลบบัญชีถาวร
+                    {t("profile.deleteAccount")}
                   </Button>
                 </CardContent>
               </Card>
@@ -688,24 +688,24 @@ export default function ProfilePage() {
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>คุณแน่ใจหรือไม่?</AlertDialogTitle>
+            <AlertDialogTitle>{t("profile.deleteConfirmTitle")}</AlertDialogTitle>
             <AlertDialogDescription>
-              การลบบัญชีจะทำให้ข้อมูลทั้งหมดของคุณถูกลบอย่างถาวร รวมถึง:
+              {t("profile.deleteConfirmDesc")}
               <ul className="list-disc list-inside mt-2 space-y-1">
-                <li>ข้อมูลโปรไฟล์</li>
-                <li>Subscriptions ทั้งหมด ({stats.totalSubscriptions} รายการ)</li>
-                <li>ประวัติการใช้งาน</li>
+                <li>{t("profile.personalInfo")}</li>
+                <li>{t("profile.totalSubs")} ({stats.totalSubscriptions} {t("dashboard.items")})</li>
+                <li>{t("profile.deleteHistory")}</li>
               </ul>
-              <p className="mt-3 font-semibold text-red-600">การกระทำนี้ไม่สามารถยกเลิกได้</p>
+              <p className="mt-3 font-semibold text-red-600">{t("profile.cannotUndo")}</p>
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
-            <AlertDialogCancel>ยกเลิก</AlertDialogCancel>
+            <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
             <AlertDialogAction
               onClick={handleDeleteAccount}
               className="bg-red-600 hover:bg-red-700"
             >
-              ยืนยันการลบบัญชี
+              {t("profile.confirmDelete")}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

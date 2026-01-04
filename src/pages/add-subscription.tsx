@@ -17,7 +17,7 @@ import { subscriptionService } from "@/services/subscriptionService";
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 import { AuthGuard } from "@/components/AuthGuard";
 import { format } from "date-fns";
-import { th } from "date-fns/locale";
+import { th, enUS } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
@@ -30,59 +30,6 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
-
-// Validation Schema
-const subscriptionSchema = z.object({
-  name: z.string()
-    .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
-    .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
-  category: z.string()
-    .min(1, t("validation.required")),
-  description: z.string()
-    .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
-    .optional()
-    .nullable(),
-  cost: z.string()
-    .min(1, t("validation.required"))
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: t("validation.positiveNumber")
-    })
-    .refine((val) => Number(val) <= 999999.99, {
-      message: t("validation.maxLength") + " 999,999.99"
-    }),
-  currency: z.string()
-    .min(1, t("validation.required")),
-  billing: z.string()
-    .min(1, t("validation.required")),
-  paymentMethod: z.string()
-    .min(1, t("validation.required")),
-  cardLast4: z.string()
-    .max(4, t("validation.maxLength") + " 4")
-    .optional()
-    .nullable(),
-  website: z.string()
-    .url(t("validation.invalidUrl"))
-    .optional()
-    .nullable()
-    .or(z.literal("")),
-  notes: z.string()
-    .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
-    .optional()
-    .nullable(),
-  startDate: z.date({
-    required_error: t("validation.required"),
-    invalid_type_error: t("validation.invalidDate"),
-  }),
-  nextBillingDate: z.date({
-    required_error: t("validation.required"),
-    invalid_type_error: t("validation.invalidDate"),
-  }),
-}).refine((data) => data.nextBillingDate > data.startDate, {
-  message: t("validation.invalidDate"),
-  path: ["nextBillingDate"],
-});
-
-type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
 
 export default function AddSubscription() {
   const [sharedUsers, setSharedUsers] = useState<string[]>([]);
@@ -97,7 +44,60 @@ export default function AddSubscription() {
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, isLoading: currencyLoading } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
+
+  // Validation Schema (Moved inside component to access t function)
+  const subscriptionSchema = z.object({
+    name: z.string()
+      .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
+      .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
+    category: z.string()
+      .min(1, t("validation.required")),
+    description: z.string()
+      .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
+      .optional()
+      .nullable(),
+    cost: z.string()
+      .min(1, t("validation.required"))
+      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+        message: t("validation.positiveNumber")
+      })
+      .refine((val) => Number(val) <= 999999.99, {
+        message: t("validation.maxLength") + " 999,999.99"
+      }),
+    currency: z.string()
+      .min(1, t("validation.required")),
+    billing: z.string()
+      .min(1, t("validation.required")),
+    paymentMethod: z.string()
+      .min(1, t("validation.required")),
+    cardLast4: z.string()
+      .max(4, t("validation.maxLength") + " 4")
+      .optional()
+      .nullable(),
+    website: z.string()
+      .url(t("validation.invalidUrl"))
+      .optional()
+      .nullable()
+      .or(z.literal("")),
+    notes: z.string()
+      .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
+      .optional()
+      .nullable(),
+    startDate: z.date({
+      required_error: t("validation.required"),
+      invalid_type_error: t("validation.invalidDate"),
+    }),
+    nextBillingDate: z.date({
+      required_error: t("validation.required"),
+      invalid_type_error: t("validation.invalidDate"),
+    }),
+  }).refine((data) => data.nextBillingDate > data.startDate, {
+    message: t("validation.invalidDate"),
+    path: ["nextBillingDate"],
+  });
+
+  type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
 
   const {
     register,
@@ -591,7 +591,7 @@ export default function AddSubscription() {
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {startDate ? (
-                              format(startDate, "d MMMM yyyy", { locale: th })
+                              format(startDate, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
                             ) : (
                               <span>{t("common.select")}</span>
                             )}
@@ -603,7 +603,7 @@ export default function AddSubscription() {
                             selected={startDate}
                             onSelect={handleStartDateChange}
                             initialFocus
-                            locale={th}
+                            locale={language === 'th' ? th : enUS}
                           />
                         </PopoverContent>
                       </Popover>
@@ -626,7 +626,7 @@ export default function AddSubscription() {
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
                             {nextBillingDate ? (
-                              format(nextBillingDate, "d MMMM yyyy", { locale: th })
+                              format(nextBillingDate, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
                             ) : (
                               <span>{t("common.select")}</span>
                             )}
@@ -638,7 +638,7 @@ export default function AddSubscription() {
                             selected={nextBillingDate}
                             onSelect={handleNextBillingDateChange}
                             initialFocus
-                            locale={th}
+                            locale={language === 'th' ? th : enUS}
                             disabled={(date) =>
                               startDate ? date <= startDate : false
                             }
