@@ -20,13 +20,14 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { subscriptionService } from "@/services/subscriptionService";
 import { authService } from "@/services/authService";
+import { profileService } from "@/services/profileService";
 import { useRouter } from "next/router";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -40,6 +41,7 @@ export default function Home() {
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [userEmail, setUserEmail] = useState<string>("");
+  const [isAdmin, setIsAdmin] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -56,6 +58,14 @@ export default function Home() {
     const user = await authService.getCurrentUser();
     if (user) {
       setUserEmail(user.email || "");
+      
+      // Check if user is admin
+      try {
+        const profile = await profileService.getCurrentProfile();
+        setIsAdmin(profile?.role === "admin");
+      } catch (error) {
+        console.error("Error checking admin status:", error);
+      }
     }
   };
 
@@ -221,6 +231,19 @@ export default function Home() {
                   <h1 className="text-2xl font-bold text-slate-900 dark:text-white">Subscription Mo</h1>
                   <p className="text-sm text-slate-600 dark:text-slate-400">จัดการค่าใช้จ่าย Software</p>
                 </div>
+                {isAdmin && (
+                  <Link href="/admin/subscription-templates">
+                    <Button 
+                      variant="outline" 
+                      size="sm"
+                      className="ml-4 gap-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 dark:border-purple-800 dark:hover:bg-purple-950"
+                      title="Admin Panel"
+                    >
+                      <Settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
+                      <span className="hidden sm:inline text-purple-600 dark:text-purple-400 font-medium">Admin Panel</span>
+                    </Button>
+                  </Link>
+                )}
               </div>
               <div className="flex items-center gap-3">
                 <div className="text-right mr-2 hidden sm:block">
