@@ -53,11 +53,21 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
   };
 
   const convertAmount = async (amount: number, fromCurrency: string): Promise<number> => {
+    console.log(`🔄 convertAmount called: ${amount} ${fromCurrency} → ${preferredCurrency}`);
+    
     if (fromCurrency === preferredCurrency) {
+      console.log(`✅ Same currency, no conversion needed`);
       return amount;
     }
     
-    return await currencyService.convertCurrency(amount, fromCurrency, preferredCurrency);
+    try {
+      const converted = await currencyService.convertCurrency(amount, fromCurrency, preferredCurrency);
+      console.log(`✅ Conversion result: ${amount} ${fromCurrency} = ${converted} ${preferredCurrency}`);
+      return converted;
+    } catch (error) {
+      console.error("❌ Currency conversion failed:", error);
+      return amount; // Fallback to original amount
+    }
   };
 
   const formatAmount = async (amount: number, fromCurrency: string): Promise<string> => {

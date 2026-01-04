@@ -60,10 +60,12 @@ export const currencyService = {
     
     // Return cached rates if still valid
     if (cachedRates && (now - cacheTimestamp) < CACHE_DURATION) {
+      console.log("📦 Using cached exchange rates");
       return cachedRates;
     }
 
     try {
+      console.log(`🌐 Fetching exchange rates for ${baseCurrency}...`);
       // Using exchangerate-api.com (free tier: 1,500 requests/month)
       const response = await fetch(`https://api.exchangerate-api.com/v4/latest/${baseCurrency}`);
       
@@ -72,12 +74,13 @@ export const currencyService = {
       }
 
       const data = await response.json();
+      console.log("✅ Exchange rates fetched:", data.rates);
       cachedRates = data.rates;
       cacheTimestamp = now;
       
       return data.rates;
     } catch (error) {
-      console.error("Error fetching exchange rates:", error);
+      console.error("❌ Error fetching exchange rates, using fallback:", error);
       
       // Fallback to approximate rates if API fails
       return this.getFallbackRates(baseCurrency);
@@ -146,7 +149,10 @@ export const currencyService = {
     fromCurrency: string,
     toCurrency: string
   ): Promise<number> {
+    console.log(`💱 convertCurrency: ${amount} ${fromCurrency} → ${toCurrency}`);
+    
     if (fromCurrency === toCurrency) {
+      console.log("✅ Same currency, returning original amount");
       return amount;
     }
 
@@ -154,11 +160,13 @@ export const currencyService = {
     const rate = rates[toCurrency];
 
     if (!rate) {
-      console.warn(`Exchange rate not found for ${toCurrency}, using amount as-is`);
+      console.warn(`⚠️ Exchange rate not found for ${toCurrency}, using amount as-is`);
       return amount;
     }
 
-    return amount * rate;
+    const converted = amount * rate;
+    console.log(`✅ Converted: ${amount} ${fromCurrency} × ${rate} = ${converted} ${toCurrency}`);
+    return converted;
   },
 
   /**

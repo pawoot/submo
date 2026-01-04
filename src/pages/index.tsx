@@ -151,9 +151,15 @@ export default function Home() {
 
       setProcessing(true);
       try {
+        console.log("🔄 Processing subscriptions...");
+        console.log("📊 Preferred Currency:", preferredCurrency);
+        
         const processed = await Promise.all(
           subscriptions.map(async (sub) => {
+            console.log(`💰 Converting ${sub.name}: ${sub.amount} ${sub.currency} → ${preferredCurrency}`);
             const convertedAmount = await convertAmount(sub.amount, sub.currency || "USD");
+            console.log(`✅ Converted: ${sub.amount} ${sub.currency} → ${convertedAmount} ${preferredCurrency}`);
+            
             return {
               ...sub,
               amount: convertedAmount,
@@ -164,6 +170,7 @@ export default function Home() {
           })
         );
 
+        console.log("✅ Processed subscriptions:", processed);
         setDisplaySubscriptions(processed);
 
         // Calculate totals
