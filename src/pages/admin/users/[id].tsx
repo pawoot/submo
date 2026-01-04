@@ -122,7 +122,7 @@ export default function UserDetailPage() {
 
     try {
       setIsUpdatingRole(true);
-      await adminUserService.toggleAdminRole(userDetail.profile.id, pendingRole);
+      await adminUserService.toggleAdminRole(userDetail.profile.id, pendingRole === "admin");
       
       // Update local state
       setUserDetail({

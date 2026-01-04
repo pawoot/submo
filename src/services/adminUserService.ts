@@ -121,4 +121,19 @@ export const adminUserService = {
       yearlyCost: totalMonthly * 12,
     };
   },
+
+  async toggleAdminRole(userId: string, isAdmin: boolean) {
+    const { error } = await supabase
+      .from("profiles")
+      .update({
+        is_admin: isAdmin,
+        role: isAdmin ? "admin" : "user",
+      })
+      .eq("id", userId);
+
+    if (error) {
+      console.error("Error toggling admin role:", error);
+      throw error;
+    }
+  },
 };
