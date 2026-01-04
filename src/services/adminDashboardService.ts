@@ -1,4 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
+import { currencyService } from "./currencyService";
 
 export interface DashboardStats {
   totalUsers: number;
@@ -37,25 +38,35 @@ export const adminDashboardService = {
         .from("subscriptions")
         .select("*", { count: "exact" });
 
-      // Calculate revenue
+      // Calculate revenue (convert all to THB)
       let totalMonthlyRevenue = 0;
       let activeSubscriptions = 0;
 
-      subscriptions?.forEach((sub) => {
+      for (const sub of subscriptions || []) {
         if (sub.is_active) {
           activeSubscriptions++;
           const amount = sub.amount || 0;
+          const currency = sub.currency || "THB";
+          
+          // Convert to THB
+          const amountInTHB = await currencyService.convertCurrency(
+            amount,
+            currency,
+            "THB"
+          );
+          
+          // Calculate monthly cost in THB
           const monthlyCost =
             sub.billing_cycle === "monthly"
-              ? amount
+              ? amountInTHB
               : sub.billing_cycle === "yearly"
-              ? amount / 12
+              ? amountInTHB / 12
               : sub.billing_cycle === "quarterly"
-              ? amount / 3
+              ? amountInTHB / 3
               : 0;
           totalMonthlyRevenue += monthlyCost;
         }
-      });
+      }
 
       const totalYearlyRevenue = totalMonthlyRevenue * 12;
 
