@@ -433,7 +433,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               <CardHeader className="bg-gradient-to-r from-indigo-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
                   <BarChart3 className="w-6 h-6 text-indigo-600" />
-                  ค่าใช้จ่ายรายเดือนตามหมวดหมู่
+                  {t("charts.monthlyByCategory")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -468,7 +468,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
                   <PieChartIcon className="w-6 h-6 text-purple-600" />
-                  สัดส่วนค่าใช้จ่ายตามหมวดหมู่
+                  {t("charts.categoryDistribution")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -511,7 +511,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
                   <CreditCard className="w-6 h-6 text-blue-600" />
-                  ค่าใช้จ่ายตามช่องทางการชำระเงิน
+                  {t("charts.paymentMethodCost")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
@@ -551,7 +551,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
               <CardHeader className="bg-gradient-to-r from-green-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
                   <PieChartIcon className="w-6 h-6 text-green-600" />
-                  สัดส่วนการใช้ช่องทางการชำระเงิน
+                  {t("charts.paymentMethodDistribution")}
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
