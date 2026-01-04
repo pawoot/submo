@@ -12,7 +12,14 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2 } from "lucide-react";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -31,14 +38,22 @@ interface Subscription {
   status: string;
 }
 
+type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-asc" | "date-desc" | "category";
+
 export default function Home() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [sortedSubscriptions, setSortedSubscriptions] = useState<Subscription[]>([]);
+  const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<number | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
     loadSubscriptions();
   }, []);
+
+  useEffect(() => {
+    sortSubscriptions(sortOption);
+  }, [subscriptions, sortOption]);
 
   const loadSubscriptions = () => {
     const stored = localStorage.getItem("subscriptions");
@@ -97,6 +112,56 @@ export default function Home() {
       ];
       setSubscriptions(mockData);
     }
+  };
+
+  const sortSubscriptions = (option: SortOption) => {
+    const sorted = [...subscriptions];
+    
+    switch (option) {
+      case "name-asc":
+        sorted.sort((a, b) => a.name.localeCompare(b.name));
+        break;
+      case "name-desc":
+        sorted.sort((a, b) => b.name.localeCompare(a.name));
+        break;
+      case "cost-asc":
+        sorted.sort((a, b) => {
+          const costA = a.billing === "monthly" ? a.cost :
+                       a.billing === "yearly" ? a.cost / 12 :
+                       a.billing === "quarterly" ? a.cost / 3 :
+                       a.billing === "biannually" ? a.cost / 6 : a.cost;
+          const costB = b.billing === "monthly" ? b.cost :
+                       b.billing === "yearly" ? b.cost / 12 :
+                       b.billing === "quarterly" ? b.cost / 3 :
+                       b.billing === "biannually" ? b.cost / 6 : b.cost;
+          return costA - costB;
+        });
+        break;
+      case "cost-desc":
+        sorted.sort((a, b) => {
+          const costA = a.billing === "monthly" ? a.cost :
+                       a.billing === "yearly" ? a.cost / 12 :
+                       a.billing === "quarterly" ? a.cost / 3 :
+                       a.billing === "biannually" ? a.cost / 6 : a.cost;
+          const costB = b.billing === "monthly" ? b.cost :
+                       b.billing === "yearly" ? b.cost / 12 :
+                       b.billing === "quarterly" ? b.cost / 3 :
+                       b.billing === "biannually" ? b.cost / 6 : b.cost;
+          return costB - costA;
+        });
+        break;
+      case "date-asc":
+        sorted.sort((a, b) => new Date(a.nextBilling).getTime() - new Date(b.nextBilling).getTime());
+        break;
+      case "date-desc":
+        sorted.sort((a, b) => new Date(b.nextBilling).getTime() - new Date(a.nextBilling).getTime());
+        break;
+      case "category":
+        sorted.sort((a, b) => a.category.localeCompare(b.category));
+        break;
+    }
+    
+    setSortedSubscriptions(sorted);
   };
 
   const handleDelete = (id: number) => {
@@ -250,19 +315,43 @@ export default function Home() {
           {/* กราฟสถิติ */}
           <SubscriptionCharts subscriptions={subscriptions} />
 
-          {subscriptions.length > 0 ? (
+          {sortedSubscriptions.length > 0 ? (
             <Card>
               <CardHeader>
-                <CardTitle className="text-xl flex items-center justify-between">
-                  <span>รายการ Subscription</span>
-                  <Badge variant="secondary">{subscriptions.length} รายการ</Badge>
-                </CardTitle>
+                <div className="flex items-center justify-between flex-wrap gap-4">
+                  <div className="flex items-center gap-3">
+                    <CardTitle className="text-xl">รายการ Subscription</CardTitle>
+                    <Badge variant="secondary">{sortedSubscriptions.length} รายการ</Badge>
+                  </div>
+                  
+                  <div className="flex items-center gap-2">
+                    <ArrowUpDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
+                    <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
+                      <SelectTrigger className="w-[200px]">
+                        <SelectValue placeholder="เรียงลำดับ" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        <SelectItem value="date-asc">วันหมดอายุ: ใกล้ → ไกล</SelectItem>
+                        <SelectItem value="date-desc">วันหมดอายุ: ไกล → ใกล้</SelectItem>
+                        <SelectItem value="cost-desc">ราคา: มาก → น้อย</SelectItem>
+                        <SelectItem value="cost-asc">ราคา: น้อย → มาก</SelectItem>
+                        <SelectItem value="name-asc">ชื่อ: A → Z</SelectItem>
+                        <SelectItem value="name-desc">ชื่อ: Z → A</SelectItem>
+                        <SelectItem value="category">หมวดหมู่</SelectItem>
+                      </SelectContent>
+                    </Select>
+                  </div>
+                </div>
               </CardHeader>
               <CardContent>
                 <div className="space-y-4">
-                  {subscriptions.map((sub) => {
+                  {sortedSubscriptions.map((sub) => {
                     const daysUntil = getDaysUntilRenewal(sub.nextBilling);
                     const isUrgent = daysUntil <= 7;
+                    const monthlyCost = sub.billing === "monthly" ? sub.cost :
+                                       sub.billing === "yearly" ? sub.cost / 12 :
+                                       sub.billing === "quarterly" ? sub.cost / 3 :
+                                       sub.billing === "biannually" ? sub.cost / 6 : sub.cost;
 
                     return (
                       <div 
@@ -314,6 +403,9 @@ export default function Home() {
                               {sub.billing === "yearly" && "ต่อปี"}
                               {sub.billing === "quarterly" && "ราย 3 เดือน"}
                               {sub.billing === "biannually" && "ราย 6 เดือน"}
+                            </div>
+                            <div className="text-xs text-slate-400 mt-1">
+                              ≈ ${monthlyCost.toFixed(2)}/เดือน
                             </div>
                             {isUrgent && (
                               <Badge variant="destructive" className="mt-2 text-xs">
