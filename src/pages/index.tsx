@@ -101,8 +101,12 @@ export default function Home() {
         const profileData = await profileService.getCurrentProfile();
         setProfile(profileData);
         
-        // Check if user is admin (simple check based on email or profile role if available)
-        // For now we'll rely on the backend/RLS or specific admin checks
+        // Check if user is admin based on profile role
+        if (profileData?.role === "admin") {
+          setIsAdmin(true);
+        } else {
+          setIsAdmin(false);
+        }
       }
     } catch (error) {
       console.error("Error loading user data:", error);
