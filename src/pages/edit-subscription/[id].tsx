@@ -559,13 +559,12 @@ export default function EditSubscription() {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
                               <Calendar
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 initialFocus
-                                locale={language === 'th' ? th : enUS}
                               />
                             </PopoverContent>
                           </Popover>
@@ -597,16 +596,12 @@ export default function EditSubscription() {
                                 )}
                               </Button>
                             </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
+                            <PopoverContent className="w-auto p-0" align="start" sideOffset={4}>
                               <Calendar
                                 mode="single"
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 initialFocus
-                                locale={language === 'th' ? th : enUS}
-                                disabled={(date) =>
-                                  startDate ? date <= startDate : false
-                                }
                               />
                             </PopoverContent>
                           </Popover>
