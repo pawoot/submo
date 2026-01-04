@@ -20,7 +20,7 @@ interface SubscriptionNameAutocompleteProps {
   value: string;
   onChange: (value: string) => void;
   onSelectTemplate: (template: SubscriptionTemplate) => void;
-  templates: SubscriptionTemplate[];
+  templates?: SubscriptionTemplate[];
   error?: string;
   disabled?: boolean;
   selectedTemplate?: SubscriptionTemplate | null;
@@ -106,7 +106,7 @@ export function SubscriptionNameAutocomplete({
               }}
             />
             <CommandList>
-              <CommandEmpty>{t("common.no_results")}</CommandEmpty>
+              <CommandEmpty>No results found</CommandEmpty>
               <CommandGroup heading="Templates">
                 {templates.map((template) => (
                   <CommandItem
