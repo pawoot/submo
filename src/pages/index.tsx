@@ -53,6 +53,8 @@ import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type DisplaySubscription = Subscription & {
@@ -82,6 +84,7 @@ export default function Home() {
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, convertAmount, formatAmount } = useCurrency();
+  const { t } = useLanguage();
 
   useEffect(() => {
     loadUserData();
@@ -341,8 +344,8 @@ export default function Home() {
   return (
     <AuthGuard>
       <SEO 
-        title="Submo - Subscription Monitoring"
-        description="ระบบติดตามและจัดการ Subscription ทั้งหมดของคุณ ตรวจสอบค่าใช้จ่าย วันหมดอายุ และแบ่งปันค่าใช้จ่ายได้ง่าย"
+        title={t("home.seo.title")}
+        description={t("home.seo.description")}
       />
       <div className={`lg:hidden sticky top-0 z-50 transition-all duration-300 ${
         scrolled 
@@ -371,10 +374,10 @@ export default function Home() {
                 <div>
                   <h1 className={`font-bold text-slate-900 dark:text-white transition-all duration-300 ${
                     scrolled ? "text-xl" : "text-2xl"
-                  }`}>Submo</h1>
+                  }`}>{t("home.title")}</h1>
                   <p className={`text-sm text-slate-600 dark:text-slate-400 transition-all duration-300 ${
                     scrolled ? "opacity-0 h-0 overflow-hidden" : "opacity-100"
-                  }`}>Subscription Monitoring</p>
+                  }`}>{t("home.tagline")}</p>
                 </div>
                 {isAdmin && (
                   <Link href="/admin">
@@ -391,6 +394,7 @@ export default function Home() {
                 )}
               </div>
               <div className="flex items-center gap-3">
+                <LanguageSwitcher />
                 <Link href="/notifications">
                   <Button variant="outline" size="icon" className="relative">
                     <Bell className="w-5 h-5" />

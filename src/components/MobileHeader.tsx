@@ -4,6 +4,8 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileNav from "@/components/MobileNav";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface MobileHeaderProps {
   user: SupabaseUser | null;
@@ -12,6 +14,8 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }: MobileHeaderProps) {
+  const { t } = useLanguage();
+  
   return (
     <div className="flex items-center justify-between px-4 py-3">
       {/* Left: Hamburger Menu */}
@@ -23,12 +27,13 @@ export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }:
           <span className="text-white font-bold text-lg">S</span>
         </div>
         <span className="font-bold text-xl bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-          Submo
+          {t("home.title")}
         </span>
       </Link>
 
       {/* Right: Quick Actions */}
       <div className="flex items-center gap-2">
+        <LanguageSwitcher />
         <Link href="/notifications">
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
