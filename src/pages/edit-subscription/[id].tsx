@@ -26,6 +26,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -157,6 +158,45 @@ export default function EditSubscription() {
       loadSubscription();
     }
   }, [id]);
+
+  // Pre-fill form when subscription data is loaded
+  useEffect(() => {
+    const loadFormData = async () => {
+      if (!subscription) return;
+
+      // Load categories and payment methods first
+      const [categoriesData, paymentMethodsData] = await Promise.all([
+        supabase.from("categories").select("*").order("name_en"),
+        supabase.from("payment_methods").select("*").order("name_en")
+      ]);
+
+      if (categoriesData.data) setDbCategories(categoriesData.data);
+      if (paymentMethodsData.data) setDbPaymentMethods(paymentMethodsData.data);
+
+      // Pre-fill form with subscription data
+      reset({
+        name: subscription.name,
+        category_id: subscription.category_id,
+        description: subscription.description || "",
+        amount: subscription.amount.toString(),
+        currency: subscription.currency,
+        billing_cycle: subscription.billing_cycle,
+        payment_method_id: subscription.payment_method_id,
+        card_last_4: subscription.card_last_4 || "",
+        website_url: subscription.website_url || "",
+        notes: subscription.notes || "",
+        start_date: new Date(subscription.start_date),
+        next_billing_date: new Date(subscription.next_billing_date),
+      });
+
+      // Pre-fill shared users
+      if (subscription.shared_with && Array.isArray(subscription.shared_with)) {
+        setSharedUsers(subscription.shared_with);
+      }
+    };
+
+    loadFormData();
+  }, [subscription, reset]);
 
   const addSharedUser = () => {
     if (!newUserEmail) {
@@ -298,10 +338,16 @@ export default function EditSubscription() {
         </header>
 
         <main className="container mx-auto px-4 py-8 max-w-4xl">
+          <div className="mb-8">
+            <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-100">
+              {t("editSub.title")}
+            </h1>
+            <p className="text-sm text-slate-600 dark:text-slate-400">{subscription?.name}</p>
+          </div>
           <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
             <div className="space-y-6">
-              {/* Basic Information */}
-              <Card>
+              {/* Edit Form */}
+              <Card className="border-slate-200 dark:border-slate-800">
                 <CardHeader>
                   <CardTitle>{t("addSub.basicInfo")}</CardTitle>
                 </CardHeader>
