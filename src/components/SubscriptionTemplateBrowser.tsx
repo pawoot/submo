@@ -3,7 +3,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Search, X } from "lucide-react";
+import { Search, X, Building2 } from "lucide-react";
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 import type { Database } from "@/integrations/supabase/types";
 
@@ -14,6 +14,22 @@ interface SubscriptionTemplateBrowserProps {
   onOpenChange: (open: boolean) => void;
   onSelect: (template: SubscriptionTemplate) => void;
 }
+
+/**
+ * Get favicon URL from website URL
+ * Uses Google Favicon API with fallback
+ */
+const getFaviconUrl = (websiteUrl: string | null, size: number = 128): string | null => {
+  if (!websiteUrl) return null;
+  
+  try {
+    const url = new URL(websiteUrl);
+    const domain = url.hostname;
+    return `https://www.google.com/s2/favicons?domain=${domain}&sz=${size}`;
+  } catch (error) {
+    return null;
+  }
+};
 
 export function SubscriptionTemplateBrowser({
   open,
@@ -26,11 +42,13 @@ export function SubscriptionTemplateBrowser({
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [searchQuery, setSearchQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const [failedFavicons, setFailedFavicons] = useState<Set<string>>(new Set());
 
   useEffect(() => {
     if (open) {
       loadTemplates();
       loadCategories();
+      setFailedFavicons(new Set()); // Reset failed favicons when dialog opens
     }
   }, [open]);
 
@@ -82,6 +100,26 @@ export function SubscriptionTemplateBrowser({
     onOpenChange(false);
     setSearchQuery("");
     setSelectedCategory("All");
+  };
+
+  const handleImageError = (templateId: string) => {
+    setFailedFavicons((prev) => new Set(prev).add(templateId));
+  };
+
+  const getTemplateImageUrl = (template: SubscriptionTemplate): string | null => {
+    // If favicon already failed for this template, skip it
+    if (failedFavicons.has(template.id)) {
+      return template.logo_url;
+    }
+
+    // Priority 1: Favicon from website_url
+    const faviconUrl = getFaviconUrl(template.website_url);
+    if (faviconUrl) {
+      return faviconUrl;
+    }
+
+    // Priority 2: Uploaded logo_url
+    return template.logo_url;
   };
 
   const groupedTemplates = filteredTemplates.reduce((acc, template) => {
@@ -154,31 +192,40 @@ export function SubscriptionTemplateBrowser({
                   {category}
                 </h3>
                 <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
-                  {items.map((template) => (
-                    <button
-                      key={template.id}
-                      onClick={() => handleSelect(template)}
-                      className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 text-left group"
-                    >
-                      <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white shadow-sm group-hover:shadow-md transition-shadow">
-                        <img
-                          src={template.logo_url}
-                          alt={template.name}
-                          className="w-full h-full object-cover"
-                        />
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="font-medium text-gray-900 truncate">
-                          {template.name}
-                        </p>
-                        {template.default_price && (
-                          <p className="text-sm text-gray-600">
-                            ${template.default_price.toFixed(2)}/{template.default_billing_cycle === "monthly" ? "mo" : "yr"}
+                  {items.map((template) => {
+                    const imageUrl = getTemplateImageUrl(template);
+                    
+                    return (
+                      <button
+                        key={template.id}
+                        onClick={() => handleSelect(template)}
+                        className="flex items-center gap-3 p-3 rounded-lg border border-gray-200 hover:border-blue-500 hover:bg-blue-50 transition-all duration-200 text-left group"
+                      >
+                        <div className="w-12 h-12 rounded-lg overflow-hidden flex-shrink-0 bg-white shadow-sm group-hover:shadow-md transition-shadow flex items-center justify-center">
+                          {imageUrl ? (
+                            <img
+                              src={imageUrl}
+                              alt={template.name}
+                              className="w-full h-full object-contain p-1"
+                              onError={() => handleImageError(template.id)}
+                            />
+                          ) : (
+                            <Building2 className="w-6 h-6 text-gray-400" />
+                          )}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="font-medium text-gray-900 truncate">
+                            {template.name}
                           </p>
-                        )}
-                      </div>
-                    </button>
-                  ))}
+                          {template.default_price && (
+                            <p className="text-sm text-gray-600">
+                              ${template.default_price.toFixed(2)}/{template.default_billing_cycle === "monthly" ? "mo" : "yr"}
+                            </p>
+                          )}
+                        </div>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             ))
