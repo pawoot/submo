@@ -197,4 +197,26 @@ export const profileService = {
       totalYearlySpend,
     };
   },
+
+  /**
+   * Update preferred currency
+   */
+  async updatePreferredCurrency(currency: string): Promise<Profile> {
+    const { data: { user } } = await supabase.auth.getUser();
+    
+    if (!user) {
+      throw new Error("User not authenticated");
+    }
+
+    const { data, error } = await supabase
+      .from("profiles")
+      .update({ preferred_currency: currency })
+      .eq("id", user.id)
+      .select()
+      .single();
+
+    if (error) throw error;
+
+    return data;
+  },
 };

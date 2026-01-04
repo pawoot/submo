@@ -149,6 +149,7 @@ export type Database = {
           id: string
           kyc_verified: boolean | null
           phone: string | null
+          preferred_currency: string | null
           role: string | null
           updated_at: string | null
         }
@@ -163,6 +164,7 @@ export type Database = {
           id: string
           kyc_verified?: boolean | null
           phone?: string | null
+          preferred_currency?: string | null
           role?: string | null
           updated_at?: string | null
         }
@@ -177,6 +179,7 @@ export type Database = {
           id?: string
           kyc_verified?: boolean | null
           phone?: string | null
+          preferred_currency?: string | null
           role?: string | null
           updated_at?: string | null
         }
