@@ -68,6 +68,17 @@ const subscriptionSchema = z.object({
     .max(500, "หมายเหตุต้องไม่เกิน 500 ตัวอักษร")
     .optional()
     .nullable(),
+  startDate: z.date({
+    required_error: "กรุณาเลือกวันเริ่มต้น",
+    invalid_type_error: "วันที่ไม่ถูกต้อง",
+  }),
+  nextBillingDate: z.date({
+    required_error: "กรุณาเลือกวันต่ออายุถัดไป",
+    invalid_type_error: "วันที่ไม่ถูกต้อง",
+  }),
+}).refine((data) => data.nextBillingDate > data.startDate, {
+  message: "วันต่ออายุต้องหลังวันเริ่มต้น",
+  path: ["nextBillingDate"],
 });
 
 type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
@@ -79,7 +90,6 @@ export default function AddSubscription() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [startDate, setStartDate] = useState<Date>();
   const [nextBillingDate, setNextBillingDate] = useState<Date>();
-  const [dateError, setDateError] = useState("");
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
@@ -102,6 +112,7 @@ export default function AddSubscription() {
       billing: "monthly",
       paymentMethod: "credit-card",
     },
+    mode: "onChange", // Enable real-time validation
   });
 
   useEffect(() => {
@@ -113,6 +124,21 @@ export default function AddSubscription() {
       setValue("currency", preferredCurrency);
     }
   }, [preferredCurrency, currencyLoading, setValue]);
+
+  // Sync date states with form
+  const handleStartDateChange = (date: Date | undefined) => {
+    setStartDate(date);
+    if (date) {
+      setValue("startDate", date, { shouldValidate: true });
+    }
+  };
+
+  const handleNextBillingDateChange = (date: Date | undefined) => {
+    setNextBillingDate(date);
+    if (date) {
+      setValue("nextBillingDate", date, { shouldValidate: true });
+    }
+  };
 
   const loadPopularTemplates = async () => {
     try {
@@ -227,30 +253,17 @@ export default function AddSubscription() {
   };
 
   const handleSubmit = async (data: SubscriptionFormData) => {
-    // Validate dates
-    if (!startDate || !nextBillingDate) {
-      setDateError("กรุณาเลือกวันที่เริ่มต้นและวันต่ออายุถัดไป");
+    // Validate subscription name
+    if (!subscriptionName || subscriptionName.trim().length < 2) {
       toast({
-        title: "❌ กรุณาเลือกวันที่",
-        description: "กรุณาเลือกวันเริ่มต้นและวันต่ออายุถัดไป",
+        title: "❌ กรุณากรอกชื่อ Subscription",
+        description: "ชื่อต้องมีอย่างน้อย 2 ตัวอักษร",
         variant: "destructive",
         duration: 3000,
       });
       return;
     }
 
-    if (nextBillingDate <= startDate) {
-      setDateError("วันต่ออายุต้องหลังวันเริ่มต้น");
-      toast({
-        title: "❌ วันที่ไม่ถูกต้อง",
-        description: "วันต่ออายุต้องหลังวันเริ่มต้น",
-        variant: "destructive",
-        duration: 3000,
-      });
-      return;
-    }
-
-    setDateError("");
     setIsSubmitting(true);
 
     try {
@@ -263,8 +276,8 @@ export default function AddSubscription() {
         billing_cycle: data.billing,
         payment_method: data.paymentMethod,
         card_last_4: data.cardLast4 || null,
-        start_date: format(startDate, "yyyy-MM-dd"),
-        next_billing_date: format(nextBillingDate, "yyyy-MM-dd"),
+        start_date: format(data.startDate, "yyyy-MM-dd"),
+        next_billing_date: format(data.nextBillingDate, "yyyy-MM-dd"),
         website_url: data.website || null,
         notes: data.notes || null,
         shared_with: sharedUsers.length > 0 ? sharedUsers : null,
@@ -397,6 +410,12 @@ export default function AddSubscription() {
                         disabled={isSubmitting}
                         selectedTemplate={selectedTemplate}
                       />
+                      {subscriptionName && subscriptionName.trim().length < 2 && (
+                        <p className="text-sm text-red-500">ชื่อต้องมีอย่างน้อย 2 ตัวอักษร</p>
+                      )}
+                      {subscriptionName && subscriptionName.trim().length >= 2 && !selectedTemplate && (
+                        <p className="text-sm text-green-600 dark:text-green-400">✓ ชื่อถูกต้อง</p>
+                      )}
                       <input
                         type="hidden"
                         id="name"
@@ -570,7 +589,7 @@ export default function AddSubscription() {
                             className={cn(
                               "w-full justify-start text-left font-normal",
                               !startDate && "text-muted-foreground",
-                              dateError && "border-red-500"
+                              errors.startDate && "border-red-500"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -585,12 +604,15 @@ export default function AddSubscription() {
                           <Calendar
                             mode="single"
                             selected={startDate}
-                            onSelect={setStartDate}
+                            onSelect={handleStartDateChange}
                             initialFocus
                             locale={th}
                           />
                         </PopoverContent>
                       </Popover>
+                      {errors.startDate && (
+                        <p className="text-sm text-red-500">{errors.startDate.message}</p>
+                      )}
                     </div>
 
                     <div className="space-y-2">
@@ -602,7 +624,7 @@ export default function AddSubscription() {
                             className={cn(
                               "w-full justify-start text-left font-normal",
                               !nextBillingDate && "text-muted-foreground",
-                              dateError && "border-red-500"
+                              errors.nextBillingDate && "border-red-500"
                             )}
                           >
                             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -617,21 +639,20 @@ export default function AddSubscription() {
                           <Calendar
                             mode="single"
                             selected={nextBillingDate}
-                            onSelect={setNextBillingDate}
+                            onSelect={handleNextBillingDateChange}
                             initialFocus
                             locale={th}
                             disabled={(date) =>
-                              startDate ? date < startDate : false
+                              startDate ? date <= startDate : false
                             }
                           />
                         </PopoverContent>
                       </Popover>
+                      {errors.nextBillingDate && (
+                        <p className="text-sm text-red-500">{errors.nextBillingDate.message}</p>
+                      )}
                     </div>
                   </div>
-
-                  {dateError && (
-                    <p className="text-sm text-red-500">{dateError}</p>
-                  )}
 
                   <div className="p-4 bg-blue-50 dark:bg-blue-950/30 rounded-lg border border-blue-200 dark:border-blue-800">
                     <p className="text-sm text-blue-800 dark:text-blue-300">
