@@ -23,7 +23,20 @@ import {
   AlertCircle,
   Globe,
   User,
+  Shield,
+  ShieldCheck,
 } from "lucide-react";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import { Switch } from "@/components/ui/switch";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
@@ -36,6 +49,9 @@ export default function UserDetailPage() {
   const [userDetail, setUserDetail] = useState<UserDetail | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
+  const [showRoleDialog, setShowRoleDialog] = useState(false);
+  const [pendingRole, setPendingRole] = useState<"admin" | "user" | null>(null);
+  const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
   const { id } = router.query;
@@ -92,6 +108,46 @@ export default function UserDetailPage() {
       });
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const handleRoleToggle = (checked: boolean) => {
+    const newRole = checked ? "admin" : "user";
+    setPendingRole(newRole);
+    setShowRoleDialog(true);
+  };
+
+  const confirmRoleChange = async () => {
+    if (!pendingRole || !userDetail) return;
+
+    try {
+      setIsUpdatingRole(true);
+      await adminUserService.toggleAdminRole(userDetail.profile.id, pendingRole);
+      
+      // Update local state
+      setUserDetail({
+        ...userDetail,
+        profile: {
+          ...userDetail.profile,
+          role: pendingRole,
+        },
+      });
+
+      toast({
+        title: "อัปเดตสิทธิ์สำเร็จ",
+        description: `เปลี่ยนสถานะเป็น ${pendingRole === "admin" ? "ผู้ดูแลระบบ" : "ผู้ใช้ทั่วไป"} แล้ว`,
+      });
+    } catch (error) {
+      console.error("Error updating role:", error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถอัปเดตสิทธิ์ได้",
+        variant: "destructive",
+      });
+    } finally {
+      setIsUpdatingRole(false);
+      setShowRoleDialog(false);
+      setPendingRole(null);
     }
   };
 
@@ -227,6 +283,19 @@ export default function UserDetailPage() {
                     )}
                   </div>
                 </div>
+                <div>
+                  {userDetail.profile.role === "admin" ? (
+                    <Badge className="bg-gradient-to-r from-purple-600 to-pink-600 text-white">
+                      <ShieldCheck className="w-3 h-3 mr-1" />
+                      Admin
+                    </Badge>
+                  ) : (
+                    <Badge variant="secondary">
+                      <User className="w-3 h-3 mr-1" />
+                      User
+                    </Badge>
+                  )}
+                </div>
               </div>
             </CardHeader>
             <CardContent>
@@ -279,6 +348,50 @@ export default function UserDetailPage() {
                   </div>
                 </div>
               </div>
+            </CardContent>
+          </Card>
+
+          {/* Role Management Card */}
+          <Card className="mb-6">
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5" />
+                จัดการสิทธิ์การใช้งาน
+              </CardTitle>
+            </CardHeader>
+            <CardContent>
+              <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-800 rounded-lg">
+                <div className="flex items-center gap-3">
+                  {userDetail.profile.role === "admin" ? (
+                    <ShieldCheck className="w-8 h-8 text-purple-600" />
+                  ) : (
+                    <User className="w-8 h-8 text-slate-600" />
+                  )}
+                  <div>
+                    <p className="font-semibold text-lg">
+                      {userDetail.profile.role === "admin" ? "ผู้ดูแลระบบ" : "ผู้ใช้ทั่วไป"}
+                    </p>
+                    <p className="text-sm text-slate-500">
+                      {userDetail.profile.role === "admin" 
+                        ? "มีสิทธิ์เข้าถึงระบบจัดการทั้งหมด" 
+                        : "สิทธิ์การใช้งานระดับปกติ"}
+                    </p>
+                  </div>
+                </div>
+                <div className="flex items-center gap-3">
+                  <span className="text-sm text-slate-600 dark:text-slate-400">
+                    {userDetail.profile.role === "admin" ? "Admin" : "User"}
+                  </span>
+                  <Switch
+                    checked={userDetail.profile.role === "admin"}
+                    onCheckedChange={handleRoleToggle}
+                    disabled={isUpdatingRole}
+                  />
+                </div>
+              </div>
+              <p className="text-xs text-slate-500 mt-3 px-4">
+                ⚠️ การเปลี่ยนสิทธิ์จะมีผลทันที โปรดใช้ความระมัดระวัง
+              </p>
             </CardContent>
           </Card>
 
@@ -454,6 +567,69 @@ export default function UserDetailPage() {
             </CardContent>
           </Card>
         </main>
+
+        {/* Role Change Confirmation Dialog */}
+        <AlertDialog open={showRoleDialog} onOpenChange={setShowRoleDialog}>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle className="flex items-center gap-2">
+                <Shield className="w-5 h-5 text-orange-600" />
+                ยืนยันการเปลี่ยนสิทธิ์
+              </AlertDialogTitle>
+              <AlertDialogDescription className="space-y-2">
+                <p>
+                  คุณต้องการเปลี่ยนสิทธิ์ของ{" "}
+                  <span className="font-semibold">
+                    {getUserDisplayName(
+                      userDetail?.profile.full_name,
+                      userDetail?.profile.first_name,
+                      userDetail?.profile.last_name,
+                      userDetail?.profile.email
+                    )}
+                  </span>{" "}
+                  เป็น
+                </p>
+                <div className="flex items-center gap-2 p-3 bg-slate-100 dark:bg-slate-800 rounded-lg">
+                  {pendingRole === "admin" ? (
+                    <>
+                      <ShieldCheck className="w-5 h-5 text-purple-600" />
+                      <span className="font-semibold text-purple-600">
+                        ผู้ดูแลระบบ (Admin)
+                      </span>
+                    </>
+                  ) : (
+                    <>
+                      <User className="w-5 h-5 text-slate-600" />
+                      <span className="font-semibold text-slate-600">
+                        ผู้ใช้ทั่วไป (User)
+                      </span>
+                    </>
+                  )}
+                </div>
+                {pendingRole === "admin" && (
+                  <p className="text-sm text-orange-600 dark:text-orange-400 flex items-start gap-2 mt-2">
+                    <AlertCircle className="w-4 h-4 mt-0.5 flex-shrink-0" />
+                    <span>
+                      ผู้ดูแลระบบจะสามารถเข้าถึงข้อมูลและจัดการผู้ใช้ทั้งหมดในระบบได้
+                    </span>
+                  </p>
+                )}
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel disabled={isUpdatingRole}>
+                ยกเลิก
+              </AlertDialogCancel>
+              <AlertDialogAction
+                onClick={confirmRoleChange}
+                disabled={isUpdatingRole}
+                className="bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-700 hover:to-pink-700"
+              >
+                {isUpdatingRole ? "กำลังอัปเดต..." : "ยืนยัน"}
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
       </div>
     </AuthGuard>
   );
