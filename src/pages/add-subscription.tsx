@@ -668,42 +668,6 @@ export default function AddSubscription() {
                 </CardContent>
               </Card>
 
-              {/* Website/URL */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>ข้อมูลเพิ่มเติม</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="website">เว็บไซต์</Label>
-                    <Input 
-                      id="website"
-                      {...register("website")}
-                      type="url"
-                      placeholder="https://example.com"
-                      className={cn(errors.website && "border-red-500")}
-                    />
-                    {errors.website && (
-                      <p className="text-sm text-red-500">{errors.website.message}</p>
-                    )}
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">หมายเหตุ</Label>
-                    <Textarea 
-                      id="notes"
-                      {...register("notes")}
-                      placeholder="ข้อมูลเพิ่มเติม หรือหมายเหตุสำคัญ"
-                      rows={3}
-                      className={cn(errors.notes && "border-red-500")}
-                    />
-                    {errors.notes && (
-                      <p className="text-sm text-red-500">{errors.notes.message}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
               {/* Action Buttons */}
               <div className="flex gap-4 justify-end pt-4">
                 <Link href="/">
