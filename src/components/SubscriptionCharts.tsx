@@ -5,9 +5,10 @@ import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles, CreditCard } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 interface Subscription {
   id: string;
@@ -67,6 +68,7 @@ const paymentMethodLabels: { [key: string]: { label: string; icon: string } } = 
 };
 
 export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
+  const { preferredCurrency } = useCurrency();
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedCategory, setSelectedCategory] = useState<string>("all");
   const [selectedBilling, setSelectedBilling] = useState<string>("all");
@@ -447,7 +449,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                     />
                     <YAxis tick={{ fontSize: 13 }} />
                     <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
+                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",
@@ -488,7 +490,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
+                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",
@@ -525,7 +527,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                     />
                     <YAxis tick={{ fontSize: 13 }} />
                     <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
+                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",
@@ -575,7 +577,7 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
                       ))}
                     </Pie>
                     <Tooltip 
-                      formatter={(value: number) => formatCurrency(value)}
+                      formatter={(value: number) => formatCurrency(value, preferredCurrency)}
                       contentStyle={{ 
                         backgroundColor: "rgba(255, 255, 255, 0.98)",
                         border: "2px solid #e2e8f0",

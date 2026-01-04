@@ -43,6 +43,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { User } from "@supabase/supabase-js";
 import { supabase } from "@/integrations/supabase/client";
 import { formatCurrency } from "@/lib/utils";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-asc" | "date-desc" | "category";
@@ -50,9 +51,12 @@ type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-as
 export default function Home() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [sortedSubscriptions, setSortedSubscriptions] = useState<Subscription[]>([]);
+  const [displaySubscriptions, setDisplaySubscriptions] = useState<Subscription[]>([]);
+  const [totals, setTotals] = useState({ monthly: 0, yearly: 0 });
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
+  const [processing, setProcessing] = useState(false);
   const [user, setUser] = useState<User | null>(null);
   const [userEmail, setUserEmail] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
@@ -61,6 +65,7 @@ export default function Home() {
   const [scrolled, setScrolled] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { preferredCurrency, convertAmount, formatAmount } = useCurrency();
 
   useEffect(() => {
     loadUserData();
@@ -76,9 +81,60 @@ export default function Home() {
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
 
+  // Process subscriptions when data or currency changes
+  useEffect(() => {
+    const processSubscriptions = async () => {
+      if (subscriptions.length === 0) {
+        setDisplaySubscriptions([]);
+        setSortedSubscriptions([]);
+        setTotals({ monthly: 0, yearly: 0 });
+        return;
+      }
+
+      setProcessing(true);
+      try {
+        const processed = await Promise.all(
+          subscriptions.map(async (sub) => {
+            const convertedAmount = await convertAmount(sub.amount, sub.currency || "USD", preferredCurrency);
+            return {
+              ...sub,
+              amount: convertedAmount,
+              currency: preferredCurrency
+            };
+          })
+        );
+
+        setDisplaySubscriptions(processed);
+
+        // Calculate totals
+        const monthly = processed.reduce((sum, sub) => {
+          let cost = sub.amount;
+          switch (sub.billing_cycle) {
+            case "yearly": cost = sub.amount / 12; break;
+            case "quarterly": cost = sub.amount / 3; break;
+            case "half-yearly": cost = sub.amount / 6; break;
+          }
+          return sum + cost;
+        }, 0);
+
+        setTotals({
+          monthly,
+          yearly: monthly * 12
+        });
+
+      } catch (error) {
+        console.error("Error processing subscriptions:", error);
+      } finally {
+        setProcessing(false);
+      }
+    };
+
+    processSubscriptions();
+  }, [subscriptions, preferredCurrency, convertAmount]);
+
   useEffect(() => {
     sortSubscriptions(sortOption);
-  }, [subscriptions, sortOption]);
+  }, [displaySubscriptions, sortOption]); // Depend on displaySubscriptions instead
 
   const loadUserData = async () => {
     // Use supabase.auth.getUser() directly to get full User object compatible with state
@@ -130,8 +186,18 @@ export default function Home() {
   };
 
   const sortSubscriptions = (option: SortOption) => {
-    const sorted = [...subscriptions];
+    const sorted = [...displaySubscriptions];
     
+    // Helper for monthly cost (synchronous since amounts are already converted)
+    const getMonthlyCost = (sub: Subscription) => {
+      switch (sub.billing_cycle) {
+        case "yearly": return sub.amount / 12;
+        case "quarterly": return sub.amount / 3;
+        case "half-yearly": return sub.amount / 6;
+        default: return sub.amount;
+      }
+    };
+
     switch (option) {
       case "name-asc":
         sorted.sort((a, b) => a.name.localeCompare(b.name));
@@ -140,18 +206,10 @@ export default function Home() {
         sorted.sort((a, b) => b.name.localeCompare(a.name));
         break;
       case "cost-asc":
-        sorted.sort((a, b) => {
-          const costA = calculateMonthlyCost(a);
-          const costB = calculateMonthlyCost(b);
-          return costA - costB;
-        });
+        sorted.sort((a, b) => getMonthlyCost(a) - getMonthlyCost(b));
         break;
       case "cost-desc":
-        sorted.sort((a, b) => {
-          const costA = calculateMonthlyCost(a);
-          const costB = calculateMonthlyCost(b);
-          return costB - costA;
-        });
+        sorted.sort((a, b) => getMonthlyCost(b) - getMonthlyCost(a));
         break;
       case "date-asc":
         sorted.sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime());
@@ -165,15 +223,6 @@ export default function Home() {
     }
     
     setSortedSubscriptions(sorted);
-  };
-
-  const calculateMonthlyCost = (sub: Subscription): number => {
-    switch (sub.billing_cycle) {
-      case "yearly": return sub.amount / 12;
-      case "quarterly": return sub.amount / 3;
-      case "half-yearly": return sub.amount / 6;
-      default: return sub.amount;
-    }
   };
 
   const handleDelete = async (id: string) => {
@@ -375,11 +424,13 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                  ${formatCurrency(totalMonthly)}
+                  {formatCurrency(totals.monthly, preferredCurrency)}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ≈ ฿{(totalMonthly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
-                </p>
+                {preferredCurrency !== 'THB' && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    ≈ ฿{(totals.monthly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -392,11 +443,13 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                  ${formatCurrency(totalYearly)}
+                  {formatCurrency(totals.yearly, preferredCurrency)}
                 </div>
-                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  ≈ ฿{(totalYearly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
-                </p>
+                {preferredCurrency !== 'THB' && (
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+                    ≈ ฿{(totals.yearly * 35).toLocaleString("th-TH", { maximumFractionDigits: 0 })}
+                  </p>
+                )}
               </CardContent>
             </Card>
 
@@ -436,7 +489,7 @@ export default function Home() {
           </div>
 
           {/* กราฟสถิติ */}
-          <SubscriptionCharts subscriptions={subscriptions} />
+          <SubscriptionCharts subscriptions={displaySubscriptions} />
 
           {sortedSubscriptions.length > 0 ? (
             <Card>
@@ -471,7 +524,10 @@ export default function Home() {
                   {sortedSubscriptions.map((sub) => {
                     const daysUntil = getDaysUntilRenewal(sub.next_billing_date);
                     const isUrgent = daysUntil <= 7;
-                    const monthlyCost = calculateMonthlyCost(sub);
+                    const monthlyCost = sub.billing_cycle === "yearly" ? sub.amount / 12 :
+                                      sub.billing_cycle === "quarterly" ? sub.amount / 3 :
+                                      sub.billing_cycle === "half-yearly" ? sub.amount / 6 : 
+                                      sub.amount;
 
                     return (
                       <div 
@@ -516,13 +572,13 @@ export default function Home() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                              ${formatCurrency(Number(sub.amount))}
+                              {formatCurrency(Number(sub.amount), preferredCurrency)}
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-400">
                               {billingCycleLabels[sub.billing_cycle]}
                             </div>
                             <div className="text-xs text-slate-400 mt-1">
-                              ≈ ${formatCurrency(monthlyCost)}/เดือน
+                              ≈ {formatCurrency(monthlyCost, preferredCurrency)}/เดือน
                             </div>
                             {isUrgent && (
                               <Badge variant="destructive" className="mt-2 text-xs">
