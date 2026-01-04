@@ -3,6 +3,16 @@ import { useRouter } from "next/router";
 import { Menu, Home, BarChart3, PlusCircle, Bell, User as UserIcon, LogOut, Shield } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Separator } from "@/components/ui/separator";
 import { Badge } from "@/components/ui/badge";
@@ -19,6 +29,7 @@ interface MobileNavProps {
 export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
+  const [showLogoutDialog, setShowLogoutDialog] = useState(false);
   const [profile, setProfile] = useState<any>(null);
   const [unreadCount, setUnreadCount] = useState(0);
   const { t } = useLanguage();
@@ -190,7 +201,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
                 {/* Logout Button */}
                 <div className="mt-2 pt-2 border-t border-gray-100">
                   <button
-                    onClick={handleLogout}
+                    onClick={() => setShowLogoutDialog(true)}
                     className="w-full flex items-center gap-3 px-4 py-3 text-red-600 hover:bg-red-50 rounded-lg transition-all duration-200"
                   >
                     <LogOut className="h-5 w-5" />
@@ -199,6 +210,27 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
                 </div>
               </nav>
             </div>
+
+            {/* Logout Confirmation Dialog */}
+            <AlertDialog open={showLogoutDialog} onOpenChange={setShowLogoutDialog}>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>{t("dialog.logoutTitle")}</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    {t("dialog.logoutDescription")}
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>{t("dialog.cancel")}</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={handleLogout}
+                    className="bg-red-600 hover:bg-red-700 focus:ring-red-600"
+                  >
+                    {t("dialog.confirm")}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
           </div>
         </SheetContent>
       </Sheet>

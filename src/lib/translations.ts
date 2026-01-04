@@ -20,6 +20,22 @@ export const translations = {
     th: "ออกจากระบบ",
     en: "Logout"
   },
+  "dialog.logoutTitle": {
+    th: "ยืนยันการออกจากระบบ",
+    en: "Confirm Logout"
+  },
+  "dialog.logoutDescription": {
+    th: "คุณแน่ใจหรือไม่ที่ต้องการออกจากระบบ?",
+    en: "Are you sure you want to logout?"
+  },
+  "dialog.cancel": {
+    th: "ยกเลิก",
+    en: "Cancel"
+  },
+  "dialog.confirm": {
+    th: "ยืนยัน",
+    en: "Confirm"
+  },
   "nav.settings": {
     th: "ตั้งค่า",
     en: "Settings"
