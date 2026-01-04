@@ -453,7 +453,7 @@ export default function Home() {
         </header>
 
         <main className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+          <div className="grid grid-cols-2 md:grid-cols-4 gap-4 md:gap-6 mb-8">
             <Card className="border-l-4 border-l-indigo-500">
               <CardHeader className="pb-3">
                 <CardTitle className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center gap-2">
@@ -550,7 +550,7 @@ export default function Home() {
                     )}
                   </div>
                   
-                  <div className="flex items-center gap-2">
+                  <div className="hidden md:flex items-center gap-2">
                     <ArrowUpDown className="w-4 h-4 text-slate-600 dark:text-slate-400" />
                     <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
                       <SelectTrigger className="w-[200px]">
@@ -581,86 +581,83 @@ export default function Home() {
                     return (
                       <div 
                         key={sub.id}
-                        className="flex items-center justify-between p-4 rounded-lg border bg-white dark:bg-slate-800 hover:shadow-md transition-shadow"
+                        className="flex flex-col md:flex-row md:items-center gap-3 md:gap-4 p-4 rounded-lg border bg-white dark:bg-slate-800 hover:shadow-md transition-shadow"
                       >
-                        <div className="flex items-center gap-4 flex-1">
-                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg">
+                        {/* Mobile: Stacked Layout */}
+                        <div className="flex items-start gap-3 flex-1">
+                          <div className="w-12 h-12 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-lg shrink-0">
                             {sub.name.charAt(0)}
                           </div>
                           
-                          <div className="flex-1">
-                            <div className="flex items-center gap-2 mb-1">
-                              <h3 className="font-semibold text-slate-900 dark:text-white">{sub.name}</h3>
-                              <Badge variant="outline" className="text-xs">
+                          <div className="flex-1 min-w-0">
+                            {/* Name and Category */}
+                            <div className="flex items-center gap-2 mb-2">
+                              <h3 className="font-semibold text-slate-900 dark:text-white truncate">{sub.name}</h3>
+                              <Badge variant="outline" className="text-xs shrink-0">
                                 {categoryLabels[sub.category] || sub.category}
                               </Badge>
                             </div>
-                            <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
+                            
+                            {/* Price */}
+                            <div className="flex items-baseline gap-2 mb-2">
+                              <span className="text-xl font-bold text-slate-900 dark:text-white">
+                                {formatCurrency(Number(sub.amount), preferredCurrency)}
+                              </span>
+                              <span className="text-sm text-slate-500 dark:text-slate-400">
+                                {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
+                                 sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
+                                 billingCycleLabels[sub.billing_cycle]}
+                              </span>
+                            </div>
+
+                            {/* Original Currency (if different) */}
+                            {sub.originalCurrency !== preferredCurrency && (
+                              <div className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                                ({formatCurrency(sub.originalAmount, sub.originalCurrency)})
+                              </div>
+                            )}
+                            
+                            {/* Info Row */}
+                            <div className="flex flex-wrap gap-x-3 gap-y-1 text-xs text-slate-600 dark:text-slate-400">
                               <span className="flex items-center gap-1">
-                                <Calendar className="w-4 h-4" />
-                                {t("subscriptions.nextBilling")}: {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
-                                  year: "numeric", 
-                                  month: "short", 
-                                  day: "numeric" 
+                                <Calendar className="w-3 h-3" />
+                                {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
+                                  day: "numeric",
+                                  month: "short"
                                 })}
                               </span>
                               <span className="flex items-center gap-1">
-                                <CreditCard className="w-4 h-4" />
+                                <CreditCard className="w-3 h-3" />
                                 {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
                               </span>
-                              {sub.shared_with && sub.shared_with.length > 0 && (
-                                <span className="flex items-center gap-1">
-                                  <Users className="w-4 h-4" />
-                                  {t("subscriptions.sharedWith")} {sub.shared_with.length} {t("subscriptions.people")}
-                                </span>
+                              <span className="text-slate-400">
+                                ≈ {formatCurrency(monthlyCost, preferredCurrency)}/เดือน
+                              </span>
+                              {isUrgent && (
+                                <Badge variant="destructive" className="text-xs">
+                                  เหลือ {daysUntil} วัน
+                                </Badge>
                               )}
                             </div>
                           </div>
                         </div>
 
-                        <div className="flex items-center gap-4">
-                          <div className="text-right">
-                            <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                              {formatCurrency(Number(sub.amount), preferredCurrency)}
-                            </div>
-                            
-                            {sub.originalCurrency !== preferredCurrency && (
-                              <div className="text-xs text-slate-500 dark:text-slate-400">
-                                ({formatCurrency(sub.originalAmount, sub.originalCurrency)})
-                              </div>
-                            )}
-
-                            <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
-                              {sub.billing_cycle === "monthly" ? t("subscriptions.monthly") : 
-                               sub.billing_cycle === "yearly" ? t("subscriptions.yearly") : 
-                               billingCycleLabels[sub.billing_cycle]}
-                            </div>
-                            <div className="text-xs text-slate-400">
-                              ≈ {formatCurrency(monthlyCost, preferredCurrency)}/เดือน
-                            </div>
-                            {isUrgent && (
-                              <Badge variant="destructive" className="mt-2 text-xs">
-                                เหลือ {daysUntil} วัน
-                              </Badge>
-                            )}
-                          </div>
-
-                          <div className="flex gap-2">
-                            <Link href={`/edit-subscription/${sub.id}`}>
-                              <Button variant="outline" size="icon" title={t("subscriptions.edit")}>
-                                <Edit className="w-4 h-4" />
-                              </Button>
-                            </Link>
-                            <Button 
-                              variant="outline" 
-                              size="icon"
-                              onClick={() => setDeleteId(sub.id)}
-                              className="hover:bg-destructive hover:text-destructive-foreground"
-                              title={t("subscriptions.delete")}
-                            >
-                              <Trash2 className="w-4 h-4" />
+                        {/* Action Buttons */}
+                        <div className="flex gap-2 ml-auto md:ml-0">
+                          <Link href={`/edit-subscription/${sub.id}`}>
+                            <Button variant="outline" size="icon" title={t("subscriptions.edit")} className="shrink-0">
+                              <Edit className="w-4 h-4" />
                             </Button>
-                          </div>
+                          </Link>
+                          <Button 
+                            variant="outline" 
+                            size="icon"
+                            onClick={() => setDeleteId(sub.id)}
+                            className="hover:bg-destructive hover:text-destructive-foreground shrink-0"
+                            title={t("subscriptions.delete")}
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </Button>
                         </div>
                       </div>
                     );
