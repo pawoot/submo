@@ -1122,6 +1122,10 @@ export const translations = {
     th: "บันทึก",
     en: "Save"
   },
+  "common.add": {
+    th: "เพิ่ม",
+    en: "Add"
+  },
   "common.cancel": {
     th: "ยกเลิก",
     en: "Cancel"
@@ -1250,14 +1254,6 @@ export const translations = {
     th: "อัปเดตไม่สำเร็จ",
     en: "Failed to update"
   },
-  "toast.errorLoading": {
-    th: "ไม่สามารถโหลดข้อมูลได้",
-    en: "Failed to load data"
-  },
-  "toast.errorLoadingDesc": {
-    th: "กรุณาลองใหม่อีกครั้งในภายหลัง",
-    en: "Please try again later"
-  },
   "toast.createSuccess": {
     th: "สร้างสำเร็จ!",
     en: "Created successfully!"
@@ -1269,6 +1265,14 @@ export const translations = {
   "toast.loadError": {
     th: "โหลดข้อมูลไม่สำเร็จ",
     en: "Failed to load data"
+  },
+  "toast.errorLoading": {
+    th: "ไม่สามารถโหลดข้อมูลได้",
+    en: "Failed to load data"
+  },
+  "toast.errorLoadingDesc": {
+    th: "กรุณาลองใหม่อีกครั้งในภายหลัง",
+    en: "Please try again later"
   },
   "toast.networkError": {
     th: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
@@ -1314,10 +1318,6 @@ export const translations = {
     th: "ใส่อีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
     en: "Enter your email to receive a password reset link"
   },
-  "auth.sendResetLink": {
-    th: "ส่งลิงก์รีเซ็ตรหัสผ่าน",
-    en: "Send Reset Link"
-  },
   "auth.sendingEmail": {
     th: "กำลังส่งอีเมล...",
     en: "Sending email..."
@@ -1348,33 +1348,9 @@ export const translations = {
   },
 
   // Auth - Reset Password
-  "auth.resetPassword": {
-    th: "ตั้งรหัสผ่านใหม่",
-    en: "Reset Password"
-  },
   "auth.enterNewPassword": {
     th: "กรุณากรอกรหัสผ่านใหม่ของคุณ",
     en: "Please enter your new password"
-  },
-  "auth.newPassword": {
-    th: "รหัสผ่านใหม่",
-    en: "New Password"
-  },
-  "auth.confirmNewPassword": {
-    th: "ยืนยันรหัสผ่านใหม่",
-    en: "Confirm New Password"
-  },
-  "auth.changePassword": {
-    th: "เปลี่ยนรหัสผ่าน",
-    en: "Change Password"
-  },
-  "auth.changingPassword": {
-    th: "กำลังเปลี่ยนรหัสผ่าน...",
-    en: "Changing password..."
-  },
-  "auth.passwordChanged": {
-    th: "เปลี่ยนรหัสผ่านสำเร็จ!",
-    en: "Password Changed!"
   },
   "auth.passwordChangedDesc": {
     th: "รหัสผ่านของคุณถูกเปลี่ยนเรียบร้อยแล้ว",
@@ -1414,7 +1390,7 @@ export const translations = {
   },
   "auth.invalidLink": {
     th: "ลิงก์ไม่ถูกต้องหรือหมดอายุ",
-    en: "Invalid or Expired Link"
+    en: "Invalid or expired link"
   },
   "auth.requestNewLink": {
     th: "กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่",

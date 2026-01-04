@@ -6,6 +6,7 @@ import MobileNav from "@/components/MobileNav";
 import type { User as SupabaseUser } from "@supabase/supabase-js";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { useRouter } from "next/navigation";
 
 interface MobileHeaderProps {
   user: SupabaseUser | null;
@@ -14,6 +15,7 @@ interface MobileHeaderProps {
 }
 
 export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }: MobileHeaderProps) {
+  const router = useRouter();
   const { t } = useLanguage();
   
   return (
