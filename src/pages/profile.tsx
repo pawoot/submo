@@ -2,6 +2,7 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import SEO from "@/components/SEO";
+import MobileHeader from "@/components/MobileHeader";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -23,6 +24,7 @@ import {
 import { useToast } from "@/hooks/use-toast";
 import { authService } from "@/services/authService";
 import { profileService } from "@/services/profileService";
+import { supabase } from "@/integrations/supabase/client";
 import { 
   User, 
   Mail, 
@@ -50,6 +52,9 @@ export default function ProfilePage() {
   const [showPasswordForm, setShowPasswordForm] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
+  const [user, setUser] = useState<any>(null);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   const [profile, setProfile] = useState<{
     id: string;
@@ -79,6 +84,8 @@ export default function ProfilePage() {
   useEffect(() => {
     loadProfile();
     loadStats();
+    loadUserData();
+    loadUnreadNotifications();
   }, []);
 
   const loadProfile = async () => {
@@ -109,6 +116,45 @@ export default function ProfilePage() {
       setStats(data);
     } catch (error) {
       console.error("Error loading stats:", error);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        setUser(currentUser);
+        
+        // Check if user is admin
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("is_admin")
+          .eq("id", currentUser.id)
+          .single();
+        
+        if (profileData?.is_admin) {
+          setIsAdmin(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const loadUnreadNotifications = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { count } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", currentUser.id)
+          .eq("is_read", false);
+        
+        setUnreadCount(count || 0);
+      }
+    } catch (error) {
+      console.error("Error loading notifications:", error);
     }
   };
 
@@ -281,9 +327,12 @@ export default function ProfilePage() {
     <AuthGuard>
       <SEO title="โปรไฟล์ผู้ใช้" description="จัดการข้อมูลโปรไฟล์และการตั้งค่าบัญชีของคุณ" />
       
+      {/* Mobile Header */}
+      <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
+      
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-        {/* Header */}
-        <header className="bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+        {/* Desktop Header - Hidden on mobile */}
+        <header className="hidden lg:block bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
