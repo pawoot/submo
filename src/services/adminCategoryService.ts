@@ -175,22 +175,40 @@ export async function getCategoryStats(): Promise<{
   categoryName: string;
   subscriptionCount: number;
 }[]> {
-  const { data, error } = await supabase
+  // Get all categories first
+  const { data: categories, error: catError } = await supabase
     .from("categories")
-    .select(`
-      id,
-      name_en,
-      subscriptions:subscriptions(count)
-    `);
+    .select("id, name_en");
 
-  if (error) {
-    console.error("Error fetching category stats:", error);
-    throw new Error("Failed to fetch category statistics");
+  if (catError) {
+    console.error("Error fetching categories:", catError);
+    throw new Error("Failed to fetch categories");
   }
 
-  return (data || []).map(cat => ({
-    categoryId: cat.id,
-    categoryName: cat.name_en,
-    subscriptionCount: (cat.subscriptions as any)[0]?.count || 0
-  }));
+  // Get subscription counts for each category
+  const stats = await Promise.all(
+    (categories || []).map(async (cat) => {
+      const { count, error } = await supabase
+        .from("subscriptions")
+        .select("id", { count: "exact", head: true })
+        .eq("category", cat.id);
+
+      if (error) {
+        console.error(`Error counting subscriptions for category ${cat.id}:`, error);
+        return {
+          categoryId: cat.id,
+          categoryName: cat.name_en,
+          subscriptionCount: 0
+        };
+      }
+
+      return {
+        categoryId: cat.id,
+        categoryName: cat.name_en,
+        subscriptionCount: count || 0
+      };
+    })
+  );
+
+  return stats;
 }
