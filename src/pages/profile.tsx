@@ -66,7 +66,7 @@ export default function ProfilePage() {
   const [user, setUser] = useState<any>(null);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
-  const { preferredCurrency, setPreferredCurrency, formatAmount } = useCurrency();
+  const { preferredCurrency, setPreferredCurrency } = useCurrency();
   const { t } = useLanguage();
 
   const [profile, setProfile] = useState<{
@@ -432,11 +432,11 @@ export default function ProfilePage() {
                   <Separator />
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ค่าใช้จ่ายรายเดือน</span>
-                    <span className="text-xl font-bold text-indigo-600">{formatAmount(stats.totalMonthlySpend)}</span>
+                    <span className="text-xl font-bold text-indigo-600">{formatCurrency(stats.totalMonthlySpend, preferredCurrency)}</span>
                   </div>
                   <div className="flex items-center justify-between">
                     <span className="text-sm text-gray-600">ค่าใช้จ่ายรายปี</span>
-                    <span className="text-xl font-bold text-purple-600">{formatAmount(stats.totalYearlySpend)}</span>
+                    <span className="text-xl font-bold text-purple-600">{formatCurrency(stats.totalYearlySpend, preferredCurrency)}</span>
                   </div>
                 </CardContent>
               </Card>
