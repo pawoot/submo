@@ -46,12 +46,17 @@ import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type DisplaySubscription = Subscription & {
+  originalAmount: number;
+  originalCurrency: string;
+};
+
 type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-asc" | "date-desc" | "category";
 
 export default function Home() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
-  const [sortedSubscriptions, setSortedSubscriptions] = useState<Subscription[]>([]);
-  const [displaySubscriptions, setDisplaySubscriptions] = useState<Subscription[]>([]);
+  const [sortedSubscriptions, setSortedSubscriptions] = useState<DisplaySubscription[]>([]);
+  const [displaySubscriptions, setDisplaySubscriptions] = useState<DisplaySubscription[]>([]);
   const [totals, setTotals] = useState({ monthly: 0, yearly: 0 });
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<string | null>(null);
@@ -99,7 +104,9 @@ export default function Home() {
             return {
               ...sub,
               amount: convertedAmount,
-              currency: preferredCurrency
+              currency: preferredCurrency,
+              originalAmount: sub.amount,
+              originalCurrency: sub.currency || "USD"
             };
           })
         );
@@ -571,10 +578,17 @@ export default function Home() {
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">
                               {formatCurrency(Number(sub.amount), preferredCurrency)}
                             </div>
-                            <div className="text-sm text-slate-500 dark:text-slate-400">
+                            
+                            {sub.originalCurrency !== preferredCurrency && (
+                              <div className="text-xs text-slate-500 dark:text-slate-400">
+                                ({formatCurrency(sub.originalAmount, sub.originalCurrency)})
+                              </div>
+                            )}
+
+                            <div className="text-sm text-slate-500 dark:text-slate-400 mt-1">
                               {billingCycleLabels[sub.billing_cycle]}
                             </div>
-                            <div className="text-xs text-slate-400 mt-1">
+                            <div className="text-xs text-slate-400">
                               ≈ {formatCurrency(monthlyCost, preferredCurrency)}/เดือน
                             </div>
                             {isUrgent && (
