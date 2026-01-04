@@ -227,9 +227,11 @@ export default function AddSubscription() {
   const paymentMethods = [
     { value: "credit-card", label: t("payment.credit-card") },
     { value: "debit-card", label: t("payment.debit-card") },
-    { value: "paypal", label: t("payment.paypal") },
     { value: "bank-transfer", label: t("payment.bank-transfer") },
-    { value: "promptpay", label: t("payment.promptpay") },
+    { value: "google-pay", label: t("payment.google-pay") },
+    { value: "apple-pay", label: t("payment.apple-pay") },
+    { value: "paypal", label: t("payment.paypal") },
+    { value: "crypto", label: t("payment.crypto") },
     { value: "other", label: t("payment.other") }
   ];
 

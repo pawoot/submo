@@ -1213,12 +1213,20 @@ export const translations = {
     en: "PayPal"
   },
   "payment.bank-transfer": {
-    th: "โอนผ่านธนาคาร",
+    th: "โอนเงินผ่านธนาคาร",
     en: "Bank Transfer"
   },
-  "payment.promptpay": {
-    th: "พร้อมเพย์",
-    en: "PromptPay"
+  "payment.google-pay": {
+    th: "Google Pay",
+    en: "Google Pay"
+  },
+  "payment.apple-pay": {
+    th: "Apple Pay",
+    en: "Apple Pay"
+  },
+  "payment.crypto": {
+    th: "สกุลเงินดิจิทัล",
+    en: "Cryptocurrency"
   },
   "payment.other": {
     th: "อื่นๆ",

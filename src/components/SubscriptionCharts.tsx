@@ -39,12 +39,14 @@ const COLORS = [
 ];
 
 const PAYMENT_COLORS: { [key: string]: string } = {
-  "credit-card": "#3b82f6",    // blue
-  "paypal": "#8b5cf6",          // purple
-  "bank-transfer": "#10b981",   // green
-  "crypto": "#f59e0b",          // amber
-  "cash": "#6b7280",            // gray
-  "other": "#ec4899"            // pink
+  "credit-card": "#3b82f6",
+  "debit-card": "#8b5cf6",
+  "bank-transfer": "#10b981",
+  "google-pay": "#4285f4",
+  "apple-pay": "#000000",
+  "paypal": "#0070ba",
+  "crypto": "#f7931a",
+  "other": "#6b7280"
 };
 
 const categoryLabels: { [key: string]: string } = {
@@ -171,11 +173,13 @@ export function SubscriptionCharts({ subscriptions }: SubscriptionChartsProps) {
   // Payment method labels and icons
   const paymentMethodLabels: { [key: string]: { label: string; icon: string; color: string } } = {
     "credit-card": { label: "Credit Card", icon: "💳", color: "#3b82f6" },
-    "paypal": { label: "PayPal", icon: "🅿️", color: "#8b5cf6" },
+    "debit-card": { label: "Debit Card", icon: "💳", color: "#8b5cf6" },
     "bank-transfer": { label: "Bank Transfer", icon: "🏦", color: "#10b981" },
-    "crypto": { label: "Crypto", icon: "₿", color: "#f59e0b" },
-    "cash": { label: "Cash", icon: "💵", color: "#6b7280" },
-    "other": { label: "Other", icon: "📱", color: "#ec4899" }
+    "google-pay": { label: "Google Pay", icon: "🅖", color: "#4285f4" },
+    "apple-pay": { label: "Apple Pay", icon: "🍎", color: "#000000" },
+    "paypal": { label: "PayPal", icon: "🅿️", color: "#0070ba" },
+    "crypto": { label: "Cryptocurrency", icon: "₿", color: "#f7931a" },
+    "other": { label: "Other", icon: "📱", color: "#6b7280" }
   };
 
   // Format payment method data for charts

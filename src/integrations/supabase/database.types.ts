@@ -176,6 +176,45 @@ export type Database = {
           },
         ]
       }
+      payment_methods: {
+        Row: {
+          color: string
+          created_at: string | null
+          display_order: number | null
+          icon: string
+          id: string
+          is_active: boolean | null
+          name_en: string
+          name_th: string
+          slug: string
+          updated_at: string | null
+        }
+        Insert: {
+          color: string
+          created_at?: string | null
+          display_order?: number | null
+          icon: string
+          id?: string
+          is_active?: boolean | null
+          name_en: string
+          name_th: string
+          slug: string
+          updated_at?: string | null
+        }
+        Update: {
+          color?: string
+          created_at?: string | null
+          display_order?: number | null
+          icon?: string
+          id?: string
+          is_active?: boolean | null
+          name_en?: string
+          name_th?: string
+          slug?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       profiles: {
         Row: {
           account_status: string | null
@@ -301,6 +340,7 @@ export type Database = {
           next_billing_date: string
           notes: string | null
           payment_method: string | null
+          payment_method_id: string
           shared_with: string[] | null
           start_date: string | null
           updated_at: string | null
@@ -323,6 +363,7 @@ export type Database = {
           next_billing_date: string
           notes?: string | null
           payment_method?: string | null
+          payment_method_id: string
           shared_with?: string[] | null
           start_date?: string | null
           updated_at?: string | null
@@ -345,6 +386,7 @@ export type Database = {
           next_billing_date?: string
           notes?: string | null
           payment_method?: string | null
+          payment_method_id?: string
           shared_with?: string[] | null
           start_date?: string | null
           updated_at?: string | null
@@ -357,6 +399,13 @@ export type Database = {
             columns: ["category_id"]
             isOneToOne: false
             referencedRelation: "categories"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_payment_method_id_fkey"
+            columns: ["payment_method_id"]
+            isOneToOne: false
+            referencedRelation: "payment_methods"
             referencedColumns: ["id"]
           },
         ]
