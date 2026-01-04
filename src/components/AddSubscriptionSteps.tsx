@@ -344,6 +344,11 @@ export function AddSubscriptionSteps({
                       ))}
                     </SelectContent>
                   </Select>
+                  {formData.category_id && selectedTemplate && (
+                    <p className="text-sm text-green-600 dark:text-green-400 flex items-center gap-1">
+                      <Check className="w-4 h-4" /> {t("addSub.autoSelected") || "เลือกอัตโนมัติจาก Template"}
+                    </p>
+                  )}
                 </div>
 
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-4">

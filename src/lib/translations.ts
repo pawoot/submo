@@ -522,7 +522,8 @@ export const translations = {
   "addSub.billedYearly": "เรียกเก็บรายปี",
   "addSub.calculatedYearly": "คำนวณจากรายเดือน",
   "addSub.highCostWarning": "ค่าใช้จ่ายสูงกว่าปกติ",
-  "addSub.highCostDesc": "บริการนี้มีค่าใช้จ่ายสูงกว่าค่าเฉลี่ยรายเดือนของคุณ",
+  "addSub.highCostDesc": "รายการนี้มีค่าใช้จ่ายสูงกว่าค่าเฉลี่ยรายเดือนของคุณ",
+  "addSub.autoSelected": "เลือกอัตโนมัติจาก Template",
   "addSub.nextBilling": "วันเรียกเก็บเงินถัดไป",
   "addSub.autoCalculated": "คำนวณอัตโนมัติจากรอบบิล",
 
