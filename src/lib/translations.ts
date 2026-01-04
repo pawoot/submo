@@ -1805,9 +1805,9 @@ export const translations = {
     th: "คำอธิบายเพิ่มเติม...",
     en: "Enter description..."
   },
-  "admin.icon": {
-    th: "ไอคอน",
-    en: "Icon"
+  "admin.category": {
+    th: "หมวดหมู่",
+    en: "Category"
   },
 
   // Toast Messages - Logout & Account

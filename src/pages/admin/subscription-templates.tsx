@@ -548,10 +548,10 @@ export default function AdminSubscriptionTemplates() {
                      <SelectValue />
                    </SelectTrigger>
                    <SelectContent>
-                     <SelectItem value="monthly">{t("subscription.monthly")}</SelectItem>
-                     <SelectItem value="quarterly">{t("subscription.quarterly")}</SelectItem>
-                     <SelectItem value="half-yearly">{t("subscription.half_yearly")}</SelectItem>
-                     <SelectItem value="yearly">{t("subscription.yearly")}</SelectItem>
+                     <SelectItem value="monthly">{t("subscriptions.monthly")}</SelectItem>
+                     <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                     <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
+                     <SelectItem value="yearly">{t("subscriptions.yearly")}</SelectItem>
                    </SelectContent>
                  </Select>
                </div>
@@ -673,10 +673,10 @@ export default function AdminSubscriptionTemplates() {
                      <SelectValue />
                    </SelectTrigger>
                    <SelectContent>
-                     <SelectItem value="monthly">{t("subscription.monthly")}</SelectItem>
-                     <SelectItem value="quarterly">{t("subscription.quarterly")}</SelectItem>
-                     <SelectItem value="half-yearly">{t("subscription.half_yearly")}</SelectItem>
-                     <SelectItem value="yearly">{t("subscription.yearly")}</SelectItem>
+                     <SelectItem value="monthly">{t("subscriptions.monthly")}</SelectItem>
+                     <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                     <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
+                     <SelectItem value="yearly">{t("subscriptions.yearly")}</SelectItem>
                    </SelectContent>
                  </Select>
                </div>

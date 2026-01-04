@@ -23,8 +23,22 @@ import type { Database } from "@/integrations/supabase/types";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
-type SubscriptionTemplate = Database["public"]["Tables"]["subscriptions"]["Row"] & {
-  categories?: Category;
+// Define a more flexible Template type that covers both DB and Service shapes for the wizard's needs
+type SubscriptionTemplate = {
+  id: string;
+  name: string;
+  category_id: string;
+  amount: number;
+  currency: string;
+  billing_cycle: string;
+  website_url?: string;
+  icon_url?: string;
+  categories?: {
+    name?: string;
+    name_en?: string;
+    name_th?: string;
+    color?: string;
+  } | Category;
 };
 
 // Form Schema with validation
