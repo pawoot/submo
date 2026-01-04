@@ -103,4 +103,16 @@ export const adminUserService = {
         user.email?.toLowerCase().includes(searchLower)
     );
   },
+
+  /**
+   * Toggle user's admin role
+   */
+  async toggleAdminRole(userId: string, newRole: "admin" | "user"): Promise<void> {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ role: newRole })
+      .eq("id", userId);
+
+    if (error) throw error;
+  },
 };
