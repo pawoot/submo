@@ -20,26 +20,10 @@ import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBr
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import { SubscriptionSummary } from "@/components/SubscriptionSummary";
 import type { Database } from "@/integrations/supabase/types";
+import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
-// Define a more flexible Template type that covers both DB and Service shapes for the wizard's needs
-type SubscriptionTemplate = {
-  id: string;
-  name: string;
-  category_id: string;
-  amount: number;
-  currency: string;
-  billing_cycle: string;
-  website_url?: string;
-  icon_url?: string;
-  categories?: {
-    name?: string;
-    name_en?: string;
-    name_th?: string;
-    color?: string;
-  } | Category;
-};
 
 // Form Schema with validation
 const formSchema = z.object({
@@ -142,32 +126,25 @@ export function AddSubscriptionWizard({
   }, [watchedValues.billing_cycle, setValue, watchedValues.remind_7_days]);
 
   // Handle template selection
-  const handleTemplateSelect = (template: SubscriptionTemplate) => {
-    // Fill form with template data but stay on step 1
+  const handleTemplateSelect = async (template: SubscriptionTemplate) => {
+    // Set form values from template
     setValue("name", template.name);
-    // setValue("category", template.categories?.name || ""); // Removed: category is not a form field, we use category_id
     setValue("category_id", template.category_id);
-    setValue("amount", template.amount); // Fixed: price -> amount
+    // Use default_amount if available, fallback to amount, then 0
+    setValue("amount", template.default_amount ?? template.amount ?? 0);
     setValue("currency", template.currency);
-    setValue("billing_cycle", template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly");
+    // Ensure billing_cycle is a valid enum value
+    const cycle = template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly";
+    setValue("billing_cycle", cycle || "monthly");
     
-    // Set icon/website URL
-    if (template.website_url) {
-      // Use favicon service
-      try {
-        const domain = new URL(template.website_url).hostname;
-        const iconUrl = `https://www.google.com/s2/favicons?domain=${domain}&sz=128`;
-        setValue("icon_url", iconUrl); // Fixed: icon -> icon_url
-      } catch (e) {
-        // Fallback
-        setValue("icon_url", ""); // Fixed: icon -> icon_url
-      }
-    } else if (template.icon_url) {
-      setValue("icon_url", template.icon_url); // Fixed: icon -> icon_url
-    }
-    
+    // Set website_url
+    // @ts-expect-error - field might not exist in form types yet
+    setValue("website_url", template.website_url || template.icon_url || "");
+    // @ts-expect-error - field might not exist in form types yet
+    setValue("description", template.description || "");
+
     // Clear custom styling when template selected
-    setSelectedTemplate(template); // Fixed: setSelectedTemplateId -> setSelectedTemplate
+    setSelectedTemplate(template);
   };
 
   // Handle form submission

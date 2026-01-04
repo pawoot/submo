@@ -1924,7 +1924,28 @@ export const translations = {
   },
   "websiteUrl": "Website URL",
   "faviconAutomatic": "Favicon will be automatically fetched from this URL",
-  "website": "Website"
+  "website": "Website",
+
+  "subscriptions.popularTemplates": {
+    th: "เทมเพลตยอดนิยม",
+    en: "Popular Templates"
+  },
+  "subscriptions.browseAllTemplates": {
+    th: "ดูบริการอื่นๆ",
+    en: "Browse All Services"
+  },
+  "subscriptions.allTemplates": {
+    th: "บริการทั้งหมด",
+    en: "All Services"
+  },
+  "subscriptions.searchTemplates": {
+    th: "ค้นหาบริการ...",
+    en: "Search services..."
+  },
+  "subscriptions.noTemplatesFound": {
+    th: "ไม่พบบริการที่ค้นหา",
+    en: "No services found"
+  }
 };
 
 export type TranslationKey = keyof typeof translations;

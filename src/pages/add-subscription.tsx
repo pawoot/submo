@@ -81,6 +81,7 @@ export default function AddSubscription() {
         usage_frequency: data.usage_frequency || null,
         website_url: null,
         updated_at: new Date().toISOString(),
+        usage_count: 0
       });
 
       toast({

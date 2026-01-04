@@ -200,14 +200,13 @@ export default function AdminSubscriptionTemplates() {
       await subscriptionTemplateService.createTemplate({
         name: formData.name,
         category_id: formData.category_id,
-        amount: parseFloat(formData.amount) || 0,
+        default_amount: parseFloat(formData.amount) || 0, // Use default_amount
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
         website_url: formData.website,
-        icon_url: iconUrl,
-        popularity_score: 0, // Always 0 as requested
         is_active: formData.is_active,
-        is_template: true
+        // icon_url is optional/legacy
+        // popularity_score is handled by service (defaults to 0)
       });
 
       toast({
@@ -245,12 +244,10 @@ export default function AdminSubscriptionTemplates() {
       await subscriptionTemplateService.updateTemplate(selectedTemplate.id, {
         name: formData.name,
         category_id: formData.category_id,
-        amount: parseFloat(formData.amount) || 0,
+        default_amount: parseFloat(formData.amount) || 0, // Use default_amount
         currency: formData.currency,
         billing_cycle: formData.billing_cycle,
         website_url: formData.website,
-        icon_url: iconUrl,
-        popularity_score: 0, // Always 0
         is_active: formData.is_active
       });
 

@@ -1,183 +1,259 @@
 import { useState, useEffect } from "react";
-import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
-import { Card, CardContent } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
+import { Search, Grid3x3, X } from "lucide-react";
 import { Input } from "@/components/ui/input";
-import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Search, Loader2 } from "lucide-react";
-import { SubscriptionIcon } from "@/components/SubscriptionIcon";
-import { cn } from "@/lib/utils";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { ScrollArea } from "@/components/ui/scroll-area";
+import { Badge } from "@/components/ui/badge";
+import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
+import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
+import { useLanguage } from "@/contexts/LanguageContext";
 
-interface SubscriptionTemplateBrowserProps {
-  onSelectTemplate?: (template: SubscriptionTemplate) => void;
+type Props = {
+  onSelectTemplate: (template: SubscriptionTemplate) => void;
+  selectedTemplateId?: string;
   compact?: boolean;
-}
+};
 
-export function SubscriptionTemplateBrowser({ 
-  onSelectTemplate, 
-  compact = false 
-}: SubscriptionTemplateBrowserProps) {
+export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplateId, compact = false }: Props) {
   const { t, language } = useLanguage();
-  const { formatCurrency, preferredCurrency } = useCurrency();
-  const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [selectedCategory, setSelectedCategory] = useState<string>("all");
+  const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [allTemplatesByCategory, setAllTemplatesByCategory] = useState<Record<string, SubscriptionTemplate[]>>({});
   const [searchQuery, setSearchQuery] = useState("");
+  const [loading, setLoading] = useState(true);
+  const [showAllModal, setShowAllModal] = useState(false);
 
   useEffect(() => {
-    loadTemplates();
+    loadPopularTemplates();
   }, []);
 
-  const loadTemplates = async () => {
+  const loadPopularTemplates = async () => {
     try {
       setLoading(true);
-      const data = await subscriptionTemplateService.getAllTemplates();
-      setTemplates(data);
+      const templates = await subscriptionTemplateService.getPopularTemplates(10);
+      setPopularTemplates(templates);
     } catch (error) {
-      console.error("Error loading templates:", error);
+      console.error("Failed to load popular templates:", error);
     } finally {
       setLoading(false);
     }
   };
 
-  const filteredTemplates = templates.filter(template => {
-    const matchesCategory = selectedCategory === "all" || 
-      (template.categories && template.categories.slug === selectedCategory);
-    const matchesSearch = template.name.toLowerCase().includes(searchQuery.toLowerCase());
-    return matchesCategory && matchesSearch;
-  });
-
-  // Unique categories from templates
-  const categories = Array.from(new Set(templates.map(t => t.categories?.slug).filter(Boolean)));
-
-  const handleSelect = (template: SubscriptionTemplate) => {
-    if (onSelectTemplate) {
-      onSelectTemplate(template);
+  const loadAllTemplates = async () => {
+    try {
+      const grouped = await subscriptionTemplateService.getAllTemplatesByCategory();
+      setAllTemplatesByCategory(grouped);
+    } catch (error) {
+      console.error("Failed to load all templates:", error);
     }
   };
 
-  if (compact) {
-    // Compact Horizontal Scroll View for Wizard
-    if (loading) return <div className="h-24 flex items-center justify-center"><Loader2 className="h-6 w-6 animate-spin text-slate-400" /></div>;
+  const handleShowAll = async () => {
+    setShowAllModal(true);
+    await loadAllTemplates();
+  };
 
-    const popularTemplates = templates.sort((a, b) => (b.popularity_score || 0) - (a.popularity_score || 0)).slice(0, 10);
+  const handleTemplateClick = async (template: SubscriptionTemplate) => {
+    onSelectTemplate(template);
+    // Increment usage count
+    try {
+      await subscriptionTemplateService.incrementUsageCount(template.id);
+    } catch (error) {
+      console.error("Failed to increment usage count:", error);
+    }
+    setShowAllModal(false);
+  };
 
+  const getCategoryName = (category: SubscriptionTemplate["categories"]) => {
+    if (!category) return "Other";
+    if (language === "th" && category.name_th) return category.name_th;
+    if (language === "en" && category.name_en) return category.name_en;
+    return category.name;
+  };
+
+  const getFaviconUrl = (websiteUrl: string | null) => {
+    if (!websiteUrl) return null;
+    try {
+      const url = new URL(websiteUrl.startsWith("http") ? websiteUrl : `https://${websiteUrl}`);
+      return `https://www.google.com/s2/favicons?domain=${url.hostname}&sz=128`;
+    } catch {
+      return null;
+    }
+  };
+
+  const filteredCategories = Object.entries(allTemplatesByCategory).reduce((acc, [category, templates]) => {
+    const filtered = templates.filter(template =>
+      template.name.toLowerCase().includes(searchQuery.toLowerCase())
+    );
+    if (filtered.length > 0) {
+      acc[category] = filtered;
+    }
+    return acc;
+  }, {} as Record<string, SubscriptionTemplate[]>);
+
+  if (loading) {
     return (
-      <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-700">
-        {popularTemplates.map((template) => (
-          <button
-            key={template.id}
-            type="button"
-            onClick={() => handleSelect(template)}
-            className="flex flex-col items-center gap-2 min-w-[80px] p-2 rounded-lg hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors group"
-          >
-            <div className="relative">
-              <SubscriptionIcon 
-                name={template.name}
-                iconUrl={template.icon_url}
-                size="lg"
-                className="group-hover:scale-110 transition-transform duration-200"
-              />
-            </div>
-            <span className="text-xs text-center font-medium truncate w-full max-w-[80px]">
-              {template.name}
-            </span>
-          </button>
-        ))}
+      <div className="flex items-center justify-center py-8">
+        <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
       </div>
     );
   }
 
   return (
     <div className="space-y-6">
-      <div className="flex flex-col sm:flex-row gap-4">
-        <div className="relative flex-1">
-          <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
-          <Input
-            placeholder={t("common.search")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            className="pl-9"
-          />
-        </div>
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="w-full sm:w-auto">
-          <TabsList className="w-full sm:w-auto overflow-x-auto justify-start">
-            <TabsTrigger value="all">{t("common.all")}</TabsTrigger>
-            {categories.map(cat => (
-              <TabsTrigger key={cat} value={cat as string} className="capitalize">
-                {cat}
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {loading ? (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {[1, 2, 3, 4, 5, 6].map((i) => (
-            <div key={i} className="h-32 bg-slate-100 dark:bg-slate-800 rounded-lg animate-pulse" />
-          ))}
-        </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-          {filteredTemplates.map((template) => (
-            <Card 
-              key={template.id} 
-              className="cursor-pointer hover:border-indigo-500 transition-colors group"
-              onClick={() => handleSelect(template)}
-            >
-              <CardContent className="p-4 flex items-center gap-4">
+      {/* Popular Templates - Top 10 */}
+      <div>
+        <h3 className="text-lg font-semibold mb-4">
+          {t("subscriptions.popularTemplates")}
+        </h3>
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
+          {popularTemplates.map((template) => {
+            const faviconUrl = getFaviconUrl(template.website_url);
+            
+            return (
+              <button
+                key={template.id}
+                onClick={() => handleTemplateClick(template)}
+                className="group relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:border-primary hover:shadow-md bg-card"
+              >
                 <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center text-lg font-bold mb-3 overflow-hidden shadow-sm border border-slate-100 dark:border-slate-700"
-                  style={{ backgroundColor: `${template.categories?.color}20` || "#f1f5f9" }}
+                  className="w-12 h-12 rounded-full flex items-center justify-center mb-2 text-white font-bold text-xl transition-transform group-hover:scale-110"
+                  style={{ backgroundColor: template.categories?.color || "#6366f1" }}
                 >
-                  {template.website_url ? (
+                  {faviconUrl ? (
                     <img 
-                      src={`https://www.google.com/s2/favicons?domain=${new URL(template.website_url).hostname}&sz=128`}
+                      src={faviconUrl} 
                       alt={template.name}
-                      className="w-full h-full object-cover"
+                      className="w-8 h-8 rounded-full object-cover"
                       onError={(e) => {
-                        const target = e.target as HTMLImageElement;
-                        target.style.display = "none";
-                        const parent = target.parentElement;
-                        if (parent) {
-                          parent.style.backgroundColor = template.categories?.color ? `${template.categories.color}20` : '#f1f5f9';
-                          parent.innerHTML = `<span style="color: ${template.categories?.color || '#64748b'}">${template.name.charAt(0).toUpperCase()}</span>`;
-                        }
+                        e.currentTarget.style.display = "none";
+                        const fallback = e.currentTarget.nextElementSibling;
+                        if (fallback) (fallback as HTMLElement).style.display = "block";
                       }}
                     />
-                  ) : (
-                    <span style={{ color: template.categories?.color || "#64748b" }}>
-                      {template.name.charAt(0).toUpperCase()}
-                    </span>
-                  )}
+                  ) : null}
+                  <span style={{ display: faviconUrl ? "none" : "block" }}>
+                    {template.name.charAt(0).toUpperCase()}
+                  </span>
                 </div>
-                
-                <div className="text-center w-full">
-                  <h4 className="font-semibold text-sm truncate w-full mb-1">{template.name}</h4>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                    {template.categories?.name}
-                  </p>
-                </div>
-                <div className="text-right">
-                  <p className="font-bold text-indigo-600 dark:text-indigo-400">
-                    {formatCurrency(template.amount || 0, template.currency || preferredCurrency)}
-                  </p>
-                  <p className="text-xs text-slate-500">/{template.billing_cycle === 'yearly' ? 'yr' : 'mo'}</p>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
-          
-          {filteredTemplates.length === 0 && (
-            <div className="col-span-full text-center py-12 text-slate-500">
-              {t("common.no_results")}
-            </div>
-          )}
+                <p className="text-sm font-medium text-center line-clamp-2 mb-1">
+                  {template.name}
+                </p>
+                {template.usage_count > 0 && (
+                  <Badge variant="secondary" className="text-xs">
+                    {template.usage_count} {language === "th" ? "คน" : "users"}
+                  </Badge>
+                )}
+              </button>
+            );
+          })}
         </div>
-      )}
+      </div>
+
+      {/* Browse All Button */}
+      <div className="flex justify-center">
+        <Button
+          variant="outline"
+          onClick={handleShowAll}
+          className="gap-2"
+        >
+          <Grid3x3 className="w-4 h-4" />
+          {t("subscriptions.browseAllTemplates")}
+        </Button>
+      </div>
+
+      {/* All Templates Modal */}
+      <Dialog open={showAllModal} onOpenChange={setShowAllModal}>
+        <DialogContent className="max-w-4xl max-h-[90vh]">
+          <DialogHeader>
+            <DialogTitle className="flex items-center justify-between">
+              <span>{t("subscriptions.allTemplates")}</span>
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => setShowAllModal(false)}
+              >
+                <X className="w-4 h-4" />
+              </Button>
+            </DialogTitle>
+          </DialogHeader>
+
+          {/* Search Bar */}
+          <div className="relative mb-4">
+            <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-muted-foreground" />
+            <Input
+              placeholder={t("subscriptions.searchTemplates")}
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="pl-10"
+            />
+          </div>
+
+          {/* Templates Grouped by Category */}
+          <ScrollArea className="h-[60vh] pr-4">
+            <div className="space-y-6">
+              {Object.entries(filteredCategories).map(([categoryName, templates]) => (
+                <div key={categoryName}>
+                  <h4 className="text-sm font-semibold text-muted-foreground mb-3 sticky top-0 bg-background py-2">
+                    {categoryName}
+                  </h4>
+                  <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
+                    {templates.map((template) => {
+                      const faviconUrl = getFaviconUrl(template.website_url);
+                      
+                      return (
+                        <button
+                          key={template.id}
+                          onClick={() => handleTemplateClick(template)}
+                          className="group relative flex flex-col items-center p-3 rounded-lg border-2 transition-all hover:border-primary hover:shadow-md bg-card"
+                        >
+                          <div 
+                            className="w-12 h-12 rounded-full flex items-center justify-center mb-2 text-white font-bold text-xl transition-transform group-hover:scale-110"
+                            style={{ backgroundColor: template.categories?.color || "#6366f1" }}
+                          >
+                            {faviconUrl ? (
+                              <img 
+                                src={faviconUrl} 
+                                alt={template.name}
+                                className="w-8 h-8 rounded-full object-cover"
+                                onError={(e) => {
+                                  e.currentTarget.style.display = "none";
+                                  const fallback = e.currentTarget.nextElementSibling;
+                                  if (fallback) (fallback as HTMLElement).style.display = "block";
+                                }}
+                              />
+                            ) : null}
+                            <span style={{ display: faviconUrl ? "none" : "block" }}>
+                              {template.name.charAt(0).toUpperCase()}
+                            </span>
+                          </div>
+                          <p className="text-xs font-medium text-center line-clamp-2 mb-1">
+                            {template.name}
+                          </p>
+                          <p className="text-xs text-muted-foreground mb-1">
+                            {template.currency} {template.default_amount}
+                          </p>
+                          {template.usage_count > 0 && (
+                            <Badge variant="secondary" className="text-xs">
+                              {template.usage_count}
+                            </Badge>
+                          )}
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              ))}
+
+              {Object.keys(filteredCategories).length === 0 && (
+                <div className="text-center py-8 text-muted-foreground">
+                  {t("subscriptions.noTemplatesFound")}
+                </div>
+              )}
+            </div>
+          </ScrollArea>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }

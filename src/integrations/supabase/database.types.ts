@@ -299,6 +299,7 @@ export type Database = {
           start_date: string | null
           template_id: string | null
           updated_at: string | null
+          usage_count: number | null
           usage_frequency: string | null
           user_id: string | null
           website_url: string | null
@@ -329,6 +330,7 @@ export type Database = {
           start_date?: string | null
           template_id?: string | null
           updated_at?: string | null
+          usage_count?: number | null
           usage_frequency?: string | null
           user_id?: string | null
           website_url?: string | null
@@ -359,6 +361,7 @@ export type Database = {
           start_date?: string | null
           template_id?: string | null
           updated_at?: string | null
+          usage_count?: number | null
           usage_frequency?: string | null
           user_id?: string | null
           website_url?: string | null
