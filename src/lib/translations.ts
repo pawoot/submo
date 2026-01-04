@@ -2057,7 +2057,7 @@ export const translations = {
     en: "Search services..."
   },
   "subscriptions.noTemplatesFound": {
-    th: "ไม่พบบริการที่ค้นหา",
+    th: "ไม่พบบริการที่คุณค้นหา",
     en: "No services found"
   }
 };

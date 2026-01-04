@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Badge } from "@/components/ui/badge";
+import { SubscriptionIcon } from "./SubscriptionIcon";
 import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -115,53 +116,33 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
   }
 
   return (
-    <div className="space-y-6">
-      {/* Popular Templates - Top 10 */}
-      <div>
-        <h3 className="text-lg font-semibold mb-4">
-          {t("subscriptions.popularTemplates")}
-        </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-3">
-          {popularTemplates.map((template) => {
-            const faviconUrl = getFaviconUrl(template.website_url);
-            
-            return (
-              <button
-                key={template.id}
-                onClick={() => handleTemplateClick(template)}
-                className="group relative flex flex-col items-center p-4 rounded-lg border-2 transition-all hover:border-primary hover:shadow-md bg-card"
-              >
-                <div 
-                  className="w-12 h-12 rounded-full flex items-center justify-center mb-2 text-white font-bold text-xl transition-transform group-hover:scale-110"
-                  style={{ backgroundColor: template.categories?.color || "#6366f1" }}
-                >
-                  {faviconUrl ? (
-                    <img 
-                      src={faviconUrl} 
-                      alt={template.name}
-                      className="w-8 h-8 rounded-full object-cover"
-                      onError={(e) => {
-                        e.currentTarget.style.display = "none";
-                        const fallback = e.currentTarget.nextElementSibling;
-                        if (fallback) (fallback as HTMLElement).style.display = "block";
-                      }}
-                    />
-                  ) : null}
-                  <span style={{ display: faviconUrl ? "none" : "block" }}>
-                    {template.name.charAt(0).toUpperCase()}
-                  </span>
-                </div>
-                <p className="text-sm font-medium text-center line-clamp-2 mb-1">
-                  {template.name}
-                </p>
-                {template.usage_count > 0 && (
-                  <Badge variant="secondary" className="text-xs">
-                    {template.usage_count} {language === "th" ? "คน" : "users"}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
+    <>
+      {/* Popular Templates Section */}
+      <div className="mb-8">
+        <div className="flex items-center justify-between mb-4">
+          <h2 className="text-lg font-semibold text-slate-900 dark:text-slate-100">
+            {t("subscription.popularTemplates")}
+          </h2>
+        </div>
+
+        {/* Popular templates grid - without user counts */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-5 gap-4 mb-4">
+          {popularTemplates.slice(0, 10).map((template) => (
+            <button
+              key={template.id}
+              onClick={() => handleTemplateClick(template)}
+              className="flex flex-col items-center gap-2 p-4 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all"
+            >
+              <SubscriptionIcon 
+                name={template.name}
+                websiteUrl={template.website_url}
+                size="lg"
+              />
+              <span className="text-sm font-medium text-slate-900 dark:text-slate-100 text-center line-clamp-2">
+                {template.name}
+              </span>
+            </button>
+          ))}
         </div>
       </div>
 
@@ -204,74 +185,67 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
             />
           </div>
 
-          {/* Templates Grouped by Category */}
-          <ScrollArea className="h-[60vh] pr-4">
-            <div className="space-y-6">
-              {Object.entries(filteredCategories).map(([categoryName, templates]) => (
-                <div key={categoryName}>
-                  <h4 className="text-sm font-semibold text-muted-foreground mb-3 sticky top-0 bg-background py-2">
-                    {categoryName}
-                  </h4>
+          {/* Template Grid */}
+          <div className="space-y-6 max-h-[400px] overflow-y-auto">
+            {searchQuery && Object.keys(filteredCategories).length === 0 ? (
+              <div className="text-center py-12">
+                <p className="text-slate-500 dark:text-slate-400 mb-4">
+                  {t("subscriptions.noTemplatesFound")}
+                </p>
+                <Button
+                  onClick={() => {
+                    setShowAllModal(false);
+                    // Focus on subscription name input
+                    setTimeout(() => {
+                      const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+                      if (nameInput) {
+                        nameInput.focus();
+                        nameInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                      }
+                    }, 100);
+                  }}
+                  variant="outline"
+                  className="mx-auto"
+                >
+                  {language === 'th' ? '+ เพิ่มบริการใหม่' : '+ Add Custom Service'}
+                </Button>
+              </div>
+            ) : (
+              Object.entries(filteredCategories).map(([category, templates]) => (
+                <div key={category}>
+                  <h3 className="font-semibold text-slate-900 dark:text-slate-100 mb-3 sticky top-0 bg-white dark:bg-slate-900 py-2">
+                    {category} ({templates.length})
+                  </h3>
                   <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-3">
-                    {templates.map((template) => {
-                      const faviconUrl = getFaviconUrl(template.website_url);
-                      
-                      return (
-                        <button
-                          key={template.id}
-                          onClick={() => handleTemplateClick(template)}
-                          className="group relative flex flex-col items-center p-3 rounded-lg border-2 transition-all hover:border-primary hover:shadow-md bg-card"
-                        >
-                          <div 
-                            className="w-12 h-12 rounded-full flex items-center justify-center mb-2 text-white font-bold text-xl transition-transform group-hover:scale-110"
-                            style={{ backgroundColor: template.categories?.color || "#6366f1" }}
-                          >
-                            {faviconUrl ? (
-                              <img 
-                                src={faviconUrl} 
-                                alt={template.name}
-                                className="w-8 h-8 rounded-full object-cover"
-                                onError={(e) => {
-                                  e.currentTarget.style.display = "none";
-                                  const fallback = e.currentTarget.nextElementSibling;
-                                  if (fallback) (fallback as HTMLElement).style.display = "block";
-                                }}
-                              />
-                            ) : null}
-                            <span style={{ display: faviconUrl ? "none" : "block" }}>
-                              {template.name.charAt(0).toUpperCase()}
-                            </span>
-                          </div>
-                          <p className="text-xs font-medium text-center line-clamp-2 mb-1">
-                            {template.name}
-                          </p>
-                          <p className="text-xs text-muted-foreground mb-1">
-                            {template.currency} {template.amount}
-                          </p>
-                          <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                            {template.categories?.name_en}
-                          </p>
-                          {template.usage_count > 0 && (
-                            <Badge variant="secondary" className="text-xs">
-                              {template.usage_count}
-                            </Badge>
-                          )}
-                        </button>
-                      );
-                    })}
+                    {templates.map((template) => (
+                      <button
+                        key={template.id}
+                        onClick={() => {
+                          handleTemplateClick(template);
+                          setShowAllModal(false);
+                        }}
+                        className="flex flex-col items-center gap-2 p-3 rounded-lg border border-slate-200 dark:border-slate-700 hover:border-blue-500 dark:hover:border-blue-400 hover:bg-blue-50 dark:hover:bg-blue-950/20 transition-all"
+                      >
+                        <SubscriptionIcon 
+                          name={template.name}
+                          websiteUrl={template.website_url}
+                          size="md"
+                        />
+                        <span className="text-xs font-medium text-slate-900 dark:text-slate-100 text-center line-clamp-2">
+                          {template.name}
+                        </span>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          {template.currency} {template.amount}
+                        </p>
+                      </button>
+                    ))}
                   </div>
                 </div>
-              ))}
-
-              {Object.keys(filteredCategories).length === 0 && (
-                <div className="text-center py-8 text-muted-foreground">
-                  {t("subscriptions.noTemplatesFound")}
-                </div>
-              )}
-            </div>
-          </ScrollArea>
+              ))
+            )}
+          </div>
         </DialogContent>
       </Dialog>
-    </div>
+    </>
   );
 }

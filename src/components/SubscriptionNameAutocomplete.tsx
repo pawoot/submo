@@ -38,7 +38,8 @@ export function SubscriptionNameAutocomplete({
   const [open, setOpen] = useState(false);
   const [templates, setTemplates] = useState<SubscriptionTemplate[]>(initialTemplates || []);
   const [loading, setLoading] = useState(false);
-  const { t } = useLanguage();
+  const [searchQuery, setSearchQuery] = useState("");
+  const { t, language } = useLanguage();
 
   // Load templates if not provided (fallback)
   useEffect(() => {
@@ -61,6 +62,10 @@ export function SubscriptionNameAutocomplete({
     }
   };
 
+  const filteredTemplates = templates.filter((template) =>
+    template.name.toLowerCase().includes(searchQuery.toLowerCase())
+  );
+
   const handleSelect = (template: SubscriptionTemplate) => {
     onChange(template.name);
     onSelectTemplate(template);
@@ -75,18 +80,18 @@ export function SubscriptionNameAutocomplete({
             variant="outline"
             role="combobox"
             aria-expanded={open}
-            disabled={disabled}
             className={cn(
-              "w-full justify-between font-normal",
-              !value && "text-muted-foreground",
-              error && "border-red-500"
+              "w-full justify-between",
+              !value && "text-muted-foreground"
             )}
           >
             <div className="flex items-center gap-2 flex-1 min-w-0">
               {selectedTemplate && (
-                <div className="w-5 h-5 rounded-full overflow-hidden flex-shrink-0">
-                   <SubscriptionIcon name={selectedTemplate.name} websiteUrl={selectedTemplate.website_url} className="w-full h-full" />
-                </div>
+                <SubscriptionIcon 
+                  name={selectedTemplate.name}
+                  websiteUrl={selectedTemplate.website_url}
+                  size="sm"
+                />
               )}
               <span className="truncate">
                 {value || t("common.select")}
@@ -95,35 +100,60 @@ export function SubscriptionNameAutocomplete({
             <ChevronsUpDown className="ml-2 h-4 w-4 shrink-0 opacity-50" />
           </Button>
         </PopoverTrigger>
-        <PopoverContent className="w-[300px] p-0" align="start">
-          <Command>
-            <CommandInput 
-              placeholder={t("common.search") + "..."} 
-              onValueChange={(val) => {
-                if (!open) setOpen(true);
-                // Allow custom value if not found
-                onChange(val);
-              }}
-            />
+        <PopoverContent className="w-full p-0" align="start">
+          <Command shouldFilter={false}>
+            <div className="relative">
+              <CommandInput 
+                placeholder={t("subscriptions.searchTemplates")} 
+                value={searchQuery}
+                onValueChange={(value) => {
+                  setSearchQuery(value);
+                  // Allow custom input - update parent value immediately
+                  onChange(value);
+                }}
+              />
+            </div>
             <CommandList>
-              <CommandEmpty>No results found</CommandEmpty>
-              <CommandGroup heading="Templates">
-                {templates.map((template) => (
-                  <CommandItem
-                    key={template.id}
-                    value={template.name}
-                    onSelect={() => handleSelect(template)}
-                    className="cursor-pointer"
-                  >
-                    <div className="flex items-center gap-2">
-                      <SubscriptionIcon name={template.name} websiteUrl={template.website_url} className="w-5 h-5" />
-                      <span>{template.name}</span>
-                    </div>
-                    {value === template.name && (
-                      <Check className="ml-auto h-4 w-4" />
-                    )}
-                  </CommandItem>
-                ))}
+              <CommandEmpty>
+                <div className="py-6 text-center">
+                  <p className="text-sm text-muted-foreground mb-3">
+                    {language === 'th' ? 'ไม่พบบริการที่ค้นหา' : 'No service found'}
+                  </p>
+                  {searchQuery && (
+                    <p className="text-xs text-slate-600 dark:text-slate-400">
+                      {language === 'th' 
+                        ? `กำลังใช้ชื่อ: "${searchQuery}"`
+                        : `Using custom name: "${searchQuery}"`
+                      }
+                    </p>
+                  )}
+                </div>
+              </CommandEmpty>
+              <CommandGroup>
+                {filteredTemplates.map((template) => {
+                  return (
+                    <CommandItem
+                      key={template.id}
+                      value={template.name}
+                      onSelect={() => {
+                        handleSelect(template);
+                      }}
+                      className="cursor-pointer"
+                    >
+                      <div className="flex items-center gap-2 flex-1 min-w-0">
+                        <SubscriptionIcon 
+                          name={template.name}
+                          websiteUrl={template.website_url}
+                          size="sm"
+                        />
+                        <span className="truncate">{template.name}</span>
+                      </div>
+                      {value === template.name && (
+                        <Check className="ml-auto h-4 w-4" />
+                      )}
+                    </CommandItem>
+                  );
+                })}
               </CommandGroup>
             </CommandList>
           </Command>
