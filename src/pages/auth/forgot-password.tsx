@@ -50,7 +50,7 @@ export default function ForgotPasswordPage() {
     return (
       <>
         <SEO 
-          title="ตรวจสอบอีเมล - Subscription Manager"
+          title="ตรวจสอบอีเมล - Submo.ai"
           description="ตรวจสอบอีเมลเพื่อรีเซ็ตรหัสผ่าน"
         />
         
@@ -97,7 +97,7 @@ export default function ForgotPasswordPage() {
   return (
     <>
       <SEO 
-        title="ลืมรหัสผ่าน - Subscription Manager"
+        title="ลืมรหัสผ่าน - Submo.ai"
         description="รีเซ็ตรหัสผ่านของคุณ"
       />
       
