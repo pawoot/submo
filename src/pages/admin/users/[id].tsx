@@ -39,6 +39,27 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Switch } from "@/components/ui/switch";
 
+// Helper component for async price display
+const PriceDisplay = ({ amount, currency }: { amount: number, currency: string }) => {
+  const { convertAmount } = useCurrency();
+  const [formattedPrice, setFormattedPrice] = useState<string>("...");
+
+  useEffect(() => {
+    const loadPrice = async () => {
+      const converted = await convertAmount(amount, currency);
+      const formatted = new Intl.NumberFormat("th-TH", {
+        style: "currency",
+        currency: "THB",
+        minimumFractionDigits: 2,
+      }).format(converted);
+      setFormattedPrice(formatted);
+    };
+    loadPrice();
+  }, [amount, currency, convertAmount]);
+
+  return <>{formattedPrice}</>;
+};
+
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 interface UserDetail {
@@ -53,8 +74,9 @@ export default function UserDetailPage() {
   const [showRoleDialog, setShowRoleDialog] = useState(false);
   const [pendingRole, setPendingRole] = useState<"admin" | "user" | null>(null);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
+  const [costs, setCosts] = useState({ monthly: 0, yearly: 0 });
   const { toast } = useToast();
-  const { convertAmount, formatAmount } = useCurrency();
+  const { convertAmount } = useCurrency();
   const router = useRouter();
   const { id } = router.query;
 
@@ -162,14 +184,42 @@ export default function UserDetailPage() {
     }
   };
 
-  const formatCurrency = async (amount: number, currency: string = "THB") => {
-    const amountInTHB = await convertAmount(amount, currency);
-    return new Intl.NumberFormat("th-TH", {
-      style: "currency",
-      currency: "THB",
-      minimumFractionDigits: 2,
-    }).format(amountInTHB);
-  };
+  useEffect(() => {
+    const calculateCosts = async () => {
+      if (!userDetail) return;
+
+      const activeSubscriptions = userDetail.subscriptions.filter(
+        (sub) => sub.is_active
+      );
+
+      let totalMonthly = 0;
+      
+      for (const sub of activeSubscriptions) {
+        const price = sub.amount || 0;
+        const currency = sub.currency || "THB";
+        
+        // Convert to THB first
+        const priceInTHB = await convertAmount(price, currency);
+        
+        const monthlyCost =
+          sub.billing_cycle === "monthly"
+            ? priceInTHB
+            : sub.billing_cycle === "yearly"
+            ? priceInTHB / 12
+            : sub.billing_cycle === "quarterly"
+            ? priceInTHB / 3
+            : 0;
+        totalMonthly += monthlyCost;
+      }
+
+      setCosts({
+        monthly: totalMonthly,
+        yearly: totalMonthly * 12,
+      });
+    };
+
+    calculateCosts();
+  }, [userDetail, convertAmount]);
 
   const formatDate = (dateString: string) => {
     return new Date(dateString).toLocaleDateString("th-TH", {
@@ -177,39 +227,6 @@ export default function UserDetailPage() {
       month: "long",
       day: "numeric",
     });
-  };
-
-  const calculateTotalCosts = async () => {
-    if (!userDetail) return { monthly: 0, yearly: 0 };
-
-    const activeSubscriptions = userDetail.subscriptions.filter(
-      (sub) => sub.is_active
-    );
-
-    let totalMonthly = 0;
-    
-    for (const sub of activeSubscriptions) {
-      const price = sub.amount || 0;
-      const currency = sub.currency || "THB";
-      
-      // Convert to THB first
-      const priceInTHB = await convertAmount(price, currency);
-      
-      const monthlyCost =
-        sub.billing_cycle === "monthly"
-          ? priceInTHB
-          : sub.billing_cycle === "yearly"
-          ? priceInTHB / 12
-          : sub.billing_cycle === "quarterly"
-          ? priceInTHB / 3
-          : 0;
-      totalMonthly += monthlyCost;
-    }
-
-    return {
-      monthly: totalMonthly,
-      yearly: totalMonthly * 12,
-    };
   };
 
   const getSubscriptionStats = () => {
@@ -240,8 +257,16 @@ export default function UserDetailPage() {
     return null;
   }
 
-  const costs = calculateTotalCosts();
   const stats = getSubscriptionStats();
+
+  // Helper for sync formatting of pre-calculated THB amounts
+  const formatTHB = (amount: number) => {
+    return new Intl.NumberFormat("th-TH", {
+      style: "currency",
+      currency: "THB",
+      minimumFractionDigits: 2,
+    }).format(amount);
+  };
 
   return (
     <AuthGuard>
@@ -457,7 +482,7 @@ export default function UserDetailPage() {
                 <div className="flex items-center gap-2">
                   <DollarSign className="w-5 h-5 text-blue-600" />
                   <span className="text-2xl font-bold">
-                    {formatCurrency(costs.monthly)}
+                    {formatTHB(costs.monthly)}
                   </span>
                 </div>
               </CardContent>
@@ -474,7 +499,7 @@ export default function UserDetailPage() {
                 <div className="flex items-center gap-2">
                   <TrendingUp className="w-5 h-5 text-orange-600" />
                   <span className="text-2xl font-bold">
-                    {formatCurrency(costs.yearly)}
+                    {formatTHB(costs.yearly)}
                   </span>
                 </div>
               </CardContent>
@@ -563,10 +588,10 @@ export default function UserDetailPage() {
                           </div>
                           <div className="text-right ml-4">
                             <div className="text-2xl font-bold text-purple-600">
-                              {formatCurrency(
-                                subscription.amount || 0,
-                                subscription.currency
-                              )}
+                              <PriceDisplay 
+                                amount={subscription.amount || 0} 
+                                currency={subscription.currency || "THB"} 
+                              />
                             </div>
                             <div className="text-xs text-slate-500">
                               {subscription.billing_cycle === "monthly"
