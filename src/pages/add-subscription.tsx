@@ -25,6 +25,7 @@ import type { Database } from "@/integrations/supabase/types";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
+import { useCurrency } from "@/contexts/CurrencyContext";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 
@@ -84,6 +85,7 @@ export default function AddSubscription() {
   const [subscriptionName, setSubscriptionName] = useState("");
   const { toast } = useToast();
   const router = useRouter();
+  const { preferredCurrency, isLoading: currencyLoading } = useCurrency();
 
   const {
     register,
@@ -103,6 +105,12 @@ export default function AddSubscription() {
   useEffect(() => {
     loadPopularTemplates();
   }, []);
+
+  useEffect(() => {
+    if (preferredCurrency && !currencyLoading) {
+      setValue("currency", preferredCurrency);
+    }
+  }, [preferredCurrency, currencyLoading, setValue]);
 
   const loadPopularTemplates = async () => {
     try {
@@ -142,7 +150,31 @@ export default function AddSubscription() {
   };
 
   const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
-    handleTemplateSelect(template);
+    setSelectedTemplate(template);
+    setSubscriptionName(template.name);
+    
+    // Auto-fill form with template data using setValue
+    if (template.category) {
+      setValue("category", template.category);
+    }
+    if (template.default_price) {
+      setValue("cost", template.default_price.toString());
+    }
+    if (template.default_currency) {
+      setValue("currency", template.default_currency);
+    }
+    if (template.default_billing_cycle) {
+      setValue("billing", template.default_billing_cycle);
+    }
+    if (template.website_url) {
+      setValue("website", template.website_url);
+    }
+
+    toast({
+      title: "✅ เลือกบริการสำเร็จ!",
+      description: `กรอกข้อมูล ${template.name} อัตโนมัติแล้ว`,
+      duration: 3000,
+    });
   };
 
   const categories = [
@@ -402,6 +434,20 @@ export default function AddSubscription() {
                     />
                     {errors.description && (
                       <p className="text-sm text-red-500">{errors.description.message}</p>
+                    )}
+                  </div>
+
+                  <div className="space-y-2">
+                    <Label htmlFor="website">เว็บไซต์</Label>
+                    <Input 
+                      id="website"
+                      {...register("website")}
+                      type="url"
+                      placeholder="https://example.com"
+                      className={cn(errors.website && "border-red-500")}
+                    />
+                    {errors.website && (
+                      <p className="text-sm text-red-500">{errors.website.message}</p>
                     )}
                   </div>
                 </CardContent>
