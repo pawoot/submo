@@ -60,7 +60,9 @@ export default function Home() {
   }, [subscriptions, sortOption]);
 
   const loadUserData = async () => {
-    const currentUser = await authService.getCurrentUser();
+    // Use supabase.auth.getUser() directly to get full User object compatible with state
+    const { data: { user: currentUser } } = await supabase.auth.getUser();
+    
     if (currentUser) {
       setUser(currentUser);
       setUserEmail(currentUser.email || "");
