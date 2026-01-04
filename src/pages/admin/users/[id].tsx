@@ -89,6 +89,15 @@ export default function UserDetailPage() {
     try {
       setIsLoading(true);
       const data = await adminUserService.getUserById(id as string);
+      
+      // Debug logging
+      console.log("=== USER DETAIL DEBUG ===");
+      console.log("User ID:", id);
+      console.log("Profile data:", data?.profile);
+      console.log("Subscriptions data:", data?.subscriptions);
+      console.log("Subscriptions count:", data?.subscriptions?.length);
+      console.log("========================");
+      
       if (data) {
         setUserDetail(data);
       } else {
