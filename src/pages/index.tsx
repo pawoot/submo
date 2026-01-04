@@ -4,6 +4,7 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -21,7 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings } from "lucide-react";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -47,6 +56,7 @@ export default function Home() {
   const [userEmail, setUserEmail] = useState<string>("");
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
+  const [profile, setProfile] = useState<any>(null);
   const { toast } = useToast();
   const router = useRouter();
 
@@ -67,10 +77,11 @@ export default function Home() {
       setUser(currentUser);
       setUserEmail(currentUser.email || "");
       
-      // Check if user is admin
+      // Check if user is admin and load profile
       try {
-        const profile = await profileService.getCurrentProfile();
-        setIsAdmin(profile?.role === "admin");
+        const profileData = await profileService.getCurrentProfile();
+        setProfile(profileData);
+        setIsAdmin(profileData?.role === "admin");
       } catch (error) {
         console.error("Error checking admin status:", error);
       }
@@ -267,25 +278,58 @@ export default function Home() {
                 )}
               </div>
               <div className="flex items-center gap-3">
-                <div className="text-right mr-2 hidden sm:block">
-                  <p className="text-sm font-medium text-slate-900 dark:text-white">{userEmail}</p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">ผู้ใช้งาน</p>
-                </div>
+                <Link href="/notifications">
+                  <Button variant="outline" size="icon" className="relative">
+                    <Bell className="w-5 h-5" />
+                    {unreadNotifications > 0 && (
+                      <Badge
+                        variant="destructive"
+                        className="absolute -top-1 -right-1 h-5 min-w-[20px] flex items-center justify-center px-1 text-xs"
+                      >
+                        {unreadNotifications > 99 ? "99+" : unreadNotifications}
+                      </Badge>
+                    )}
+                  </Button>
+                </Link>
                 <Link href="/add-subscription">
                   <Button size="lg" className="gap-2">
                     <Plus className="w-5 h-5" />
                     <span className="hidden sm:inline">เพิ่ม Subscription</span>
                   </Button>
                 </Link>
-                <Button 
-                  variant="outline" 
-                  size="lg" 
-                  onClick={handleLogout}
-                  className="gap-2"
-                >
-                  <LogOut className="w-5 h-5" />
-                  <span className="hidden sm:inline">ออกจากระบบ</span>
-                </Button>
+                
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="relative h-10 w-10 rounded-full">
+                      <Avatar className="h-10 w-10 border-2 border-indigo-200">
+                        <AvatarImage src={profile?.avatar_url || ""} alt={profile?.full_name || userEmail} />
+                        <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white font-semibold">
+                          {profile?.full_name?.[0]?.toUpperCase() || userEmail?.[0]?.toUpperCase() || "?"}
+                        </AvatarFallback>
+                      </Avatar>
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent className="w-56" align="end" forceMount>
+                    <DropdownMenuLabel className="font-normal">
+                      <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{profile?.full_name || "ผู้ใช้"}</p>
+                        <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
+                      </div>
+                    </DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem asChild>
+                      <Link href="/profile" className="cursor-pointer">
+                        <UserIcon className="w-4 h-4 mr-2" />
+                        โปรไฟล์
+                      </Link>
+                    </DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      ออกจากระบบ
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </div>
             </div>
           </div>
