@@ -259,7 +259,8 @@ export default function AddSubscription() {
         notes: data.notes || null,
         is_active: true,
         logo_url: null,
-        shared_with: sharedUsers
+        shared_with: sharedUsers,
+        updated_at: new Date().toISOString()
       });
 
       toast({

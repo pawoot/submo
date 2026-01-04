@@ -1532,6 +1532,26 @@ export const translations = {
     th: "เปลี่ยนรหัสผ่านไม่สำเร็จ",
     en: "Failed to change password"
   },
+  "subscription.add_success": {
+    th: "เพิ่มรายการสมัครสมาชิกเรียบร้อยแล้ว",
+    en: "Subscription added successfully"
+  },
+  "subscription.update_success": {
+    th: "อัปเดตรายการสมัครสมาชิกเรียบร้อยแล้ว",
+    en: "Subscription updated successfully"
+  },
+  "subscription.payment_method": {
+    th: "วิธีการชำระเงิน",
+    en: "Payment Method"
+  },
+  "payment.select_method": {
+    th: "เลือกวิธีการชำระเงิน",
+    en: "Select payment method"
+  },
+  "common.error_occurred": {
+    th: "เกิดข้อผิดพลาดขึ้น",
+    en: "An error occurred"
+  },
 };
 
 export type TranslationKey = keyof typeof translations;
