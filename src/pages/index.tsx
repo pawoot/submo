@@ -1,4 +1,5 @@
 import SEO from "@/components/SEO";
+import { AuthGuard } from "@/components/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -19,35 +20,31 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { SubscriptionCharts } from "@/components/SubscriptionCharts";
+import { subscriptionService } from "@/services/subscriptionService";
+import { authService } from "@/services/authService";
+import { useRouter } from "next/router";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Subscription {
-  id: number;
-  name: string;
-  cost: number;
-  currency: string;
-  billing: string;
-  nextBillingDate: string;
-  category: string;
-  paymentMethod: string;
-  sharedWith: string[];
-  status: string;
-}
-
+type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type SortOption = "name-asc" | "name-desc" | "cost-asc" | "cost-desc" | "date-asc" | "date-desc" | "category";
 
 export default function Home() {
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [sortedSubscriptions, setSortedSubscriptions] = useState<Subscription[]>([]);
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
-  const [deleteId, setDeleteId] = useState<number | null>(null);
+  const [deleteId, setDeleteId] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [userEmail, setUserEmail] = useState<string>("");
   const { toast } = useToast();
+  const router = useRouter();
 
   useEffect(() => {
+    loadUserData();
     loadSubscriptions();
   }, []);
 
@@ -55,62 +52,28 @@ export default function Home() {
     sortSubscriptions(sortOption);
   }, [subscriptions, sortOption]);
 
-  const loadSubscriptions = () => {
-    const stored = localStorage.getItem("subscriptions");
-    if (stored) {
-      setSubscriptions(JSON.parse(stored));
-    } else {
-      const mockData = [
-        {
-          id: 1,
-          name: "Adobe Creative Cloud",
-          cost: 52.99,
-          currency: "USD",
-          billing: "monthly",
-          nextBillingDate: "2026-01-15",
-          category: "design",
-          paymentMethod: "credit-card",
-          sharedWith: ["user1@example.com", "user2@example.com"],
-          status: "active"
-        },
-        {
-          id: 2,
-          name: "Figma Professional",
-          cost: 12,
-          currency: "USD",
-          billing: "monthly",
-          nextBillingDate: "2026-01-20",
-          category: "design",
-          paymentMethod: "credit-card",
-          sharedWith: [],
-          status: "active"
-        },
-        {
-          id: 3,
-          name: "GitHub Team",
-          cost: 4,
-          currency: "USD",
-          billing: "monthly",
-          nextBillingDate: "2026-01-10",
-          category: "development",
-          paymentMethod: "credit-card",
-          sharedWith: ["dev1@example.com", "dev2@example.com", "dev3@example.com", "dev4@example.com", "dev5@example.com"],
-          status: "active"
-        },
-        {
-          id: 4,
-          name: "Notion Team",
-          cost: 8,
-          currency: "USD",
-          billing: "monthly",
-          nextBillingDate: "2026-01-25",
-          category: "productivity",
-          paymentMethod: "credit-card",
-          sharedWith: ["team1@example.com", "team2@example.com", "team3@example.com"],
-          status: "active"
-        }
-      ];
-      setSubscriptions(mockData);
+  const loadUserData = async () => {
+    const user = await authService.getCurrentUser();
+    if (user) {
+      setUserEmail(user.email || "");
+    }
+  };
+
+  const loadSubscriptions = async () => {
+    try {
+      setLoading(true);
+      const data = await subscriptionService.getAll();
+      setSubscriptions(data);
+    } catch (error) {
+      console.error("Error loading subscriptions:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถโหลดข้อมูล Subscription ได้",
+        variant: "destructive",
+        duration: 3000,
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -126,35 +89,23 @@ export default function Home() {
         break;
       case "cost-asc":
         sorted.sort((a, b) => {
-          const costA = a.billing === "monthly" ? a.cost :
-                       a.billing === "yearly" ? a.cost / 12 :
-                       a.billing === "quarterly" ? a.cost / 3 :
-                       a.billing === "biannually" ? a.cost / 6 : a.cost;
-          const costB = b.billing === "monthly" ? b.cost :
-                       b.billing === "yearly" ? b.cost / 12 :
-                       b.billing === "quarterly" ? b.cost / 3 :
-                       b.billing === "biannually" ? b.cost / 6 : b.cost;
+          const costA = calculateMonthlyCost(a);
+          const costB = calculateMonthlyCost(b);
           return costA - costB;
         });
         break;
       case "cost-desc":
         sorted.sort((a, b) => {
-          const costA = a.billing === "monthly" ? a.cost :
-                       a.billing === "yearly" ? a.cost / 12 :
-                       a.billing === "quarterly" ? a.cost / 3 :
-                       a.billing === "biannually" ? a.cost / 6 : a.cost;
-          const costB = b.billing === "monthly" ? b.cost :
-                       b.billing === "yearly" ? b.cost / 12 :
-                       b.billing === "quarterly" ? b.cost / 3 :
-                       b.billing === "biannually" ? b.cost / 6 : b.cost;
+          const costA = calculateMonthlyCost(a);
+          const costB = calculateMonthlyCost(b);
           return costB - costA;
         });
         break;
       case "date-asc":
-        sorted.sort((a, b) => new Date(a.nextBillingDate).getTime() - new Date(b.nextBillingDate).getTime());
+        sorted.sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime());
         break;
       case "date-desc":
-        sorted.sort((a, b) => new Date(b.nextBillingDate).getTime() - new Date(a.nextBillingDate).getTime());
+        sorted.sort((a, b) => new Date(b.next_billing_date).getTime() - new Date(a.next_billing_date).getTime());
         break;
       case "category":
         sorted.sort((a, b) => a.category.localeCompare(b.category));
@@ -164,32 +115,52 @@ export default function Home() {
     setSortedSubscriptions(sorted);
   };
 
-  const handleDelete = (id: number) => {
-    const stored = localStorage.getItem("subscriptions");
-    if (stored) {
-      const subscriptions = JSON.parse(stored);
-      const filtered = subscriptions.filter((s: Subscription) => s.id !== id);
-      localStorage.setItem("subscriptions", JSON.stringify(filtered));
-      loadSubscriptions();
+  const calculateMonthlyCost = (sub: Subscription): number => {
+    switch (sub.billing_cycle) {
+      case "yearly": return sub.price / 12;
+      case "quarterly": return sub.price / 3;
+      case "half-yearly": return sub.price / 6;
+      default: return sub.price;
+    }
+  };
+
+  const handleDelete = async (id: string) => {
+    try {
+      await subscriptionService.delete(id);
+      await loadSubscriptions();
       
       toast({
         title: "🗑️ ลบ Subscription สำเร็จ",
         description: "รายการถูกลบออกจากระบบแล้ว",
         duration: 3000,
       });
+    } catch (error) {
+      console.error("Error deleting subscription:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถลบรายการได้",
+        variant: "destructive",
+        duration: 3000,
+      });
     }
     setDeleteId(null);
   };
 
-  const totalMonthly = subscriptions.reduce((sum, sub) => {
-    const cost = Number(sub.cost);
-    if (sub.billing === "monthly") return sum + cost;
-    if (sub.billing === "yearly") return sum + (cost / 12);
-    if (sub.billing === "quarterly") return sum + (cost / 3);
-    if (sub.billing === "biannually") return sum + (cost / 6);
-    return sum;
-  }, 0);
+  const handleLogout = async () => {
+    try {
+      await authService.signOut();
+      router.push("/auth/login");
+      toast({
+        title: "👋 ออกจากระบบสำเร็จ",
+        description: "แล้วพบกันใหม่",
+        duration: 3000,
+      });
+    } catch (error) {
+      console.error("Error signing out:", error);
+    }
+  };
 
+  const totalMonthly = subscriptions.reduce((sum, sub) => sum + calculateMonthlyCost(sub), 0);
   const totalYearly = totalMonthly * 12;
 
   const getDaysUntilRenewal = (date: string) => {
@@ -211,8 +182,28 @@ export default function Home() {
     other: "Other"
   };
 
+  const billingCycleLabels: { [key: string]: string } = {
+    monthly: "ต่อเดือน",
+    quarterly: "ราย 3 เดือน",
+    "half-yearly": "ราย 6 เดือน",
+    yearly: "ต่อปี"
+  };
+
+  if (loading) {
+    return (
+      <AuthGuard>
+        <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
+          <div className="text-center">
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+            <p className="text-lg text-gray-600">กำลังโหลดข้อมูล...</p>
+          </div>
+        </div>
+      </AuthGuard>
+    );
+  }
+
   return (
-    <>
+    <AuthGuard>
       <SEO 
         title="Subscription Manager - จัดการค่าใช้จ่าย Software"
         description="ระบบบริหารจัดการค่าใช้จ่าย Software Subscription ติดตามวันหมดอายุ แบ่งปันค่าใช้จ่าย และดูภาพรวมการใช้เงิน"
@@ -231,12 +222,27 @@ export default function Home() {
                   <p className="text-sm text-slate-600 dark:text-slate-400">จัดการค่าใช้จ่าย Software</p>
                 </div>
               </div>
-              <Link href="/add-subscription">
-                <Button size="lg" className="gap-2">
-                  <Plus className="w-5 h-5" />
-                  เพิ่ม Subscription
+              <div className="flex items-center gap-3">
+                <div className="text-right mr-2 hidden sm:block">
+                  <p className="text-sm font-medium text-slate-900 dark:text-white">{userEmail}</p>
+                  <p className="text-xs text-slate-500 dark:text-slate-400">ผู้ใช้งาน</p>
+                </div>
+                <Link href="/add-subscription">
+                  <Button size="lg" className="gap-2">
+                    <Plus className="w-5 h-5" />
+                    <span className="hidden sm:inline">เพิ่ม Subscription</span>
+                  </Button>
+                </Link>
+                <Button 
+                  variant="outline" 
+                  size="lg" 
+                  onClick={handleLogout}
+                  className="gap-2"
+                >
+                  <LogOut className="w-5 h-5" />
+                  <span className="hidden sm:inline">ออกจากระบบ</span>
                 </Button>
-              </Link>
+              </div>
             </div>
           </div>
         </header>
@@ -303,7 +309,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                  {subscriptions.filter(s => getDaysUntilRenewal(s.nextBillingDate) <= 7).length}
+                  {subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 7).length}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   ภายใน 7 วัน
@@ -346,12 +352,9 @@ export default function Home() {
               <CardContent>
                 <div className="space-y-4">
                   {sortedSubscriptions.map((sub) => {
-                    const daysUntil = getDaysUntilRenewal(sub.nextBillingDate);
+                    const daysUntil = getDaysUntilRenewal(sub.next_billing_date);
                     const isUrgent = daysUntil <= 7;
-                    const monthlyCost = sub.billing === "monthly" ? sub.cost :
-                                       sub.billing === "yearly" ? sub.cost / 12 :
-                                       sub.billing === "quarterly" ? sub.cost / 3 :
-                                       sub.billing === "biannually" ? sub.cost / 6 : sub.cost;
+                    const monthlyCost = calculateMonthlyCost(sub);
 
                     return (
                       <div 
@@ -373,7 +376,7 @@ export default function Home() {
                             <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                ต่ออายุ: {new Date(sub.nextBillingDate).toLocaleDateString("th-TH", { 
+                                ต่ออายุ: {new Date(sub.next_billing_date).toLocaleDateString("th-TH", { 
                                   year: "numeric", 
                                   month: "short", 
                                   day: "numeric" 
@@ -381,12 +384,12 @@ export default function Home() {
                               </span>
                               <span className="flex items-center gap-1">
                                 <CreditCard className="w-4 h-4" />
-                                {sub.paymentMethod.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
+                                {sub.payment_method.split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ")}
                               </span>
-                              {sub.sharedWith && sub.sharedWith.length > 0 && (
+                              {sub.shared_with && sub.shared_with.length > 0 && (
                                 <span className="flex items-center gap-1">
                                   <Users className="w-4 h-4" />
-                                  แบ่งกับ {sub.sharedWith.length} คน
+                                  แบ่งกับ {sub.shared_with.length} คน
                                 </span>
                               )}
                             </div>
@@ -396,13 +399,10 @@ export default function Home() {
                         <div className="flex items-center gap-4">
                           <div className="text-right">
                             <div className="text-2xl font-bold text-slate-900 dark:text-white">
-                              ${Number(sub.cost).toFixed(2)}
+                              ${Number(sub.price).toFixed(2)}
                             </div>
                             <div className="text-sm text-slate-500 dark:text-slate-400">
-                              {sub.billing === "monthly" && "ต่อเดือน"}
-                              {sub.billing === "yearly" && "ต่อปี"}
-                              {sub.billing === "quarterly" && "ราย 3 เดือน"}
-                              {sub.billing === "biannually" && "ราย 6 เดือน"}
+                              {billingCycleLabels[sub.billing_cycle]}
                             </div>
                             <div className="text-xs text-slate-400 mt-1">
                               ≈ ${monthlyCost.toFixed(2)}/เดือน
@@ -475,6 +475,6 @@ export default function Home() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
-    </>
+    </AuthGuard>
   );
 }
