@@ -6,7 +6,7 @@ import { profileService } from "@/services/profileService";
 interface CurrencyContextType {
   preferredCurrency: string;
   setPreferredCurrency: (currency: string) => Promise<void>;
-  convertAmount: (amount: number, fromCurrency: string) => Promise<number>;
+  convertAmount: (amount: number, fromCurrency: string, toCurrency: string) => Promise<number>;
   formatAmount: (amount: number, fromCurrency: string) => Promise<string>;
   isLoading: boolean;
 }
@@ -52,7 +52,7 @@ export function CurrencyProvider({ children }: { children: ReactNode }) {
     }
   };
 
-  const convertAmount = async (amount: number, fromCurrency: string): Promise<number> => {
+  const convertAmount = async (amount: number, fromCurrency: string, toCurrency: string): Promise<number> => {
     if (fromCurrency === preferredCurrency) {
       return amount;
     }

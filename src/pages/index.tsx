@@ -95,7 +95,7 @@ export default function Home() {
       try {
         const processed = await Promise.all(
           subscriptions.map(async (sub) => {
-            const convertedAmount = await convertAmount(sub.amount, sub.currency || "USD", preferredCurrency);
+            const convertedAmount = await convertAmount(sub.amount, sub.currency || "USD");
             return {
               ...sub,
               amount: convertedAmount,
@@ -260,9 +260,6 @@ export default function Home() {
       console.error("Error signing out:", error);
     }
   };
-
-  const totalMonthly = subscriptions.reduce((sum, sub) => sum + calculateMonthlyCost(sub), 0);
-  const totalYearly = totalMonthly * 12;
 
   const getDaysUntilRenewal = (date: string) => {
     const today = new Date();
