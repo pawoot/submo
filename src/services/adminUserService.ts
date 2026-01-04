@@ -33,17 +33,18 @@ export const adminUserService = {
           .eq("user_id", profile.id);
 
         const activeSubscriptions = subscriptions?.filter(
-          (sub) => sub.status === "active"
+          (sub) => sub.is_active
         ) || [];
 
         const totalMonthlyCost = activeSubscriptions.reduce((sum, sub) => {
+          const price = sub.amount || 0;
           const monthlyCost =
             sub.billing_cycle === "monthly"
-              ? sub.price
+              ? price
               : sub.billing_cycle === "yearly"
-              ? sub.price / 12
+              ? price / 12
               : sub.billing_cycle === "quarterly"
-              ? sub.price / 3
+              ? price / 3
               : 0;
           return sum + monthlyCost;
         }, 0);

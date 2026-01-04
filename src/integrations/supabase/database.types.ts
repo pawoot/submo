@@ -139,29 +139,38 @@ export type Database = {
       }
       profiles: {
         Row: {
+          account_status: string | null
           avatar_url: string | null
           created_at: string | null
           email: string | null
           full_name: string | null
           id: string
+          kyc_verified: boolean | null
+          phone: string | null
           role: string | null
           updated_at: string | null
         }
         Insert: {
+          account_status?: string | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          kyc_verified?: boolean | null
+          phone?: string | null
           role?: string | null
           updated_at?: string | null
         }
         Update: {
+          account_status?: string | null
           avatar_url?: string | null
           created_at?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          kyc_verified?: boolean | null
+          phone?: string | null
           role?: string | null
           updated_at?: string | null
         }
