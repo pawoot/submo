@@ -9,9 +9,56 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Separator } from "@/components/ui/separator";
 import { Checkbox } from "@/components/ui/checkbox";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { authService } from "@/services/authService";
-import { Mail, Lock, Chrome, Loader2, ArrowLeft, CheckCircle2 } from "lucide-react";
+import { profileService } from "@/services/profileService";
+import { Mail, Lock, Chrome, Loader2, ArrowLeft, CheckCircle2, Globe } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
+
+// Country list in Thai
+const COUNTRIES = [
+  { code: "TH", name: "ไทย", nameEn: "Thailand" },
+  { code: "US", name: "สหรัฐอเมริกา", nameEn: "United States" },
+  { code: "GB", name: "สหราชอาณาจักร", nameEn: "United Kingdom" },
+  { code: "JP", name: "ญี่ปุ่น", nameEn: "Japan" },
+  { code: "CN", name: "จีน", nameEn: "China" },
+  { code: "KR", name: "เกาหลีใต้", nameEn: "South Korea" },
+  { code: "SG", name: "สิงคโปร์", nameEn: "Singapore" },
+  { code: "MY", name: "มาเลเซีย", nameEn: "Malaysia" },
+  { code: "ID", name: "อินโดนีเซีย", nameEn: "Indonesia" },
+  { code: "VN", name: "เวียดนาม", nameEn: "Vietnam" },
+  { code: "PH", name: "ฟิลิปปินส์", nameEn: "Philippines" },
+  { code: "IN", name: "อินเดีย", nameEn: "India" },
+  { code: "AU", name: "ออสเตรเลีย", nameEn: "Australia" },
+  { code: "CA", name: "แคนาดา", nameEn: "Canada" },
+  { code: "DE", name: "เยอรมนี", nameEn: "Germany" },
+  { code: "FR", name: "ฝรั่งเศส", nameEn: "France" },
+  { code: "IT", name: "อิตาลี", nameEn: "Italy" },
+  { code: "ES", name: "สเปน", nameEn: "Spain" },
+  { code: "NL", name: "เนเธอร์แลนด์", nameEn: "Netherlands" },
+  { code: "SE", name: "สวีเดน", nameEn: "Sweden" },
+  { code: "NO", name: "นอร์เวย์", nameEn: "Norway" },
+  { code: "DK", name: "เดนมาร์ก", nameEn: "Denmark" },
+  { code: "FI", name: "ฟินแลนด์", nameEn: "Finland" },
+  { code: "CH", name: "สวิตเซอร์แลนด์", nameEn: "Switzerland" },
+  { code: "AT", name: "ออสเตรีย", nameEn: "Austria" },
+  { code: "BE", name: "เบลเยียม", nameEn: "Belgium" },
+  { code: "NZ", name: "นิวซีแลนด์", nameEn: "New Zealand" },
+  { code: "BR", name: "บราซิล", nameEn: "Brazil" },
+  { code: "MX", name: "เม็กซิโก", nameEn: "Mexico" },
+  { code: "AR", name: "อาร์เจนตินา", nameEn: "Argentina" },
+  { code: "RU", name: "รัสเซีย", nameEn: "Russia" },
+  { code: "ZA", name: "แอฟริกาใต้", nameEn: "South Africa" },
+  { code: "AE", name: "สหรัฐอาหรับเอมิเรตส์", nameEn: "United Arab Emirates" },
+  { code: "SA", name: "ซาอุดีอาระเบีย", nameEn: "Saudi Arabia" },
+  { code: "IL", name: "อิสราเอล", nameEn: "Israel" },
+  { code: "TR", name: "ตุรกี", nameEn: "Turkey" },
+  { code: "EG", name: "อียิปต์", nameEn: "Egypt" },
+  { code: "NG", name: "ไนจีเรีย", nameEn: "Nigeria" },
+  { code: "KE", name: "เคนยา", nameEn: "Kenya" },
+  { code: "PK", name: "ปากีสถาน", nameEn: "Pakistan" },
+  { code: "BD", name: "บังกลาเทศ", nameEn: "Bangladesh" },
+].sort((a, b) => a.name.localeCompare(b.name, "th"));
 
 export default function SignUpPage() {
   const router = useRouter();
@@ -19,6 +66,8 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
+  const [country, setCountry] = useState("");
+  const [detectingCountry, setDetectingCountry] = useState(true);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
@@ -34,6 +83,28 @@ export default function SignUpPage() {
       }
     };
     checkAuth();
+
+    // Detect country from IP
+    const detectCountry = async () => {
+      try {
+        const response = await fetch("https://ipapi.co/json/");
+        const data = await response.json();
+        
+        if (data.country_code) {
+          // Check if detected country is in our list
+          const countryExists = COUNTRIES.find(c => c.code === data.country_code);
+          if (countryExists) {
+            setCountry(data.country_code);
+          }
+        }
+      } catch (error) {
+        console.error("Failed to detect country:", error);
+      } finally {
+        setDetectingCountry(false);
+      }
+    };
+    
+    detectCountry();
   }, [router]);
 
   const validatePassword = () => {
@@ -57,6 +128,11 @@ export default function SignUpPage() {
       return;
     }
 
+    if (!country) {
+      setError("กรุณาเลือกประเทศ");
+      return;
+    }
+
     if (!validatePassword()) {
       return;
     }
@@ -74,6 +150,13 @@ export default function SignUpPage() {
           variant: "destructive",
         });
       } else if (user) {
+        // Update profile with country
+        try {
+          await profileService.updateProfile(user.id, { country });
+        } catch (profileError) {
+          console.error("Failed to update country:", profileError);
+        }
+
         setSuccess(true);
         toast({
           title: "สมัครสมาชิกสำเร็จ!",
@@ -274,6 +357,38 @@ export default function SignUpPage() {
                       minLength={6}
                     />
                   </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label htmlFor="country">ประเทศ</Label>
+                  <div className="relative">
+                    <Globe className="absolute left-3 top-3 h-5 w-5 text-gray-400 z-10" />
+                    <Select
+                      value={country}
+                      onValueChange={setCountry}
+                      disabled={loading || googleLoading || detectingCountry}
+                    >
+                      <SelectTrigger className="pl-10 h-12">
+                        <SelectValue placeholder={detectingCountry ? "กำลังตรวจสอบ..." : "เลือกประเทศ"} />
+                      </SelectTrigger>
+                      <SelectContent className="max-h-[300px]">
+                        {COUNTRIES.map((country) => (
+                          <SelectItem key={country.code} value={country.code}>
+                            <span className="flex items-center gap-2">
+                              <span className="text-base">{country.name}</span>
+                              <span className="text-xs text-gray-500">({country.nameEn})</span>
+                            </span>
+                          </SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                  {detectingCountry && (
+                    <p className="text-xs text-gray-500 flex items-center gap-1">
+                      <Loader2 className="w-3 h-3 animate-spin" />
+                      กำลังตรวจสอบประเทศจาก IP ของคุณ...
+                    </p>
+                  )}
                 </div>
 
                 <div className="flex items-center space-x-2">

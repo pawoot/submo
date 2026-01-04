@@ -141,6 +141,7 @@ export type Database = {
         Row: {
           account_status: string | null
           avatar_url: string | null
+          country: string | null
           created_at: string | null
           date_of_birth: string | null
           email: string | null
@@ -154,6 +155,7 @@ export type Database = {
         Insert: {
           account_status?: string | null
           avatar_url?: string | null
+          country?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
@@ -167,6 +169,7 @@ export type Database = {
         Update: {
           account_status?: string | null
           avatar_url?: string | null
+          country?: string | null
           created_at?: string | null
           date_of_birth?: string | null
           email?: string | null
