@@ -40,7 +40,7 @@ export const adminUserService = {
             const currency = sub.currency || "THB";
 
             // Convert to THB
-            const priceInTHB = await currencyService.convertAmount(
+            const priceInTHB = await currencyService.convertCurrency(
               price,
               currency,
               "THB"
