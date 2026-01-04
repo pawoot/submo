@@ -31,7 +31,7 @@ interface Subscription {
   cost: number;
   currency: string;
   billing: string;
-  nextBilling: string;
+  nextBillingDate: string;
   category: string;
   paymentMethod: string;
   sharedWith: string[];
@@ -67,7 +67,7 @@ export default function Home() {
           cost: 52.99,
           currency: "USD",
           billing: "monthly",
-          nextBilling: "2026-01-15",
+          nextBillingDate: "2026-01-15",
           category: "design",
           paymentMethod: "credit-card",
           sharedWith: ["user1@example.com", "user2@example.com"],
@@ -79,7 +79,7 @@ export default function Home() {
           cost: 12,
           currency: "USD",
           billing: "monthly",
-          nextBilling: "2026-01-20",
+          nextBillingDate: "2026-01-20",
           category: "design",
           paymentMethod: "credit-card",
           sharedWith: [],
@@ -91,7 +91,7 @@ export default function Home() {
           cost: 4,
           currency: "USD",
           billing: "monthly",
-          nextBilling: "2026-01-10",
+          nextBillingDate: "2026-01-10",
           category: "development",
           paymentMethod: "credit-card",
           sharedWith: ["dev1@example.com", "dev2@example.com", "dev3@example.com", "dev4@example.com", "dev5@example.com"],
@@ -103,7 +103,7 @@ export default function Home() {
           cost: 8,
           currency: "USD",
           billing: "monthly",
-          nextBilling: "2026-01-25",
+          nextBillingDate: "2026-01-25",
           category: "productivity",
           paymentMethod: "credit-card",
           sharedWith: ["team1@example.com", "team2@example.com", "team3@example.com"],
@@ -151,10 +151,10 @@ export default function Home() {
         });
         break;
       case "date-asc":
-        sorted.sort((a, b) => new Date(a.nextBilling).getTime() - new Date(b.nextBilling).getTime());
+        sorted.sort((a, b) => new Date(a.nextBillingDate).getTime() - new Date(b.nextBillingDate).getTime());
         break;
       case "date-desc":
-        sorted.sort((a, b) => new Date(b.nextBilling).getTime() - new Date(a.nextBilling).getTime());
+        sorted.sort((a, b) => new Date(b.nextBillingDate).getTime() - new Date(a.nextBillingDate).getTime());
         break;
       case "category":
         sorted.sort((a, b) => a.category.localeCompare(b.category));
@@ -303,7 +303,7 @@ export default function Home() {
               </CardHeader>
               <CardContent>
                 <div className="text-3xl font-bold text-slate-900 dark:text-white">
-                  {subscriptions.filter(s => getDaysUntilRenewal(s.nextBilling) <= 7).length}
+                  {subscriptions.filter(s => getDaysUntilRenewal(s.nextBillingDate) <= 7).length}
                 </div>
                 <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                   ภายใน 7 วัน
@@ -346,7 +346,7 @@ export default function Home() {
               <CardContent>
                 <div className="space-y-4">
                   {sortedSubscriptions.map((sub) => {
-                    const daysUntil = getDaysUntilRenewal(sub.nextBilling);
+                    const daysUntil = getDaysUntilRenewal(sub.nextBillingDate);
                     const isUrgent = daysUntil <= 7;
                     const monthlyCost = sub.billing === "monthly" ? sub.cost :
                                        sub.billing === "yearly" ? sub.cost / 12 :
@@ -373,7 +373,7 @@ export default function Home() {
                             <div className="flex items-center gap-4 text-sm text-slate-600 dark:text-slate-400">
                               <span className="flex items-center gap-1">
                                 <Calendar className="w-4 h-4" />
-                                ต่ออายุ: {new Date(sub.nextBilling).toLocaleDateString("th-TH", { 
+                                ต่ออายุ: {new Date(sub.nextBillingDate).toLocaleDateString("th-TH", { 
                                   year: "numeric", 
                                   month: "short", 
                                   day: "numeric" 
