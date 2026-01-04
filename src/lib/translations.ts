@@ -24,6 +24,22 @@ export const translations = {
     th: "ตั้งค่า",
     en: "Settings"
   },
+  "nav.admin": {
+    th: "แอดมิน",
+    en: "Admin Panel"
+  },
+  "nav.stats": {
+    th: "สถิติ",
+    en: "Statistics"
+  },
+  "nav.login": {
+    th: "เข้าสู่ระบบ",
+    en: "Login"
+  },
+  "nav.signup": {
+    th: "สมัครสมาชิก",
+    en: "Sign Up"
+  },
 
   // Home Page - Header
   "home.title": {
@@ -41,6 +57,14 @@ export const translations = {
   "home.seo.description": {
     th: "ระบบติดตามและจัดการ Subscription ทั้งหมดของคุณ ตรวจสอบค่าใช้จ่าย วันหมดอายุ และแบ่งปันค่าใช้จ่ายได้ง่าย",
     en: "Track and manage all your subscriptions. Monitor costs, expiration dates, and share expenses easily."
+  },
+  "home.welcome": {
+    th: "ยินดีต้อนรับสู่ Submo.ai",
+    en: "Welcome to Submo.ai"
+  },
+  "home.description": {
+    th: "จัดการ Subscription ทั้งหมดของคุณในที่เดียว ติดตามค่าใช้จ่าย และไม่พลาดทุกการต่ออายุ",
+    en: "Manage all your subscriptions in one place. Track expenses and never miss a renewal."
   },
 
   // Dashboard Cards
@@ -194,6 +218,10 @@ export const translations = {
     th: "/เดือน",
     en: "/month"
   },
+  "subscriptions.daysLeft": {
+    th: "เหลือ {days} วัน",
+    en: "{days} days left"
+  },
 
   // Add Subscription Page
   "addSub.title": {
@@ -316,6 +344,18 @@ export const translations = {
     th: "เทมเพลตยอดนิยม",
     en: "Popular Templates"
   },
+  "addSub.browseAll": {
+    th: "ดูทั้งหมด",
+    en: "Browse all"
+  },
+  "addSub.quickAdd": {
+    th: "เพิ่มด่วน",
+    en: "Quick Add"
+  },
+  "addSub.selectService": {
+    th: "เลือกบริการที่ต้องการเพิ่ม",
+    en: "Select a service to add"
+  },
   "addSub.templateSelected": {
     th: "เลือกบริการสำเร็จ!",
     en: "Service selected!"
@@ -323,6 +363,22 @@ export const translations = {
   "addSub.templateSelectedDesc": {
     th: "กรอกข้อมูลอัตโนมัติแล้ว",
     en: "Auto-filled"
+  },
+  "addSub.basicInfo": {
+    th: "ข้อมูลพื้นฐาน",
+    en: "Basic Information"
+  },
+  "addSub.pricingInfo": {
+    th: "ข้อมูลราคา",
+    en: "Pricing Information"
+  },
+  "addSub.paymentInfo": {
+    th: "ข้อมูลการชำระเงิน",
+    en: "Payment Information"
+  },
+  "addSub.additionalInfo": {
+    th: "ข้อมูลเพิ่มเติม",
+    en: "Additional Information"
   },
 
   // Edit Subscription Page
@@ -404,6 +460,10 @@ export const translations = {
     th: "บันทึกการเปลี่ยนแปลงสำเร็จ!",
     en: "Changes saved successfully!"
   },
+  "profile.error": {
+    th: "เกิดข้อผิดพลาดในการบันทึก",
+    en: "Error saving changes"
+  },
 
   // Notifications Page
   "notif.title": {
@@ -433,6 +493,14 @@ export const translations = {
   "notif.delete": {
     th: "ลบ",
     en: "Delete"
+  },
+  "notif.markedAllRead": {
+    th: "ทำเครื่องหมายทั้งหมดว่าอ่านแล้ว!",
+    en: "All notifications marked as read!"
+  },
+  "notif.deleted": {
+    th: "ลบการแจ้งเตือนแล้ว",
+    en: "Notification deleted"
   },
 
   // Auth Pages
@@ -483,6 +551,130 @@ export const translations = {
   "auth.backToLogin": {
     th: "กลับไปหน้าเข้าสู่ระบบ",
     en: "Back to login"
+  },
+  "auth.emailPlaceholder": {
+    th: "อีเมลของคุณ",
+    en: "Your email"
+  },
+  "auth.passwordPlaceholder": {
+    th: "รหัสผ่าน",
+    en: "Password"
+  },
+  "auth.fullNamePlaceholder": {
+    th: "ชื่อ-นามสกุล",
+    en: "Full Name"
+  },
+  "auth.loggingIn": {
+    th: "กำลังเข้าสู่ระบบ...",
+    en: "Logging in..."
+  },
+  "auth.signingUp": {
+    th: "กำลังสมัครสมาชิก...",
+    en: "Signing up..."
+  },
+  "auth.loginSuccess": {
+    th: "เข้าสู่ระบบสำเร็จ!",
+    en: "Login successful!"
+  },
+  "auth.signupSuccess": {
+    th: "สมัครสมาชิกสำเร็จ!",
+    en: "Sign up successful!"
+  },
+  "auth.loginError": {
+    th: "เข้าสู่ระบบไม่สำเร็จ",
+    en: "Login failed"
+  },
+  "auth.signupError": {
+    th: "สมัครสมาชิกไม่สำเร็จ",
+    en: "Sign up failed"
+  },
+  "auth.invalidCredentials": {
+    th: "อีเมลหรือรหัสผ่านไม่ถูกต้อง",
+    en: "Invalid email or password"
+  },
+  "auth.emailInUse": {
+    th: "อีเมลนี้ถูกใช้งานแล้ว",
+    en: "Email already in use"
+  },
+  "auth.weakPassword": {
+    th: "รหัสผ่านไม่ปลอดภัยเพียงพอ",
+    en: "Password is too weak"
+  },
+  "auth.passwordMismatch": {
+    th: "รหัสผ่านไม่ตรงกัน",
+    en: "Passwords do not match"
+  },
+  "auth.resetEmailSent": {
+    th: "ส่งอีเมลรีเซ็ตรหัสผ่านแล้ว",
+    en: "Password reset email sent"
+  },
+  "auth.resetSuccess": {
+    th: "รีเซ็ตรหัสผ่านสำเร็จ!",
+    en: "Password reset successful!"
+  },
+  "auth.checkEmail": {
+    th: "ตรวจสอบอีเมลของคุณ",
+    en: "Check your email"
+  },
+  "auth.resetLinkSent": {
+    th: "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปยัง",
+    en: "We've sent a password reset link to"
+  },
+  "auth.checkSpam": {
+    th: "กรุณาตรวจสอบโฟลเดอร์ Spam ด้วย",
+    en: "Please check your spam folder"
+  },
+  "auth.newPassword": {
+    th: "รหัสผ่านใหม่",
+    en: "New Password"
+  },
+  "auth.confirmNewPassword": {
+    th: "ยืนยันรหัสผ่านใหม่",
+    en: "Confirm New Password"
+  },
+  "auth.changePassword": {
+    th: "เปลี่ยนรหัสผ่าน",
+    en: "Change Password"
+  },
+  "auth.changingPassword": {
+    th: "กำลังเปลี่ยนรหัสผ่าน...",
+    en: "Changing password..."
+  },
+  "auth.passwordChanged": {
+    th: "เปลี่ยนรหัสผ่านสำเร็จ!",
+    en: "Password changed successfully!"
+  },
+  "auth.redirecting": {
+    th: "กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...",
+    en: "Redirecting to login..."
+  },
+  "auth.invalidToken": {
+    th: "ลิงก์ไม่ถูกต้องหรือหมดอายุแล้ว",
+    en: "Invalid or expired link"
+  },
+  "auth.passwordStrength": {
+    th: "ความแข็งแกร่งของรหัสผ่าน",
+    en: "Password Strength"
+  },
+  "auth.weak": {
+    th: "อ่อนแอ",
+    en: "Weak"
+  },
+  "auth.medium": {
+    th: "ปานกลาง",
+    en: "Medium"
+  },
+  "auth.strong": {
+    th: "แข็งแกร่ง",
+    en: "Strong"
+  },
+  "auth.passwordsMatch": {
+    th: "รหัสผ่านตรงกัน",
+    en: "Passwords match"
+  },
+  "auth.passwordsDoNotMatch": {
+    th: "รหัสผ่านไม่ตรงกัน",
+    en: "Passwords do not match"
   },
 
   // Categories
@@ -617,6 +809,132 @@ export const translations = {
   "common.view": {
     th: "ดู",
     en: "View"
+  },
+  "common.close": {
+    th: "ปิด",
+    en: "Close"
+  },
+  "common.confirm": {
+    th: "ยืนยัน",
+    en: "Confirm"
+  },
+  "common.yes": {
+    th: "ใช่",
+    en: "Yes"
+  },
+  "common.no": {
+    th: "ไม่",
+    en: "No"
+  },
+  "common.optional": {
+    th: "(ไม่จำเป็น)",
+    en: "(Optional)"
+  },
+  "common.required": {
+    th: "(จำเป็น)",
+    en: "(Required)"
+  },
+
+  // Validation Messages
+  "validation.required": {
+    th: "กรุณากรอกข้อมูล",
+    en: "This field is required"
+  },
+  "validation.invalidEmail": {
+    th: "รูปแบบอีเมลไม่ถูกต้อง",
+    en: "Invalid email format"
+  },
+  "validation.invalidUrl": {
+    th: "รูปแบบ URL ไม่ถูกต้อง",
+    en: "Invalid URL format"
+  },
+  "validation.minLength": {
+    th: "ต้องมีอย่างน้อย",
+    en: "Must be at least"
+  },
+  "validation.maxLength": {
+    th: "ต้องไม่เกิน",
+    en: "Must not exceed"
+  },
+  "validation.characters": {
+    th: "ตัวอักษร",
+    en: "characters"
+  },
+  "validation.positiveNumber": {
+    th: "ต้องเป็นตัวเลขที่มากกว่า 0",
+    en: "Must be a positive number"
+  },
+  "validation.invalidDate": {
+    th: "วันที่ไม่ถูกต้อง",
+    en: "Invalid date"
+  },
+
+  // Toast Messages
+  "toast.deleteSuccess": {
+    th: "ลบสำเร็จ!",
+    en: "Deleted successfully!"
+  },
+  "toast.deleteError": {
+    th: "ลบไม่สำเร็จ",
+    en: "Failed to delete"
+  },
+  "toast.updateSuccess": {
+    th: "อัพเดตสำเร็จ!",
+    en: "Updated successfully!"
+  },
+  "toast.updateError": {
+    th: "อัพเดตไม่สำเร็จ",
+    en: "Failed to update"
+  },
+  "toast.createSuccess": {
+    th: "สร้างสำเร็จ!",
+    en: "Created successfully!"
+  },
+  "toast.createError": {
+    th: "สร้างไม่สำเร็จ",
+    en: "Failed to create"
+  },
+  "toast.loadError": {
+    th: "โหลดข้อมูลไม่สำเร็จ",
+    en: "Failed to load data"
+  },
+  "toast.networkError": {
+    th: "เกิดข้อผิดพลาดในการเชื่อมต่อ",
+    en: "Network error occurred"
+  },
+  "toast.unknownError": {
+    th: "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
+    en: "An unknown error occurred"
+  },
+
+  // Date & Time
+  "time.today": {
+    th: "วันนี้",
+    en: "Today"
+  },
+  "time.tomorrow": {
+    th: "พรุ่งนี้",
+    en: "Tomorrow"
+  },
+  "time.yesterday": {
+    th: "เมื่อวาน",
+    en: "Yesterday"
+  },
+  "time.daysAgo": {
+    th: "วันที่แล้ว",
+    en: "days ago"
+  },
+  "time.hoursAgo": {
+    th: "ชั่วโมงที่แล้ว",
+    en: "hours ago"
+  },
+  "time.minutesAgo": {
+    th: "นาทีที่แล้ว",
+    en: "minutes ago"
+  },
+  "time.justNow": {
+    th: "เมื่อสักครู่",
+    en: "Just now"
   },
 };
 

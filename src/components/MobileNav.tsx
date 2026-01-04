@@ -58,7 +58,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
 
   const menuItems = [
     { icon: Home, label: t("nav.home"), href: "/", color: "text-blue-600" },
-    { icon: BarChart3, label: "สถิติ", href: "/", color: "text-green-600", hash: "#stats" },
+    { icon: BarChart3, label: t("nav.stats"), href: "/", color: "text-green-600", hash: "#stats" },
     { icon: PlusCircle, label: t("nav.addSubscription"), href: "/add-subscription", color: "text-purple-600" },
     { icon: Bell, label: t("nav.notifications"), href: "/notifications", color: "text-orange-600", badge: unreadCount },
     { icon: UserIcon, label: t("nav.profile"), href: "/profile", color: "text-pink-600" },
@@ -66,7 +66,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
 
   const adminMenuItems = isAdmin
     ? [
-        { icon: Shield, label: "Admin Dashboard", href: "/admin", color: "text-red-600" },
+        { icon: Shield, label: t("nav.admin"), href: "/admin", color: "text-red-600" },
       ]
     : [];
 

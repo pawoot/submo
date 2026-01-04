@@ -286,15 +286,15 @@ export default function Home() {
       await loadSubscriptions();
       
       toast({
-        title: "🗑️ ลบ Subscription สำเร็จ",
-        description: "รายการถูกลบออกจากระบบแล้ว",
+        title: t("toast.deleteSuccess"),
+        description: t("toast.deleted"),
         duration: 3000,
       });
     } catch (error) {
       console.error("Error deleting subscription:", error);
       toast({
-        title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถลบรายการได้",
+        title: t("common.error"),
+        description: t("toast.deleteError"),
         variant: "destructive",
         duration: 3000,
       });
@@ -307,8 +307,8 @@ export default function Home() {
       await authService.signOut();
       router.push("/auth/login");
       toast({
-        title: "👋 ออกจากระบบสำเร็จ",
-        description: "แล้วพบกันใหม่",
+        title: t("nav.logout"),
+        description: t("common.success"),
         duration: 3000,
       });
     } catch (error) {
@@ -324,22 +324,23 @@ export default function Home() {
   };
 
   const categoryLabels: { [key: string]: string } = {
-    design: "Design",
-    development: "Development",
-    productivity: "Productivity",
-    entertainment: "Entertainment",
-    storage: "Storage",
-    communication: "Communication",
-    marketing: "Marketing",
-    education: "Education",
-    other: "Other"
+    design: t("category.design"),
+    development: t("category.development"),
+    productivity: t("category.productivity"),
+    entertainment: t("category.entertainment"),
+    "cloud-storage": t("category.cloud-storage"),
+    gaming: t("category.gaming"),
+    education: t("category.education"),
+    fitness: t("category.fitness"),
+    news: t("category.news"),
+    other: t("category.other")
   };
 
   const billingCycleLabels: { [key: string]: string } = {
-    monthly: "ต่อเดือน",
-    quarterly: "ราย 3 เดือน",
-    "half-yearly": "ราย 6 เดือน",
-    yearly: "ต่อปี"
+    monthly: t("subscriptions.monthly"),
+    quarterly: t("subscriptions.quarterly") || "Quarterly",
+    "half-yearly": t("subscriptions.halfYearly") || "Half-yearly",
+    yearly: t("subscriptions.yearly")
   };
 
   if (loading) {
