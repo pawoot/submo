@@ -338,8 +338,8 @@ export default function Home() {
 
   const billingCycleLabels: { [key: string]: string } = {
     monthly: t("subscriptions.monthly"),
-    quarterly: t("subscriptions.quarterly") || "Quarterly",
-    "half-yearly": t("subscriptions.halfYearly") || "Half-yearly",
+    quarterly: t("subscriptions.quarterly"),
+    "half-yearly": t("subscriptions.halfYearly"),
     yearly: t("subscriptions.yearly")
   };
 
@@ -349,7 +349,7 @@ export default function Home() {
         <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-indigo-50 via-white to-purple-50">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-lg text-gray-600">กำลังโหลดข้อมูล...</p>
+            <p className="text-lg text-gray-600">{t("common.loading")}</p>
           </div>
         </div>
       </AuthGuard>
@@ -379,7 +379,7 @@ export default function Home() {
           <div className="container mx-auto px-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <div={`rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-all duration-300 ${
+                <div className={`rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center transition-all duration-300 ${
                   scrolled ? "w-8 h-8" : "w-10 h-10"
                 }`}>
                   <CreditCard className={`text-white transition-all duration-300 ${
@@ -400,10 +400,10 @@ export default function Home() {
                       variant="outline" 
                       size="sm"
                       className="ml-4 gap-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300 dark:border-purple-800 dark:hover:bg-purple-950"
-                      title="Admin Panel"
+                      title={t("nav.admin")}
                     >
                       <Settings className="w-4 h-4 text-purple-600 dark:text-purple-400" />
-                      <span className="hidden sm:inline text-purple-600 dark:text-purple-400 font-medium">Admin Panel</span>
+                      <span className="hidden sm:inline text-purple-600 dark:text-purple-400 font-medium">{t("nav.admin")}</span>
                     </Button>
                   </Link>
                 )}
@@ -426,7 +426,7 @@ export default function Home() {
                 <Link href="/add-subscription">
                   <Button size="lg" className="gap-2">
                     <Plus className="w-5 h-5" />
-                    <span className="hidden sm:inline">เพิ่ม Subscription</span>
+                    <span className="hidden sm:inline">{t("nav.addSubscription")}</span>
                   </Button>
                 </Link>
                 
@@ -444,7 +444,7 @@ export default function Home() {
                   <DropdownMenuContent className="w-56" align="end" forceMount>
                     <DropdownMenuLabel className="font-normal">
                       <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">{profile?.full_name || "ผู้ใช้"}</p>
+                        <p className="text-sm font-medium leading-none">{profile?.full_name || t("profile.noName")}</p>
                         <p className="text-xs leading-none text-muted-foreground">{userEmail}</p>
                       </div>
                     </DropdownMenuLabel>
@@ -452,13 +452,13 @@ export default function Home() {
                     <DropdownMenuItem asChild>
                       <Link href="/profile" className="cursor-pointer">
                         <UserIcon className="w-4 h-4 mr-2" />
-                        โปรไฟล์
+                        {t("nav.profile")}
                       </Link>
                     </DropdownMenuItem>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 focus:text-red-600">
                       <LogOut className="w-4 h-4 mr-2" />
-                      ออกจากระบบ
+                      {t("nav.logout")}
                     </DropdownMenuItem>
                   </DropdownMenuContent>
                 </DropdownMenu>
@@ -540,33 +540,6 @@ export default function Home() {
 
           {/* กราฟสถิติ */}
           <SubscriptionCharts subscriptions={displaySubscriptions} />
-
-          {/* Desktop Search Section - Detailed (with sort dropdown) */}
-          <div className="hidden md:block mb-8">
-            <Card className="shadow-sm">
-              <CardContent className="p-4">
-                <div className="flex flex-col md:flex-row gap-4">
-                  <div className="md:w-48">
-                    <label className="text-sm font-medium mb-2 block">{t("subscriptions.sort")}</label>
-                    <Select value={sortOption} onValueChange={(value) => setSortOption(value as SortOption)}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("subscriptions.sort")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="date-asc">{t("subscriptions.sortNextBilling")}</SelectItem>
-                        <SelectItem value="date-desc">{t("subscriptions.sortNextBillingDesc")}</SelectItem>
-                        <SelectItem value="cost-desc">{t("subscriptions.sortPriceHigh")}</SelectItem>
-                        <SelectItem value="cost-asc">{t("subscriptions.sortPriceLow")}</SelectItem>
-                        <SelectItem value="name-asc">{t("subscriptions.sortNameAZ")}</SelectItem>
-                        <SelectItem value="name-desc">{t("subscriptions.sortNameZA")}</SelectItem>
-                        <SelectItem value="category">{t("subscriptions.sortCategory")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-              </CardContent>
-            </Card>
-          </div>
 
           {sortedSubscriptions.length > 0 ? (
             <Card id="subscription-list" className="shadow-sm">
@@ -654,7 +627,7 @@ export default function Home() {
                                 </div>
                                 {isUrgent && (
                                   <span className="inline-block mt-1 text-[10px] text-white bg-red-500 px-1.5 py-0.5 rounded-sm">
-                                    เหลือ {daysUntil} วัน
+                                    {t("subscriptions.daysLeft").replace("{days}", daysUntil.toString())}
                                   </span>
                                 )}
                             </div>

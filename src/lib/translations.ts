@@ -179,8 +179,12 @@ export const translations = {
     en: "Quarterly"
   },
   "subscriptions.halfYearly": {
-    th: "รายครึ่งปี",
+    th: "ราย 6 เดือน",
     en: "Half-yearly"
+  },
+  "subscriptions.daysLeft": {
+    th: "เหลือ {days} วัน",
+    en: "{days} days left"
   },
   "subscriptions.yearly": {
     th: "รายปี",
@@ -225,10 +229,6 @@ export const translations = {
   "subscriptions.perMonth": {
     th: "/เดือน",
     en: "/month"
-  },
-  "subscriptions.daysLeft": {
-    th: "เหลือ {days} วัน",
-    en: "{days} days left"
   },
 
   // Search & Filter
