@@ -491,10 +491,13 @@ export const translations = {
     th: "ดูทั้งหมด",
     en: "Browse all"
   },
-  "addSub.quickAdd": "เพิ่มด่วนจากบริการยอดนิยม",
+  "addSub.quickAdd": {
+    th: "เพิ่มด่วนจากบริการยอดนิยม",
+    en: "Quick Add from Popular Services"
+  },
   "addSub.selectService": {
-    th: "เลือกบริการที่ต้องการเพิ่ม",
-    en: "Select a service to add"
+    th: "เลือกบริการ",
+    en: "Select a Service"
   },
   "addSub.templateSelected": {
     th: "เลือกบริการสำเร็จ!",
@@ -504,28 +507,82 @@ export const translations = {
     th: "กรอกข้อมูลอัตโนมัติแล้ว",
     en: "Auto-filled"
   },
-  "addSub.basicInfo": "ข้อมูลบริการและราคา",
+  "addSub.basicInfo": {
+    th: "ข้อมูลบริการและราคา",
+    en: "Subscription Information"
+  },
   "addSub.pricingInfo": {
     th: "ข้อมูลราคา",
     en: "Pricing Information"
   },
-  "addSub.paymentInfo": "การเรียกเก็บเงิน",
-  "addSub.additionalInfo": "ข้อมูลเพิ่มเติม",
-  "addSub.usageFrequency": "ความถี่ในการใช้งาน",
-  "addSub.often": "ใช้บ่อย (ทุกวัน)",
-  "addSub.sometimes": "ใช้บางครั้ง (สัปดาห์ละครั้ง)",
-  "addSub.rarely": "ใช้นานๆ ครั้ง (เดือนละครั้ง)",
-  "addSub.summary": "สรุปค่าใช้จ่าย",
-  "addSub.subscription": "บริการ",
-  "addSub.monthlyCost": "ค่าใช้จ่ายต่อเดือน",
-  "addSub.yearlyCost": "ค่าใช้จ่ายต่อปี",
-  "addSub.billedYearly": "เรียกเก็บรายปี",
-  "addSub.calculatedYearly": "คำนวณจากรายเดือน",
-  "addSub.highCostWarning": "ค่าใช้จ่ายสูงกว่าปกติ",
-  "addSub.highCostDesc": "รายการนี้มีค่าใช้จ่ายสูงกว่าค่าเฉลี่ยรายเดือนของคุณ",
-  "addSub.autoSelected": "เลือกอัตโนมัติจาก Template",
-  "addSub.nextBilling": "วันเรียกเก็บเงินถัดไป",
-  "addSub.autoCalculated": "คำนวณอัตโนมัติจากรอบบิล",
+  "addSub.paymentInfo": {
+    th: "การเรียกเก็บเงิน",
+    en: "Billing & Payment"
+  },
+  "addSub.additionalInfo": {
+    th: "ข้อมูลเพิ่มเติม",
+    en: "Additional Information"
+  },
+  "addSub.usageFrequency": {
+    th: "ความถี่ในการใช้งาน",
+    en: "Usage Frequency"
+  },
+  "addSub.often": {
+    th: "ใช้บ่อย (ทุกวัน)",
+    en: "Often (Daily)"
+  },
+  "addSub.sometimes": {
+    th: "ใช้บางครั้ง (สัปดาห์ละครั้ง)",
+    en: "Sometimes (Weekly)"
+  },
+  "addSub.rarely": {
+    th: "ใช้นานๆ ครั้ง (เดือนละครั้ง)",
+    en: "Rarely (Monthly)"
+  },
+  "addSub.summary": {
+    th: "สรุปค่าใช้จ่าย",
+    en: "Cost Summary"
+  },
+  "addSub.subscription": {
+    th: "บริการ",
+    en: "Subscription"
+  },
+  "addSub.monthlyCost": {
+    th: "ค่าใช้จ่ายต่อเดือน",
+    en: "Monthly Cost"
+  },
+  "addSub.yearlyCost": {
+    th: "ค่าใช้จ่ายต่อปี",
+    en: "Yearly Cost"
+  },
+  "addSub.billedYearly": {
+    th: "เรียกเก็บรายปี",
+    en: "Billed Yearly"
+  },
+  "addSub.calculatedYearly": {
+    th: "คำนวณจากรายเดือน",
+    en: "Calculated Yearly"
+  },
+  "addSub.highCostWarning": {
+    th: "ค่าใช้จ่ายสูงกว่าปกติ",
+    en: "High Cost Warning"
+  },
+  "addSub.highCostDesc": {
+    th: "รายการนี้มีค่าใช้จ่ายสูงกว่าค่าเฉลี่ยรายเดือนของคุณ",
+    en: "This item has a higher cost than your average monthly expense."
+  },
+  "addSub.autoSelected": {
+    th: "เลือกอัตโนมัติจาก Template",
+    en: "Auto-selected from Template"
+  },
+  "addSub.nextBilling": {
+    th: "วันเรียกเก็บเงินถัดไป",
+    en: "Next Billing Date"
+  },
+  "addSub.autoCalculated": {
+    th: "คำนวณอัตโนมัติจากรอบบิล",
+    en: "Auto-calculated from Invoice"
+  },
 
   // Edit Subscription Page
   "editSub.title": {
@@ -1752,10 +1809,6 @@ export const translations = {
   "addSub.subtitle": {
     th: "เพิ่มรายการใหม่เพื่อติดตามค่าใช้จ่าย",
     en: "Add a new subscription to track expenses"
-  },
-  "addSub.selectService": {
-    th: "เลือกบริการ",
-    en: "Select a Service"
   },
   "addSub.customSubscription": {
     th: "Custom Subscription",
