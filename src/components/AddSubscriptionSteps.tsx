@@ -453,8 +453,7 @@ export function AddSubscriptionSteps({
                       <PopoverTrigger asChild>
                         <Button
                           variant="outline"
-                          className="w-full justify-start text-left font-normal bg-gray-50"
-                          disabled
+                          className="w-full justify-start text-left font-normal"
                         >
                           <CalendarIcon className="mr-2 h-4 w-4" />
                           {formData.next_billing_date ? (
@@ -466,9 +465,18 @@ export function AddSubscriptionSteps({
                           )}
                         </Button>
                       </PopoverTrigger>
+                      <PopoverContent className="w-auto p-0" align="start">
+                        <Calendar
+                          mode="single"
+                          selected={formData.next_billing_date}
+                          onSelect={(date) => updateFormData("next_billing_date", date)}
+                          initialFocus
+                          locale={language === "th" ? th : enUS}
+                        />
+                      </PopoverContent>
                     </Popover>
                     <p className="text-xs text-gray-500">
-                      {t("addSub.autoCalculated") || "คำนวณอัตโนมัติจากรอบการเรียกเก็บเงิน"}
+                      {t("addSub.autoCalculated") || "คำนวณอัตโนมัติ - คลิกเพื่อปรับแต่ง"}
                     </p>
                   </div>
                 </div>
