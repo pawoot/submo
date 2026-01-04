@@ -54,7 +54,7 @@ export default function UserDetailPage() {
   const [pendingRole, setPendingRole] = useState<"admin" | "user" | null>(null);
   const [isUpdatingRole, setIsUpdatingRole] = useState(false);
   const { toast } = useToast();
-  const { convertCurrency, formatCurrency: formatCurrencyWithSymbol } = useCurrency();
+  const { convertAmount, formatAmount } = useCurrency();
   const router = useRouter();
   const { id } = router.query;
 
@@ -162,8 +162,8 @@ export default function UserDetailPage() {
     }
   };
 
-  const formatCurrency = (amount: number, currency: string = "THB") => {
-    const amountInTHB = convertCurrency(amount, currency, "THB");
+  const formatCurrency = async (amount: number, currency: string = "THB") => {
+    const amountInTHB = await convertAmount(amount, currency);
     return new Intl.NumberFormat("th-TH", {
       style: "currency",
       currency: "THB",
@@ -179,19 +179,21 @@ export default function UserDetailPage() {
     });
   };
 
-  const calculateTotalCosts = () => {
+  const calculateTotalCosts = async () => {
     if (!userDetail) return { monthly: 0, yearly: 0 };
 
     const activeSubscriptions = userDetail.subscriptions.filter(
       (sub) => sub.is_active
     );
 
-    const totalMonthly = activeSubscriptions.reduce((sum, sub) => {
+    let totalMonthly = 0;
+    
+    for (const sub of activeSubscriptions) {
       const price = sub.amount || 0;
       const currency = sub.currency || "THB";
       
       // Convert to THB first
-      const priceInTHB = convertCurrency(price, currency, "THB");
+      const priceInTHB = await convertAmount(price, currency);
       
       const monthlyCost =
         sub.billing_cycle === "monthly"
@@ -201,8 +203,8 @@ export default function UserDetailPage() {
           : sub.billing_cycle === "quarterly"
           ? priceInTHB / 3
           : 0;
-      return sum + monthlyCost;
-    }, 0);
+      totalMonthly += monthlyCost;
+    }
 
     return {
       monthly: totalMonthly,
