@@ -1,62 +1,31 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
 import { Button } from "@/components/ui/button";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
-import { Badge } from "@/components/ui/badge";
+import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
+import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
+import { Card, CardContent } from "@/components/ui/card";
+import { Check, ChevronRight, ArrowLeft, Calendar as CalendarIcon, CreditCard, Wallet, Tag } from "lucide-react";
+import { cn } from "@/lib/utils";
+import { format } from "date-fns";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { Checkbox } from "@/components/ui/checkbox";
-import { Progress } from "@/components/ui/progress";
-import { 
-  CalendarIcon, 
-  ChevronRight, 
-  ChevronLeft, 
-  Check,
-  Sparkles,
-  DollarSign,
-  CreditCard,
-  FileText,
-  AlertTriangle
-} from "lucide-react";
-import { format, addMonths, addYears, addDays } from "date-fns";
-import { th, enUS } from "date-fns/locale";
-import { cn } from "@/lib/utils";
-import { SubscriptionIcon } from "@/components/SubscriptionIcon";
-import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 import type { Database } from "@/integrations/supabase/types";
 
-type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
-
-interface FormData {
-  name: string;
-  category_id: string;
-  description: string;
-  amount: string;
-  currency: string;
-  billing_cycle: string;
-  payment_method_id: string;
-  card_last_4: string;
-  start_date: Date | undefined;
-  next_billing_date: Date | undefined;
-  website_url: string;
-  notes: string;
-  remind_3_days: boolean;
-  remind_7_days: boolean;
-  usage_frequency: string;
-}
 
 interface AddSubscriptionStepsProps {
   popularTemplates: SubscriptionTemplate[];
   categories: Category[];
   paymentMethods: PaymentMethod[];
-  onSubmit: (data: FormData) => Promise<void>;
+  onSubmit: (data: any) => void;
   onTemplateSelect: (template: SubscriptionTemplate) => void;
   isSubmitting: boolean;
 }
@@ -139,42 +108,26 @@ export function AddSubscriptionSteps({
   }, [formData.billing_cycle]);
 
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
-    setSelectedTemplate(template);
+    // Determine category based on template category slug
+    const category = categories.find(c => c.slug === template.categories?.slug);
     
-    // Debug: Log template and categories for troubleshooting
-    console.log("🎯 Selected Template:", {
-      name: template.name,
-      category: template.category,
-      id: template.id
-    });
+    form.setValue("name", template.name);
+    form.setValue("amount", template.amount.toString());
+    form.setValue("currency", template.currency);
+    form.setValue("billing_cycle", template.billing_cycle);
+    form.setValue("website_url", template.website_url || "");
+    form.setValue("icon_url", template.icon_url || "");
+    form.setValue("template_id", template.id);
     
-    console.log("📂 Available Categories:", categories.map(c => ({
-      id: c.id,
-      slug: c.slug,
-      name_en: c.name_en,
-      name_th: c.name_th
-    })));
-    
-    // Find matching category by slug
-    const matchingCategory = categories.find(c => 
-      c.slug.toLowerCase() === template.category?.toLowerCase()
-    );
-    
-    console.log("✅ Matched Category:", matchingCategory ? {
-      id: matchingCategory.id,
-      slug: matchingCategory.slug,
-      name_en: matchingCategory.name_en
-    } : "❌ No match found");
-    
-    setFormData(prev => ({
-      ...prev,
-      name: template.name,
-      category_id: matchingCategory?.id || "",
-      amount: template.default_price?.toString() || "",
-      currency: template.default_currency || preferredCurrency || "THB",
-      billing_cycle: template.default_billing_cycle || "monthly",
-      website_url: template.website_url || "",
-    }));
+    if (category) {
+      form.setValue("category_id", category.id);
+      setSelectedCategory(category);
+    }
+
+    // Move to next step if it was a quick add click
+    if (step === 1) {
+      setStep(2);
+    }
 
     onTemplateSelect(template);
   };
