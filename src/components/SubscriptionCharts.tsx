@@ -245,122 +245,15 @@ export function SubscriptionCharts() {
   }
 
   return (
-    <div className="mb-8 space-y-6">
-      {/* Search and Filters Bar */}
-      <div className="bg-white rounded-xl border-2 border-gray-100 p-6 shadow-sm">
-        <div className="grid grid-cols-1 md:grid-cols-12 gap-4 items-end">
-          {/* Search Box */}
-          <div className="md:col-span-4">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">{t("search.label")}</label>
-            <div className="relative">
-              <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-5 h-5" />
-              <Input
-                type="text"
-                placeholder={t("search.placeholder")}
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                className="pl-10 h-11"
-              />
-            </div>
-          </div>
-
-          {/* Time Range Dropdown */}
-          <div className="md:col-span-3">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">{t("filter.timePeriod")}</label>
-            <Select value={timeRange} onValueChange={setTimeRange}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder={t("filter.all")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("filter.all")}</SelectItem>
-                <SelectItem value="this-month">{t("charts.thisMonth")}</SelectItem>
-                <SelectItem value="this-quarter">{t("charts.thisQuarter")}</SelectItem>
-                <SelectItem value="this-year">{t("charts.thisYear")}</SelectItem>
-                <SelectItem value="expiring-soon">{t("charts.expiringSoon")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Billing Cycle Dropdown */}
-          <div className="md:col-span-3">
-            <label className="text-sm font-medium text-gray-700 mb-2 block">{t("addSub.billing")}</label>
-            <Select value={selectedBilling} onValueChange={setSelectedBilling}>
-              <SelectTrigger className="h-11">
-                <SelectValue placeholder={t("filter.all")} />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">{t("filter.all")}</SelectItem>
-                <SelectItem value="monthly">{t("subscriptions.monthly")}</SelectItem>
-                <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
-                <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
-                <SelectItem value="yearly">{t("subscriptions.yearly")}</SelectItem>
-              </SelectContent>
-            </Select>
-          </div>
-
-          {/* Search Button */}
-          <div className="md:col-span-2">
-            <Button className="w-full h-11 bg-indigo-600 hover:bg-indigo-700 text-white font-semibold">
-              {t("common.search")}
-            </Button>
-          </div>
+    <div className="space-y-6">
+      {loading ? (
+        <div className="text-center py-12">
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
+          <p className="text-slate-600">{t("common.loading")}</p>
         </div>
-      </div>
-
-      {/* Category Tabs */}
-      <div className="flex items-center justify-between bg-white rounded-xl border-2 border-gray-100 p-4">
-        <Tabs value={selectedCategory} onValueChange={setSelectedCategory} className="flex-1 w-full">
-          <TabsList className="bg-gray-50 flex flex-wrap h-auto p-1 gap-1">
-            <TabsTrigger value="all" className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 font-semibold">
-              {t("filter.all")}
-            </TabsTrigger>
-            {categories.map((category) => (
-              <TabsTrigger 
-                key={category.id}
-                value={category.id} 
-                className="data-[state=active]:bg-white data-[state=active]:text-indigo-600 gap-2"
-              >
-                <span>{category.icon}</span>
-                <span>{language === 'th' ? category.name_th : category.name_en}</span>
-              </TabsTrigger>
-            ))}
-          </TabsList>
-        </Tabs>
-      </div>
-
-      {filteredSubscriptions.length === 0 ? (
-        <Card className="border-2 border-dashed border-gray-200 bg-gradient-to-br from-gray-50 to-gray-100/50 shadow-lg">
-          <CardContent className="py-16 text-center">
-            <div className="max-w-lg mx-auto space-y-4">
-              <div className="relative inline-block">
-                <div className="bg-gradient-to-br from-gray-200 to-gray-300 rounded-full p-6 shadow-inner">
-                  <Search className="w-16 h-16 text-gray-400" strokeWidth={1.5} />
-                </div>
-              </div>
-              <div className="space-y-2">
-                <h3 className="text-2xl font-bold text-gray-700">{t("charts.noResults")}</h3>
-                <p className="text-gray-500 text-base max-w-sm mx-auto">{t("charts.noResultsDesc")}</p>
-              </div>
-              <Button
-                variant="outline"
-                size="lg"
-                onClick={() => {
-                  setSearchQuery("");
-                  setSelectedCategory("all");
-                  setSelectedBilling("all");
-                  setTimeRange("all");
-                }}
-                className="mt-4 border-2 border-indigo-200 text-indigo-600 hover:bg-indigo-50 hover:border-indigo-300 font-semibold"
-              >
-                <Filter className="w-4 h-4 mr-2" />
-                {t("charts.clearFilters")}
-              </Button>
-            </div>
-          </CardContent>
-        </Card>
       ) : (
         <>
-          {/* Category Charts Grid */}
+          {/* Charts Grid */}
           <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-indigo-50 to-white">
@@ -434,10 +327,7 @@ export function SubscriptionCharts() {
                 </div>
               </CardContent>
             </Card>
-          </div>
 
-          {/* Payment Method Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
