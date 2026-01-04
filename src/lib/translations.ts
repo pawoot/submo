@@ -1697,10 +1697,6 @@ export const translations = {
   "profile.logoutDesc": {
     th: "ออกจากระบบบนอุปกรณ์นี้",
     en: "Sign out from your account on this device"
-  },
-  "profile.confirmDelete": {
-    th: "ยืนยันการลบบัญชี",
-    en: "Confirm Account Deletion"
   }
 };
 
