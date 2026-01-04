@@ -180,38 +180,6 @@ export default function AdminUsers() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8">
-          {/* Filters */}
-          <Card className="mb-6">
-            <CardContent className="pt-6">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                {/* Search */}
-                <div className="relative">
-                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
-                  <Input
-                    placeholder="ค้นหาชื่อ, อีเมล..."
-                    value={searchQuery}
-                    onChange={(e) => setSearchQuery(e.target.value)}
-                    className="pl-10"
-                  />
-                </div>
-
-                {/* Sort */}
-                <Select value={sortBy} onValueChange={setSortBy}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="เรียงลำดับ" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="newest">วันสมัครใหม่สุด</SelectItem>
-                    <SelectItem value="oldest">วันสมัครเก่าสุด</SelectItem>
-                    <SelectItem value="name">ชื่อ A-Z</SelectItem>
-                    <SelectItem value="spending-high">ค่าใช้จ่ายสูง-ต่ำ</SelectItem>
-                    <SelectItem value="spending-low">ค่าใช้จ่ายต่ำ-สูง</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-            </CardContent>
-          </Card>
-
           {/* Statistics Cards */}
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
             <Card>
