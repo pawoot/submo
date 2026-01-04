@@ -1,5 +1,5 @@
 import Link from "next/link";
-import { Bell, User } from "lucide-react";
+import { Bell, User, Plus } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileNav from "@/components/MobileNav";
@@ -17,11 +17,11 @@ export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }:
   const { t } = useLanguage();
   
   return (
-    <div className="flex items-center justify-between px-4 py-3">
+    <div className="flex items-center justify-between px-4 py-3 gap-3">
       {/* Left: Hamburger Menu */}
       <MobileNav user={user} isAdmin={isAdmin} />
 
-      {/* Center: Logo */}
+      {/* Center-Left: Logo */}
       <Link href="/" className="flex items-center gap-2">
         <div className="w-8 h-8 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg flex items-center justify-center">
           <span className="text-white font-bold text-lg">S</span>
@@ -31,9 +31,19 @@ export default function MobileHeader({ user, isAdmin = false, unreadCount = 0 }:
         </span>
       </Link>
 
+      {/* Center-Right: Add Subscription Button */}
+      <Link href="/add-subscription" className="ml-auto">
+        <Button 
+          className="bg-blue-600 hover:bg-blue-700 text-white shadow-md"
+          size="sm"
+        >
+          <Plus className="h-4 w-4 sm:mr-1" />
+          <span className="hidden sm:inline">{t("nav.addSubscription")}</span>
+        </Button>
+      </Link>
+
       {/* Right: Quick Actions */}
       <div className="flex items-center gap-2">
-        <LanguageSwitcher />
         <Link href="/notifications">
           <Button variant="ghost" size="icon" className="relative">
             <Bell className="h-5 w-5" />
