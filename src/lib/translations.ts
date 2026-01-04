@@ -70,10 +70,7 @@ export const translations = {
     th: "Submo - Subscription Monitoring",
     en: "Submo - Subscription Monitoring"
   },
-  "home.seo.description": {
-    th: "ระบบติดตามและจัดการ Subscription ทั้งหมดของคุณ ตรวจสอบค่าใช้จ่าย วันหมดอายุ และแบ่งปันค่าใช้จ่ายได้ง่าย",
-    en: "Track and manage all your subscriptions. Monitor costs, expiration dates, and share expenses easily."
-  },
+  "home.seo.description": "ติดตามค่าใช้จ่ายสมาชิก แจ้งเตือนก่อนชำระเงิน และดูภาพรวมการใช้จ่ายของคุณ",
   "home.welcome": {
     th: "ยินดีต้อนรับสู่ Submo.ai",
     en: "Welcome to Submo.ai"
@@ -368,10 +365,8 @@ export const translations = {
   },
 
   // Add Subscription Page
-  "addSub.title": {
-    th: "เพิ่ม Subscription",
-    en: "Add Subscription"
-  },
+  "addSub.title": "เพิ่มรายการสมาชิก",
+  "addSub.desc": "เพิ่มรายการสมาชิกใหม่เพื่อติดตามค่าใช้จ่ายของคุณ",
   "addSub.name": {
     th: "ชื่อ Subscription",
     en: "Subscription Name"
@@ -496,10 +491,7 @@ export const translations = {
     th: "ดูทั้งหมด",
     en: "Browse all"
   },
-  "addSub.quickAdd": {
-    th: "เพิ่มด่วน",
-    en: "Quick Add"
-  },
+  "addSub.quickAdd": "เพิ่มด่วนจากบริการยอดนิยม",
   "addSub.selectService": {
     th: "เลือกบริการที่ต้องการเพิ่ม",
     en: "Select a service to add"
@@ -512,22 +504,27 @@ export const translations = {
     th: "กรอกข้อมูลอัตโนมัติแล้ว",
     en: "Auto-filled"
   },
-  "addSub.basicInfo": {
-    th: "ข้อมูลพื้นฐาน",
-    en: "Basic Information"
-  },
+  "addSub.basicInfo": "ข้อมูลบริการและราคา",
   "addSub.pricingInfo": {
     th: "ข้อมูลราคา",
     en: "Pricing Information"
   },
-  "addSub.paymentInfo": {
-    th: "ข้อมูลการชำระเงิน",
-    en: "Payment Information"
-  },
-  "addSub.additionalInfo": {
-    th: "ข้อมูลเพิ่มเติม",
-    en: "Additional Information"
-  },
+  "addSub.paymentInfo": "การเรียกเก็บเงิน",
+  "addSub.additionalInfo": "ข้อมูลเพิ่มเติม",
+  "addSub.usageFrequency": "ความถี่ในการใช้งาน",
+  "addSub.often": "ใช้บ่อย (ทุกวัน)",
+  "addSub.sometimes": "ใช้บางครั้ง (สัปดาห์ละครั้ง)",
+  "addSub.rarely": "ใช้นานๆ ครั้ง (เดือนละครั้ง)",
+  "addSub.summary": "สรุปค่าใช้จ่าย",
+  "addSub.subscription": "บริการ",
+  "addSub.monthlyCost": "ค่าใช้จ่ายต่อเดือน",
+  "addSub.yearlyCost": "ค่าใช้จ่ายต่อปี",
+  "addSub.billedYearly": "เรียกเก็บรายปี",
+  "addSub.calculatedYearly": "คำนวณจากรายเดือน",
+  "addSub.highCostWarning": "ค่าใช้จ่ายสูงกว่าปกติ",
+  "addSub.highCostDesc": "บริการนี้มีค่าใช้จ่ายสูงกว่าค่าเฉลี่ยรายเดือนของคุณ",
+  "addSub.nextBilling": "วันเรียกเก็บเงินถัดไป",
+  "addSub.autoCalculated": "คำนวณอัตโนมัติจากรอบบิล",
 
   // Edit Subscription Page
   "editSub.title": {
@@ -1345,6 +1342,24 @@ export const translations = {
   "common.unknown": {
     th: "ไม่ระบุ",
     en: "Unknown"
+  },
+  "common.recommended": {
+    th: "แนะนำ",
+    en: "Recommended"
+  },
+
+  // Notifications & Reminders
+  "notifications.reminders": {
+    th: "การแจ้งเตือน",
+    en: "Reminders"
+  },
+  "notifications.remind_3_days": {
+    th: "แจ้งเตือนก่อน 3 วัน",
+    en: "Remind 3 days before"
+  },
+  "notifications.remind_7_days": {
+    th: "แจ้งเตือนก่อน 7 วัน",
+    en: "Remind 7 days before"
   },
 
   // Validation Messages
