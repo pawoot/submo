@@ -20,6 +20,7 @@ import { format } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
+import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import type { Database } from "@/integrations/supabase/types";
 
 type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
@@ -33,6 +34,7 @@ export default function AddSubscription() {
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [showBrowser, setShowBrowser] = useState(false);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
+  const [subscriptionName, setSubscriptionName] = useState("");
   const { toast } = useToast();
   const router = useRouter();
 
@@ -51,12 +53,12 @@ export default function AddSubscription() {
 
   const handleTemplateSelect = (template: SubscriptionTemplate) => {
     setSelectedTemplate(template);
+    setSubscriptionName(template.name);
     
     // Auto-fill form with template data
     const form = document.getElementById("subscription-form") as HTMLFormElement;
     if (form) {
-      // Set basic fields
-      (form.elements.namedItem("name") as HTMLInputElement).value = template.name;
+      // Set category
       (form.elements.namedItem("category") as HTMLInputElement).value = template.category;
       
       // Set pricing fields
@@ -81,6 +83,10 @@ export default function AddSubscription() {
       description: `กรอกข้อมูล ${template.name} อัตโนมัติแล้ว`,
       duration: 3000,
     });
+  };
+
+  const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
+    handleTemplateSelect(template);
   };
 
   const categories = [
@@ -268,29 +274,19 @@ export default function AddSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">ชื่อ Subscription *</Label>
-                      <div className="relative">
-                        {selectedTemplate && (
-                          <div className="absolute left-3 top-1/2 transform -translate-y-1/2 w-6 h-6 rounded overflow-hidden bg-white shadow-sm">
-                            <img
-                              src={selectedTemplate.logo_url}
-                              alt={selectedTemplate.name}
-                              className="w-full h-full object-cover"
-                            />
-                          </div>
-                        )}
-                        <Input 
-                          id="name"
-                          name="name"
-                          placeholder="เช่น Adobe Creative Cloud"
-                          className={selectedTemplate ? "pl-12" : ""}
-                          required
-                        />
-                      </div>
-                      {selectedTemplate && (
-                        <p className="text-xs text-blue-600 dark:text-blue-400">
-                          ✓ ใช้ข้อมูลจาก Template
-                        </p>
-                      )}
+                      <SubscriptionNameAutocomplete
+                        value={subscriptionName}
+                        onChange={setSubscriptionName}
+                        onTemplateSelect={handleAutocompleteTemplateSelect}
+                        disabled={isSubmitting}
+                      />
+                      <input
+                        type="hidden"
+                        id="name"
+                        name="name"
+                        value={subscriptionName}
+                        required
+                      />
                     </div>
 
                     <div className="space-y-2">

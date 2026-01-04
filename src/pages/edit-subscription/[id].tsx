@@ -15,12 +15,14 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
 import { AuthGuard } from "@/components/AuthGuard";
+import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import type { Database } from "@/integrations/supabase/types";
 import { format, parseISO } from "date-fns";
 import { th } from "date-fns/locale";
 import { cn } from "@/lib/utils";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
 
 export default function EditSubscription() {
   const router = useRouter();
@@ -34,6 +36,7 @@ export default function EditSubscription() {
   const [loading, setLoading] = useState(true);
   const [startDate, setStartDate] = useState<Date>();
   const [nextBillingDate, setNextBillingDate] = useState<Date>();
+  const [subscriptionName, setSubscriptionName] = useState("");
 
   const categories = [
     "Design", "Development", "Productivity", "Entertainment", 
@@ -68,6 +71,7 @@ export default function EditSubscription() {
       
       if (data) {
         setSubscription(data);
+        setSubscriptionName(data.name);
         setSharedUsers(data.shared_with || []);
         setStartDate(parseISO(data.start_date));
         setNextBillingDate(parseISO(data.next_billing_date));
@@ -102,6 +106,39 @@ export default function EditSubscription() {
 
   const removeSharedUser = (email: string) => {
     setSharedUsers(sharedUsers.filter(u => u !== email));
+  };
+
+  const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
+    setSubscriptionName(template.name);
+    
+    // Auto-fill form with template data
+    const form = document.getElementById("subscription-form") as HTMLFormElement;
+    if (form) {
+      // Set category
+      (form.elements.namedItem("category") as HTMLInputElement).value = template.category;
+      
+      // Set pricing fields
+      if (template.default_price) {
+        (form.elements.namedItem("cost") as HTMLInputElement).value = template.default_price.toString();
+      }
+      if (template.default_currency) {
+        (form.elements.namedItem("currency") as HTMLInputElement).value = template.default_currency;
+      }
+      if (template.default_billing_cycle) {
+        (form.elements.namedItem("billing") as HTMLInputElement).value = template.default_billing_cycle;
+      }
+      
+      // Set website
+      if (template.website_url) {
+        (form.elements.namedItem("website") as HTMLInputElement).value = template.website_url;
+      }
+    }
+
+    toast({
+      title: "✅ เปลี่ยนบริการสำเร็จ!",
+      description: `อัพเดทข้อมูลจาก ${template.name} แล้ว`,
+      duration: 3000,
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
@@ -204,7 +241,7 @@ export default function EditSubscription() {
 
         {/* Main Content */}
         <main className="container mx-auto px-4 py-8 max-w-4xl">
-          <form onSubmit={handleSubmit}>
+          <form onSubmit={handleSubmit} id="subscription-form">
             <div className="space-y-6">
               {/* Basic Information */}
               <Card>
@@ -215,11 +252,17 @@ export default function EditSubscription() {
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label htmlFor="name">ชื่อ Subscription *</Label>
-                      <Input 
+                      <SubscriptionNameAutocomplete
+                        value={subscriptionName}
+                        onChange={setSubscriptionName}
+                        onTemplateSelect={handleAutocompleteTemplateSelect}
+                        disabled={isSubmitting}
+                      />
+                      <input
+                        type="hidden"
                         id="name"
                         name="name"
-                        placeholder="เช่น Adobe Creative Cloud"
-                        defaultValue={subscription.name}
+                        value={subscriptionName}
                         required
                       />
                     </div>
