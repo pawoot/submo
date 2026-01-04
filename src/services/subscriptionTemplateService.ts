@@ -1,139 +1,148 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { Database } from "@/integrations/supabase/types";
+import type { Tables } from "@/integrations/supabase/types";
 
-type SubscriptionTemplate = Database["public"]["Tables"]["subscription_templates"]["Row"];
-type SubscriptionTemplateInsert = Database["public"]["Tables"]["subscription_templates"]["Insert"];
-type SubscriptionTemplateUpdate = Database["public"]["Tables"]["subscription_templates"]["Update"];
+// Template is now just a subscription with is_template = true
+export type SubscriptionTemplate = Tables<"subscriptions">;
 
-export const subscriptionTemplateService = {
-  /**
-   * Get all active templates
-   */
-  async getAllTemplates() {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .select("*")
-      .eq("is_active", true)
-      .order("display_order", { ascending: true });
+/**
+ * Get all subscription templates (popular and regular)
+ */
+export async function getSubscriptionTemplates(): Promise<SubscriptionTemplate[]> {
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      )
+    `)
+    .eq("is_template", true)
+    .order("popularity_score", { ascending: false })
+    .order("name", { ascending: true });
 
-    if (error) throw error;
-    return data as SubscriptionTemplate[];
-  },
+  if (error) {
+    console.error("Error fetching subscription templates:", error);
+    throw error;
+  }
 
-  /**
-   * Get popular templates (for Quick Add section)
-   */
-  async getPopularTemplates(limit: number = 6) {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .select("*")
-      .eq("is_active", true)
-      .eq("is_popular", true)
-      .order("display_order", { ascending: true })
-      .limit(limit);
+  return data || [];
+}
 
-    if (error) throw error;
-    return data as SubscriptionTemplate[];
-  },
+/**
+ * Get popular subscription templates (popularity_score >= 100)
+ */
+export async function getPopularTemplates(): Promise<SubscriptionTemplate[]> {
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      )
+    `)
+    .eq("is_template", true)
+    .gte("popularity_score", 100)
+    .order("popularity_score", { ascending: false })
+    .order("name", { ascending: true });
 
-  /**
-   * Get templates by category
-   */
-  async getTemplatesByCategory(category: string) {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .select("*")
-      .eq("is_active", true)
-      .eq("category", category)
-      .order("display_order", { ascending: true });
+  if (error) {
+    console.error("Error fetching popular templates:", error);
+    throw error;
+  }
 
-    if (error) throw error;
-    return data as SubscriptionTemplate[];
-  },
+  return data || [];
+}
 
-  /**
-   * Search templates by name
-   */
-  async searchTemplates(query: string) {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .select("*")
-      .eq("is_active", true)
-      .ilike("name", `%${query}%`)
-      .order("display_order", { ascending: true });
+/**
+ * Search subscription templates by name
+ */
+export async function searchTemplates(query: string): Promise<SubscriptionTemplate[]> {
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      )
+    `)
+    .eq("is_template", true)
+    .ilike("name", `%${query}%`)
+    .order("popularity_score", { ascending: false })
+    .order("name", { ascending: true });
 
-    if (error) throw error;
-    return data as SubscriptionTemplate[];
-  },
+  if (error) {
+    console.error("Error searching templates:", error);
+    throw error;
+  }
 
-  /**
-   * Get a single template by ID
-   */
-  async getTemplateById(id: string) {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .select("*")
-      .eq("id", id)
-      .single();
+  return data || [];
+}
 
-    if (error) throw error;
-    return data as SubscriptionTemplate;
-  },
+/**
+ * Get subscription template by ID
+ */
+export async function getTemplateById(id: string): Promise<SubscriptionTemplate | null> {
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      )
+    `)
+    .eq("id", id)
+    .eq("is_template", true)
+    .single();
 
-  /**
-   * Create a new template (Admin only)
-   */
-  async createTemplate(template: SubscriptionTemplateInsert) {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .insert(template)
-      .select()
-      .single();
+  if (error) {
+    console.error("Error fetching template:", error);
+    return null;
+  }
 
-    if (error) throw error;
-    return data as SubscriptionTemplate;
-  },
+  return data;
+}
 
-  /**
-   * Update a template (Admin only)
-   */
-  async updateTemplate(id: string, updates: SubscriptionTemplateUpdate) {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .update(updates)
-      .eq("id", id)
-      .select()
-      .single();
+/**
+ * Get templates by category
+ */
+export async function getTemplatesByCategory(categoryId: string): Promise<SubscriptionTemplate[]> {
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      )
+    `)
+    .eq("is_template", true)
+    .eq("category_id", categoryId)
+    .order("popularity_score", { ascending: false })
+    .order("name", { ascending: true });
 
-    if (error) throw error;
-    return data as SubscriptionTemplate;
-  },
+  if (error) {
+    console.error("Error fetching templates by category:", error);
+    throw error;
+  }
 
-  /**
-   * Delete a template (Admin only)
-   */
-  async deleteTemplate(id: string) {
-    const { error } = await supabase
-      .from("subscription_templates")
-      .delete()
-      .eq("id", id);
-
-    if (error) throw error;
-  },
-
-  /**
-   * Get all unique categories
-   */
-  async getCategories() {
-    const { data, error } = await supabase
-      .from("subscription_templates")
-      .select("category")
-      .eq("is_active", true);
-
-    if (error) throw error;
-
-    // Get unique categories
-    const categories = [...new Set(data.map((item) => item.category))];
-    return categories.sort();
-  },
-};
+  return data || [];
+}

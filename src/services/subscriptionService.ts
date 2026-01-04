@@ -293,3 +293,86 @@ export const subscriptionService = {
     };
   },
 };
+
+/**
+ * Get all subscriptions for the current user
+ */
+export async function getUserSubscriptions(): Promise<Subscription[]> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      ),
+      payment_methods!subscriptions_payment_method_id_fkey (
+        id,
+        name,
+        type,
+        last_four
+      )
+    `)
+    .eq("user_id", user.id)
+    .eq("is_template", false)
+    .order("next_billing_date", { ascending: true });
+
+  if (error) {
+    console.error("Error fetching user subscriptions:", error);
+    throw error;
+  }
+
+  return data || [];
+}
+
+/**
+ * Create a new subscription (optionally from a template)
+ */
+export async function createSubscription(
+  subscription: Omit<Subscription, "id" | "user_id" | "created_at" | "updated_at">
+): Promise<Subscription> {
+  const user = await getCurrentUser();
+  if (!user) {
+    throw new Error("User not authenticated");
+  }
+
+  const { data, error } = await supabase
+    .from("subscriptions")
+    .insert({
+      ...subscription,
+      user_id: user.id,
+      is_template: false, // User subscriptions are NOT templates
+    })
+    .select(`
+      *,
+      categories!subscriptions_category_id_fkey (
+        id,
+        slug,
+        name_en,
+        name_th,
+        icon
+      ),
+      payment_methods!subscriptions_payment_method_id_fkey (
+        id,
+        name,
+        type,
+        last_four
+      )
+    `)
+    .single();
+
+  if (error) {
+    console.error("Error creating subscription:", error);
+    throw error;
+  }
+
+  return data;
+}

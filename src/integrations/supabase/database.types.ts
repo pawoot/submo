@@ -328,69 +328,81 @@ export type Database = {
           amount: number
           billing_cycle: string
           card_last_4: string | null
-          category: string
+          category: string | null
           category_id: string
           created_at: string | null
           currency: string
           description: string | null
+          icon_url: string | null
           id: string
           is_active: boolean | null
+          is_template: boolean | null
           logo_url: string | null
           name: string
           next_billing_date: string
           notes: string | null
           payment_method: string | null
-          payment_method_id: string
+          payment_method_id: string | null
+          popularity_score: number | null
           shared_with: string[] | null
           start_date: string | null
+          template_id: string | null
           updated_at: string | null
-          user_id: string
+          user_id: string | null
           website_url: string | null
         }
         Insert: {
           amount: number
           billing_cycle: string
           card_last_4?: string | null
-          category: string
+          category?: string | null
           category_id: string
           created_at?: string | null
           currency?: string
           description?: string | null
+          icon_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_template?: boolean | null
           logo_url?: string | null
           name: string
           next_billing_date: string
           notes?: string | null
           payment_method?: string | null
-          payment_method_id: string
+          payment_method_id?: string | null
+          popularity_score?: number | null
           shared_with?: string[] | null
           start_date?: string | null
+          template_id?: string | null
           updated_at?: string | null
-          user_id: string
+          user_id?: string | null
           website_url?: string | null
         }
         Update: {
           amount?: number
           billing_cycle?: string
           card_last_4?: string | null
-          category?: string
+          category?: string | null
           category_id?: string
           created_at?: string | null
           currency?: string
           description?: string | null
+          icon_url?: string | null
           id?: string
           is_active?: boolean | null
+          is_template?: boolean | null
           logo_url?: string | null
           name?: string
           next_billing_date?: string
           notes?: string | null
           payment_method?: string | null
-          payment_method_id?: string
+          payment_method_id?: string | null
+          popularity_score?: number | null
           shared_with?: string[] | null
           start_date?: string | null
+          template_id?: string | null
           updated_at?: string | null
-          user_id?: string
+          user_id?: string | null
           website_url?: string | null
         }
         Relationships: [
@@ -406,6 +418,13 @@ export type Database = {
             columns: ["payment_method_id"]
             isOneToOne: false
             referencedRelation: "payment_methods"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "subscriptions_template_id_fkey"
+            columns: ["template_id"]
+            isOneToOne: false
+            referencedRelation: "subscriptions"
             referencedColumns: ["id"]
           },
           {
