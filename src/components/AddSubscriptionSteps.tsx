@@ -211,8 +211,7 @@ export function AddSubscriptionSteps({
                   </CardHeader>
                   <CardContent>
                     <SubscriptionTemplateBrowser 
-                      templates={popularTemplates}
-                      onSelect={handleTemplateSelect}
+                      onSelectTemplate={handleTemplateSelect}
                     />
                   </CardContent>
                 </Card>
@@ -242,7 +241,7 @@ export function AddSubscriptionSteps({
                           />
                           {field.value && (
                              <div className="absolute left-3 top-2.5">
-                               <SubscriptionIcon name={field.value} logoUrl={form.getValues("icon_url")} className="w-5 h-5" />
+                               <SubscriptionIcon name={field.value} iconUrl={form.getValues("icon_url")} className="w-5 h-5" />
                              </div>
                           )}
                         </div>
@@ -570,7 +569,7 @@ export function AddSubscriptionSteps({
                   <CardContent className="space-y-6">
                     <div className="flex items-center justify-between p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                       <div className="flex items-center gap-3">
-                        <SubscriptionIcon name={watchedValues.name} logoUrl={watchedValues.icon_url} className="w-12 h-12" />
+                        <SubscriptionIcon name={watchedValues.name} iconUrl={watchedValues.icon_url} className="w-12 h-12" />
                         <div>
                           <h3 className="font-bold text-lg">{watchedValues.name}</h3>
                           <div className="flex items-center gap-2 text-sm text-muted-foreground">

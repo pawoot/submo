@@ -564,7 +564,7 @@ export default function Home() {
                           <div className="flex gap-3">
                             <SubscriptionIcon
                               name={sub.name}
-                              website={sub.website_url}
+                              iconUrl={sub.icon_url}
                               className="w-10 h-10 md:w-12 md:h-12 shrink-0 shadow-sm"
                             />
                             <div>

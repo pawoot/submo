@@ -1792,6 +1792,10 @@ export const translations = {
     th: "ขั้นตอน",
     en: "Step"
   },
+  "common.of": {
+    th: "จาก",
+    en: "of"
+  },
   "common.continue": {
     th: "ถัดไป",
     en: "Continue"

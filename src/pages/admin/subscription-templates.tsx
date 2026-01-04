@@ -440,7 +440,7 @@ export default function AdminSubscriptionTemplates() {
                       <TableCell>
                         <SubscriptionIcon 
                           name={template.name} 
-                          logoUrl={template.icon_url} 
+                          iconUrl={template.icon_url} 
                           className="w-8 h-8"
                         />
                       </TableCell>
