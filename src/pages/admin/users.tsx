@@ -129,7 +129,7 @@ export default function AdminUsers() {
   const formatCurrency = (amount: number, currency: string = "THB") => {
     return new Intl.NumberFormat("th-TH", {
       style: "currency",
-      currency: currency,
+      currency: "THB",
       minimumFractionDigits: 2,
     }).format(amount);
   };

@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { currencyService } from "./currencyService";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
@@ -21,34 +22,52 @@ export const adminUserService = {
       throw profilesError;
     }
 
-    const usersWithStats = profiles.map((profile) => {
-      const subscriptions = Array.isArray(profile.subscriptions)
-        ? profile.subscriptions
-        : [];
+    const usersWithStats = await Promise.all(
+      profiles.map(async (profile) => {
+        const subscriptions = Array.isArray(profile.subscriptions)
+          ? profile.subscriptions
+          : [];
 
-      const activeSubscriptions = subscriptions.filter(
-        (sub: Subscription) => sub.is_active !== false
-      );
+        const activeSubscriptions = subscriptions.filter(
+          (sub: Subscription) => sub.is_active !== false
+        );
 
-      const totalMonthlyCost = activeSubscriptions.reduce((sum, sub: Subscription) => {
-        const price = sub.amount || 0;
-        const monthlyCost =
-          sub.billing_cycle === "monthly"
-            ? price
-            : sub.billing_cycle === "yearly"
-            ? price / 12
-            : sub.billing_cycle === "quarterly"
-            ? price / 3
-            : 0;
-        return sum + monthlyCost;
-      }, 0);
+        // Convert all amounts to THB before calculating total
+        const totalMonthlyCost = await activeSubscriptions.reduce(
+          async (sumPromise, sub: Subscription) => {
+            const sum = await sumPromise;
+            const price = sub.amount || 0;
+            const currency = sub.currency || "THB";
 
-      return {
-        ...profile,
-        subscription_count: subscriptions.length,
-        total_monthly_cost: totalMonthlyCost,
-      };
-    });
+            // Convert to THB
+            const priceInTHB = await currencyService.convertAmount(
+              price,
+              currency,
+              "THB"
+            );
+
+            // Calculate monthly cost
+            const monthlyCost =
+              sub.billing_cycle === "monthly"
+                ? priceInTHB
+                : sub.billing_cycle === "yearly"
+                ? priceInTHB / 12
+                : sub.billing_cycle === "quarterly"
+                ? priceInTHB / 3
+                : 0;
+
+            return sum + monthlyCost;
+          },
+          Promise.resolve(0)
+        );
+
+        return {
+          ...profile,
+          subscription_count: subscriptions.length,
+          total_monthly_cost: totalMonthlyCost,
+        };
+      })
+    );
 
     return usersWithStats;
   },
