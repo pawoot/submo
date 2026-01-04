@@ -54,22 +54,35 @@ export const adminUserService = {
   },
 
   async getUserById(userId: string) {
+    console.log("=== getUserById DEBUG ===");
+    console.log("Received userId:", userId);
+
     const { data: profile, error: profileError } = await supabase
       .from("profiles")
       .select("*")
       .eq("id", userId)
       .single();
 
+    console.log("Profile query result:", profile);
+    console.log("Profile error:", profileError);
+
     if (profileError) {
       console.error("Error fetching user profile:", profileError);
       throw profileError;
     }
+
+    console.log("Querying subscriptions with user_id:", userId);
 
     const { data: subscriptions, error: subsError } = await supabase
       .from("subscriptions")
       .select("*")
       .eq("user_id", userId)
       .order("created_at", { ascending: false });
+
+    console.log("Subscriptions query result:", subscriptions);
+    console.log("Subscriptions count:", subscriptions?.length || 0);
+    console.log("Subscriptions error:", subsError);
+    console.log("========================");
 
     if (subsError) {
       console.error("Error fetching subscriptions:", subsError);
