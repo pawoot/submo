@@ -78,7 +78,7 @@ export function AddSubscriptionWizard({
       name: "",
       category_id: "",
       amount: 0,
-      currency: preferredCurrency || "USD",
+      currency: preferredCurrency || "THB", // Use preferred currency or default to THB
       billing_cycle: "monthly",
       payment_method_id: "",
       card_last_4: "",
@@ -94,6 +94,11 @@ export function AddSubscriptionWizard({
 
   const { register, control, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedValues = watch();
+
+  // Scroll to top when step changes
+  useEffect(() => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  }, [step]);
 
   // Auto-calculate next billing date based on start date and billing cycle
   useEffect(() => {
@@ -149,6 +154,15 @@ export function AddSubscriptionWizard({
 
     // Clear custom styling when template selected
     setSelectedTemplate(template);
+
+    // Scroll to amount field after template selection
+    setTimeout(() => {
+      const amountField = document.querySelector('input[name="amount"]');
+      if (amountField) {
+        amountField.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        (amountField as HTMLInputElement).focus();
+      }
+    }, 100);
   };
 
   // Handle form submission
@@ -540,6 +554,15 @@ export function AddSubscriptionWizard({
                       usageFrequency={watchedValues.usage_frequency}
                       existingSubscriptions={existingSubscriptions}
                     />
+
+                    {/* Info Box */}
+                    <div className="mt-6 p-4 bg-blue-50 dark:bg-blue-950 rounded-lg border border-blue-200 dark:border-blue-800">
+                      <p className="text-sm text-blue-800 dark:text-blue-200">
+                        💡 {language === "th" 
+                          ? "กรอกข้อมูลเพิ่มเติมเพื่อช่วยให้ Submo.ai วิเคราะห์และให้คำแนะนำที่ดีขึ้น หรือข้ามไปบันทึกได้เลย"
+                          : "Fill in additional information to help Submo.ai analyze and provide better recommendations, or skip and save now"}
+                      </p>
+                    </div>
                   </div>
                 </div>
               )}
@@ -550,7 +573,7 @@ export function AddSubscriptionWizard({
                   type="button"
                   variant="outline"
                   onClick={prevStep}
-                  disabled={step === 1}
+                  disabled={step === 1 || isSubmitting}
                 >
                   <ChevronLeft className="w-4 h-4 mr-2" />
                   {t("common.previous")}
