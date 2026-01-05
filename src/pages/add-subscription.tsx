@@ -13,8 +13,8 @@ import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
-import { adminCategoryService } from "@/services/adminCategoryService";
-import { adminPaymentMethodService } from "@/services/adminPaymentMethodService";
+import { getAllCategories } from "@/services/adminCategoryService";
+import { getAllPaymentMethods } from "@/services/adminPaymentMethodService";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
@@ -32,16 +32,13 @@ export default function AddSubscription() {
   useEffect(() => {
     const loadData = async () => {
       try {
-        const [categoriesData, paymentMethodsData] = await Promise.all([
-          supabase.from("categories").select("*").order("name_en"),
-          supabase.from("payment_methods").select("*").order("name_en")
+        const [cats, methods, subs] = await Promise.all([
+          getAllCategories(),
+          getAllPaymentMethods(),
+          subscriptionService.getAll()
         ]);
-
-        if (categoriesData.error) throw categoriesData.error;
-        if (paymentMethodsData.error) throw paymentMethodsData.error;
-
-        setCategories(categoriesData.data || []);
-        setPaymentMethods(paymentMethodsData.data || []);
+        setCategories(cats);
+        setPaymentMethods(methods);
       } catch (error) {
         console.error("Error loading data:", error);
         toast({

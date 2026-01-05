@@ -248,6 +248,18 @@ export const translations = {
     th: "/เดือน",
     en: "/month"
   },
+  "subscriptions.browseAllTemplates": {
+    th: "ดูเทมเพลตทั้งหมด",
+    en: "Browse All Templates"
+  },
+  "subscriptions.noTemplatesFound": {
+    th: "ไม่พบเทมเพลต",
+    en: "No templates found"
+  },
+  "subscriptions.searchTemplates": {
+    th: "ค้นหาเทมเพลต...",
+    en: "Search templates..."
+  },
 
   // Search & Filter
   "search.label": {
@@ -666,17 +678,17 @@ export const translations = {
     th: "ค่าใช้จ่ายรายปี",
     en: "Yearly Cost"
   },
-  "subscriptions.browseAllTemplates": {
-    th: "ดูเทมเพลตทั้งหมด",
-    en: "Browse All Templates"
+  "subscription.add_success": {
+    th: "เพิ่มรายการสมัครสมาชิกเรียบร้อยแล้ว",
+    en: "Subscription added successfully"
   },
-  "subscriptions.noTemplatesFound": {
-    th: "ไม่พบเทมเพลต",
-    en: "No templates found"
+  "subscription.update_success": {
+    th: "อัปเดตรายการสมัครสมาชิกเรียบร้อยแล้ว",
+    en: "Subscription updated successfully"
   },
-  "subscriptions.searchTemplates": {
-    th: "ค้นหาเทมเพลต...",
-    en: "Search templates..."
+  "subscription.payment_method": {
+    th: "วิธีการชำระเงิน",
+    en: "Payment Method"
   },
 
   // Edit Subscription Page
@@ -1494,18 +1506,6 @@ export const translations = {
     th: "อื่นๆ",
     en: "Other"
   },
-  "subscription.add_success": {
-    th: "เพิ่มรายการสมัครสมาชิกเรียบร้อยแล้ว",
-    en: "Subscription added successfully"
-  },
-  "subscription.update_success": {
-    th: "อัปเดตรายการสมัครสมาชิกเรียบร้อยแล้ว",
-    en: "Subscription updated successfully"
-  },
-  "subscription.payment_method": {
-    th: "วิธีการชำระเงิน",
-    en: "Payment Method"
-  },
   "payment.select_method": {
     th: "เลือกวิธีการชำระเงิน",
     en: "Select payment method"
@@ -1655,76 +1655,6 @@ export const translations = {
   "common.billingCycle.half-yearly": {
     th: "ราย 6 เดือน",
     en: "Half-yearly"
-  },
-
-  // Intelligence translations
-  "intelligence.costBreakdown": {
-    th: "การคำนวณค่าใช้จ่าย",
-    en: "Cost Breakdown"
-  },
-  "intelligence.monthlyEquivalent": {
-    th: "รายเดือน",
-    en: "Monthly"
-  },
-  "intelligence.yearlyEquivalent": {
-    th: "รายปี",
-    en: "Yearly"
-  },
-  "intelligence.dailyCost": {
-    th: "รายวัน",
-    en: "Daily cost"
-  },
-  "intelligence.spendingContext": {
-    th: "บริบทการใช้จ่าย",
-    en: "Spending Context"
-  },
-  "intelligence.ofTotalSpending": {
-    th: "ของค่าใช้จ่ายรวมทั้งหมด",
-    en: "of total monthly spending"
-  },
-  "intelligence.rank": {
-    th: "อันดับที่ {rank} จาก {total}",
-    en: "Rank {rank} of {total}"
-  },
-  "intelligence.highYearlyCost": {
-    th: "⚠️ บริการนี้มีค่าใช้จ่ายมากกว่า {amount} บาท/ปี",
-    en: "⚠️ This subscription costs more than {amount}/year"
-  },
-  "intelligence.multipleInCategory": {
-    th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ",
-    en: "🔁 You already have {count} subscriptions in this category"
-  },
-  "intelligence.rarelyUsed": {
-    th: "✂️ บริการที่ใช้ไม่บ่อยมักจะถูกยกเลิกโดยผู้ใช้",
-    en: "✂️ Subscriptions used rarely are often canceled by users"
-  },
-  "intelligence.yearlyBillingSuggestion": {
-    th: "💡 ลองพิจารณาจ่ายแบบรายปี อาจประหยัดได้ประมาณ {savings} บาท",
-    en: "💡 Consider yearly billing to potentially save around {savings}"
-  },
-  "intelligence.reminderSuggestion": {
-    th: "🔔 แนะนำให้เปิดการแจ้งเตือนเพื่อไม่ให้ลืมบริการนี้",
-    en: "🔔 We recommend enabling reminders for this subscription"
-  },
-  "intelligence.summary": {
-    th: "สรุปข้อมูลอัจฉริยะ",
-    en: "Submo Insight"
-  },
-  "intelligence.summaryYearlyCost": {
-    th: "บริการนี้มีค่าใช้จ่าย {amount} ต่อปี",
-    en: "This subscription costs {amount}/year"
-  },
-  "intelligence.summaryPercentage": {
-    th: "คิดเป็น {percentage}% ของค่าใช้จ่ายรายเดือนของคุณ",
-    en: "It accounts for {percentage}% of your monthly subscription spending"
-  },
-  "intelligence.summaryReminder": {
-    th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว",
-    en: "A reminder has been enabled to prevent forgetting"
-  },
-  "intelligence.noActionRequired": {
-    th: "ไม่ต้องทำอะไรเพิ่มเติม",
-    en: "No additional action required"
   },
 
   // Notifications & Reminders
@@ -1984,6 +1914,38 @@ export const translations = {
     th: "การกระทำนี้ไม่สามารถย้อนกลับได้",
     en: "This action cannot be undone"
   },
+  "admin.enterTemplateName": {
+    th: "ระบุชื่อเทมเพลต",
+    en: "Enter template name"
+  },
+  "admin.websiteUrl": {
+    th: "URL เว็บไซต์",
+    en: "Website URL"
+  },
+  "admin.faviconAutomatic": {
+    th: "ดึง Favicon อัตโนมัติ",
+    en: "Auto-fetch Favicon"
+  },
+  "admin.category": {
+    th: "หมวดหมู่",
+    en: "Category"
+  },
+  "admin.selectCategory": {
+    th: "เลือกหมวดหมู่",
+    en: "Select Category"
+  },
+  "admin.currency": {
+    th: "สกุลเงิน",
+    en: "Currency"
+  },
+  "admin.billingCycle": {
+    th: "รอบการชำระเงิน",
+    en: "Billing Cycle"
+  },
+  "admin.description": {
+    th: "คำอธิบาย",
+    en: "Description"
+  },
   "admin.templates.table.icon": {
     th: "ไอคอน",
     en: "Icon"
@@ -2077,37 +2039,15 @@ export const translations = {
     en: "Only active templates are visible to users"
   },
   "admin.templateName": {
-    th: "ชื่อ",
-    en: "Name"
+    th: "ชื่อเทมเพลต",
+    en: "Template Name"
   },
   "admin.enterDescription": {
     th: "กรอกคำอธิบาย",
     en: "Enter description"
   },
-  "common.days": {
-    th: "วัน",
-    en: "days"
-  },
-  "common.no_results": {
-    th: "ไม่พบผลลัพธ์",
-    en: "No results found"
-  },
-  "common.billingCycle.monthly": {
-    th: "รายเดือน",
-    en: "Monthly"
-  },
-  "common.billingCycle.yearly": {
-    th: "รายปี",
-    en: "Yearly"
-  },
-  "common.billingCycle.quarterly": {
-    th: "รายไตรมาส",
-    en: "Quarterly"
-  },
-  "common.billingCycle.half-yearly": {
-    th: "ราย 6 เดือน",
-    en: "Half-yearly"
-  },
+
+  // Intelligence Layer
   "intelligence.costBreakdown": {
     th: "การคำนวณค่าใช้จ่าย",
     en: "Cost Breakdown"
