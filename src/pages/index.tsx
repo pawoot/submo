@@ -338,12 +338,14 @@ export default function LandingPage() {
                         </div>
 
                         {/* Subscription List */}
-                        <div className="space-y-3 flex-1 overflow-y-auto">
+                        <div className="space-y-3 flex-1 overflow-y-auto max-h-[380px]">
                           {/* Netflix */}
                           <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
                             <div className="flex items-center space-x-3">
                               <div className="w-12 h-12 bg-black rounded-lg flex items-center justify-center overflow-hidden">
-                                <img src="https://images.unsplash.com/photo-1574375927938-d5a98e8ffe85?w=100&h=100&fit=crop" alt="Netflix" className="w-full h-full object-cover" />
+                                <svg viewBox="0 0 111 30" className="w-8 h-8" xmlns="http://www.w3.org/2000/svg">
+                                  <path d="M105.062 14.28L111 30c-1.75-.25-3.499-.563-5.28-.845l-3.345-8.686-3.437 8.31c-1.812-.282-3.656-.563-5.5-.845l6.093-14.72L94.468 0h5.063l3.062 7.874L105.875 0h5.124l-5.937 14.28zM90.47 0h-4.594v27.25c1.5.094 3.062.156 4.594.343V0zm-8.563 26.937c-4.187-.281-8.375-.437-12.656-.437V0h4.687v21.875c2.688.062 5.375.28 7.969.405v4.657zM64.25 10.657v4.687h-6.406V26H53.22V0h13.125v4.687h-8.5v5.97h6.406zm-18.906-5.97V26.25c-1.563 0-3.156 0-4.688.062V4.687h-4.844V0h14.406v4.687h-4.874zM30.75 15.593c-2.062 0-4.5 0-6.25.095v6.968c2.75-.188 5.5-.406 8.281-.5v4.5l-12.968 1.032V0H32.78v4.687H24.5V11c1.813 0 4.594-.094 6.25-.094v4.688zM4.78 12.968v16.375C3.094 29.531 1.593 29.75 0 30V0h4.469l6.093 17.032V0h4.688v28.062c-1.656.282-3.344.376-5.125.625L4.78 12.968z" fill="#E50914"/>
+                                </svg>
                               </div>
                               <div>
                                 <div className="text-white font-semibold text-sm">Netflix Premium</div>
@@ -418,7 +420,7 @@ export default function LandingPage() {
                         </div>
 
                         {/* Analysis Button */}
-                        <div className="mt-4 pt-4">
+                        <div className="mt-4 pt-4 border-t border-gray-700/50">
                           <Link href="/auth/login">
                             <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300">
                               วิเคราะห์รายจ่ายของฉัน
