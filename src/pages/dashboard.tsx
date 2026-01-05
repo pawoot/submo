@@ -141,9 +141,17 @@ export default function Dashboard() {
         <div className="border-b bg-white dark:bg-gray-800 sticky top-0 z-50 shadow-sm">
           <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <div>
-                <h1 className="text-2xl font-bold">Submo</h1>
-                <p className="text-sm text-muted-foreground">Subscription Monitoring</p>
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                  <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+                    <rect x="3" y="3" width="18" height="18" rx="3" fill="white"/>
+                    <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                  </svg>
+                </div>
+                <div>
+                  <h1 className="text-2xl font-bold">Submo</h1>
+                  <p className="text-sm text-muted-foreground">Subscription Monitoring</p>
+                </div>
               </div>
               
               <div className="flex items-center gap-3">
@@ -232,15 +240,11 @@ export default function Dashboard() {
               />
             </div>
 
-            {/* Middle Top Row: Total Spending + Upcoming Renewals */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            {/* Middle Row: Total Spending + Charts + Upcoming Renewals (3 columns) */}
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <TotalSpending subscriptions={subscriptions} />
-              <UpcomingRenewals subscriptions={subscriptions} />
-            </div>
-
-            {/* Middle Row: Charts - Full Width */}
-            <div>
               <SubscriptionCharts />
+              <UpcomingRenewals subscriptions={subscriptions} />
             </div>
 
             {/* Subscription List */}
