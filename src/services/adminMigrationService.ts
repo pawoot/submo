@@ -38,7 +38,8 @@ export async function getMigrationHealth(): Promise<MigrationHealth | null> {
     return null;
   }
 
-  return data as MigrationHealth;
+  // Cast through unknown to avoid type overlap errors with Json
+  return data as unknown as MigrationHealth;
 }
 
 /**
