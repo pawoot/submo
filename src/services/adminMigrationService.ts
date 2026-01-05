@@ -83,8 +83,8 @@ export async function getMigrationHealth(): Promise<MigrationHealth | null> {
  * Get latest migration report
  */
 export async function getLatestMigrationReport(): Promise<MigrationReport | null> {
-  // @ts-ignore - bypassing type check for new table
-  const { data, error } = await supabase
+  // Cast supabase to any to bypass strict type checking for new tables
+  const { data, error } = await (supabase as any)
     .from("migration_reports")
     .select("*")
     .order("generated_at", { ascending: false })
@@ -96,7 +96,7 @@ export async function getLatestMigrationReport(): Promise<MigrationReport | null
     return null;
   }
 
-  return data as unknown as MigrationReport;
+  return data as MigrationReport;
 }
 
 /**
@@ -109,8 +109,7 @@ export async function getMigrationReports(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // @ts-ignore - bypassing type check for new table
-  const { data, error, count } = await supabase
+  const { data, error, count } = await (supabase as any)
     .from("migration_reports")
     .select("*", { count: "exact" })
     .order("generated_at", { ascending: false })
@@ -121,7 +120,7 @@ export async function getMigrationReports(
     return { data: [], count: 0 };
   }
 
-  return { data: (data || []) as unknown as MigrationReport[], count: count || 0 };
+  return { data: (data || []) as MigrationReport[], count: count || 0 };
 }
 
 /**
@@ -134,8 +133,7 @@ export async function getUnmappedRecords(filters?: {
   date_from?: string;
   date_to?: string;
 }): Promise<UnmappedRecord[]> {
-  // @ts-ignore - bypassing type check for new table
-  let query = supabase
+  let query = (supabase as any)
     .from("migration_report_rows")
     .select(`
       id,
@@ -194,7 +192,7 @@ export async function fixSubscriptionCategory(
   subscriptionId: string,
   newCategoryId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const { data, error } = await supabase.rpc("admin_fix_subscription_category", {
+  const { error } = await supabase.rpc("admin_fix_subscription_category", {
     p_subscription_id: subscriptionId,
     p_new_category_id: newCategoryId,
   });
@@ -214,7 +212,7 @@ export async function fixSubscriptionPaymentMethod(
   subscriptionId: string,
   newPaymentMethodId: string
 ): Promise<{ success: boolean; error?: string }> {
-  const { data, error } = await supabase.rpc("admin_fix_subscription_payment_method", {
+  const { error } = await supabase.rpc("admin_fix_subscription_payment_method", {
     p_subscription_id: subscriptionId,
     p_new_payment_method_id: newPaymentMethodId,
   });
@@ -235,7 +233,6 @@ export async function rerunCategoryBackfill(): Promise<{
   mapped_count?: number;
   error?: string;
 }> {
-  // @ts-ignore - RPC might not be in types yet
   const { data, error } = await supabase.rpc("rerun_category_backfill");
 
   if (error) {
@@ -254,7 +251,6 @@ export async function rerunPaymentMethodBackfill(): Promise<{
   mapped_count?: number;
   error?: string;
 }> {
-  // @ts-ignore - RPC might not be in types yet
   const { data, error } = await supabase.rpc("rerun_payment_method_backfill");
 
   if (error) {
@@ -269,8 +265,7 @@ export async function rerunPaymentMethodBackfill(): Promise<{
  * Get all feature flags
  */
 export async function getFeatureFlags(): Promise<FeatureFlag[]> {
-  // @ts-ignore - bypassing type check for new table
-  const { data, error } = await supabase
+  const { data, error } = await (supabase as any)
     .from("feature_flags")
     .select("*")
     .order("key");
@@ -280,7 +275,7 @@ export async function getFeatureFlags(): Promise<FeatureFlag[]> {
     return [];
   }
 
-  return (data || []) as unknown as FeatureFlag[];
+  return (data || []) as FeatureFlag[];
 }
 
 /**
@@ -290,8 +285,7 @@ export async function toggleFeatureFlag(
   flagKey: string,
   enabled: boolean
 ): Promise<{ success: boolean; error?: string }> {
-  // @ts-ignore - bypassing type check for new table
-  const { error } = await supabase
+  const { error } = await (supabase as any)
     .from("feature_flags")
     .update({ enabled, updated_at: new Date().toISOString() })
     .eq("key", flagKey);
@@ -320,8 +314,7 @@ export async function getAdminActionLogs(
   const from = (page - 1) * pageSize;
   const to = from + pageSize - 1;
 
-  // @ts-ignore - bypassing type check for new table
-  let query = supabase
+  let query = (supabase as any)
     .from("admin_actions_log")
     .select("*", { count: "exact" })
     .order("created_at", { ascending: false })
@@ -350,7 +343,7 @@ export async function getAdminActionLogs(
     return { data: [], count: 0 };
   }
 
-  return { data: (data || []) as unknown as AdminActionLog[], count: count || 0 };
+  return { data: (data || []) as AdminActionLog[], count: count || 0 };
 }
 
 /**
