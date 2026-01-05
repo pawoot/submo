@@ -233,7 +233,7 @@ export async function rerunCategoryBackfill(): Promise<{
   mapped_count?: number;
   error?: string;
 }> {
-  const { data, error } = await supabase.rpc("rerun_category_backfill");
+  const { data, error } = await (supabase as any).rpc("rerun_category_backfill");
 
   if (error) {
     console.error("Error re-running category backfill:", error);
@@ -251,7 +251,7 @@ export async function rerunPaymentMethodBackfill(): Promise<{
   mapped_count?: number;
   error?: string;
 }> {
-  const { data, error } = await supabase.rpc("rerun_payment_method_backfill");
+  const { data, error } = await (supabase as any).rpc("rerun_payment_method_backfill");
 
   if (error) {
     console.error("Error re-running payment method backfill:", error);
