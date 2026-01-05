@@ -315,6 +315,39 @@ export default function Home() {
     }
   };
 
+  const handleToggleReminder = async (id: string, currentEnabled: boolean) => {
+    try {
+      const subscription = subscriptions.find((s) => s.id === id);
+      if (!subscription) return;
+
+      await subscriptionService.updateSubscription(id, {
+        reminder_enabled: !currentEnabled,
+      });
+
+      toast({
+        title: currentEnabled ? "🔕 ปิดการแจ้งเตือน" : "🔔 เปิดการแจ้งเตือน",
+        description: currentEnabled 
+          ? `ปิดการแจ้งเตือนสำหรับ "${subscription.name}" แล้ว`
+          : `เปิดการแจ้งเตือนสำหรับ "${subscription.name}" แล้ว`,
+        variant: "default",
+      });
+
+      // Update local state
+      setSubscriptions(
+        subscriptions.map((sub) =>
+          sub.id === id ? { ...sub, reminder_enabled: !currentEnabled } : sub
+        )
+      );
+    } catch (error) {
+      console.error("Error updating reminder:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถเปลี่ยนแปลงการตั้งค่าได้ กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+      });
+    }
+  };
+
   const getDaysUntilRenewal = (date: string) => {
     const today = new Date();
     const renewal = new Date(date);

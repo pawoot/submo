@@ -74,16 +74,23 @@ export default function AddSubscription() {
       await subscriptionService.createSubscription(newSubscription);
 
       toast({
-        title: "สร้างรายการสำเร็จ",
-        description: `เพิ่ม ${data.name} เรียบร้อยแล้ว`,
+        title: "✅ สร้างรายการสำเร็จ",
+        description: `เพิ่ม "${data.name}" จำนวน ${new Intl.NumberFormat('th-TH', {
+          style: 'currency',
+          currency: data.currency || 'THB'
+        }).format(parseFloat(data.amount))} เรียบร้อยแล้ว`,
+        variant: "default",
       });
 
-      router.push("/");
+      // Redirect after short delay
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
     } catch (error) {
-      console.error("Error adding subscription:", error);
+      console.error("Error creating subscription:", error);
       toast({
-        title: t("common.error"),
-        description: t("common.error_occurred"),
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถสร้างรายการได้ กรุณาลองใหม่อีกครั้ง",
         variant: "destructive",
       });
     } finally {

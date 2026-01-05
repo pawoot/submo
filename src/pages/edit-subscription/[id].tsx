@@ -1,6 +1,16 @@
 import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
@@ -39,6 +49,7 @@ export default function EditSubscription() {
   const { toast } = useToast();
   const { t, language } = useLanguage();
 
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -251,21 +262,53 @@ export default function EditSubscription() {
       await subscriptionService.updateSubscription(id as string, updates);
 
       toast({
-        title: "บันทึกข้อมูลสำเร็จ",
-        description: "อัปเดตข้อมูล Subscription เรียบร้อยแล้ว",
+        title: "✅ บันทึกข้อมูลสำเร็จ",
+        description: `อัปเดตข้อมูล "${data.name}" เรียบร้อยแล้ว`,
+        variant: "default",
       });
-      
-      router.push("/");
+
+      // Redirect after short delay
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
     } catch (error) {
       console.error("Error updating subscription:", error);
       toast({
-        title: t("common.error"),
-        description: t("common.error_occurred"),
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
     }
+  };
+
+  const handleDelete = async () => {
+    if (!subscription) return;
+
+    try {
+      await subscriptionService.delete(id as string);
+
+      toast({
+        title: "✅ ลบรายการสำเร็จ",
+        description: `ลบ "${subscription.name}" เรียบร้อยแล้ว`,
+        variant: "default",
+      });
+
+      // Redirect after short delay
+      setTimeout(() => {
+        router.push("/");
+      }, 1500);
+    } catch (error) {
+      console.error("Error deleting subscription:", error);
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่สามารถลบรายการได้ กรุณาลองใหม่อีกครั้ง",
+        variant: "destructive",
+      });
+    }
+
+    setShowDeleteDialog(false);
   };
 
   if (loading) {
@@ -653,25 +696,57 @@ export default function EditSubscription() {
               </Card>
 
               {/* Action Buttons */}
-              <div className="flex items-center justify-end gap-4 pt-6">
+              <div className="flex items-center justify-between pt-6">
                 <Button
                   type="button"
-                  variant="outline"
-                  onClick={() => router.push("/")}
-                  className="min-w-[120px]"
+                  variant="destructive"
+                  onClick={() => setShowDeleteDialog(true)}
+                  className="gap-2"
                 >
-                  {t("common.cancel")}
+                  <Trash2 className="w-4 h-4" />
+                  {t("subscriptions.delete")}
                 </Button>
-                <Button
-                  type="submit"
-                  disabled={isSubmitting}
-                  className="min-w-[120px] bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
-                >
-                  {isSubmitting ? t("common.saving") : t("common.save")}
-                </Button>
+
+                <div className="flex gap-4">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={() => router.push("/")}
+                    className="min-w-[120px]"
+                  >
+                    {t("common.cancel")}
+                  </Button>
+                  <Button
+                    type="submit"
+                    disabled={isSubmitting}
+                    className="min-w-[120px] bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
+                  >
+                    {isSubmitting ? t("common.saving") : t("common.save")}
+                  </Button>
+                </div>
               </div>
             </div>
           </form>
+
+          <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>{t("subscriptions.confirmDelete")}</AlertDialogTitle>
+                <AlertDialogDescription>
+                  {t("subscriptions.confirmDeleteDesc")}
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel>{t("common.cancel")}</AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={handleDelete}
+                  className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                >
+                  {t("subscriptions.delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
         </main>
       </div>
     </AuthGuard>
