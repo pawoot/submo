@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import AdminLayout from "@/components/AdminLayout";
+import { AdminLayout } from "@/components/AdminLayout";
 import { MigrationHealthCard } from "@/components/admin/MigrationHealthCard";
 import { FeatureFlagControl } from "@/components/admin/FeatureFlagControl";
 import { MigrationReportTable } from "@/components/admin/MigrationReportTable";
