@@ -1,387 +1,414 @@
 export type Language = "th" | "en";
 
 export const translations = {
-  // Header & Navigation
-  "nav.home": {
-    th: "หน้าหลัก",
-    en: "Home"
-  },
-  "nav.addSubscription": {
-    th: "เพิ่ม Subscription",
-    en: "Add Subscription"
-  },
-  "nav.profile": {
-    th: "โปรไฟล์",
-    en: "Profile"
-  },
-  "nav.notifications": {
-    th: "การแจ้งเตือน",
-    en: "Notifications"
-  },
-  "nav.logout": {
-    th: "ออกจากระบบ",
-    en: "Logout"
-  },
-  "dialog.logoutTitle": {
-    th: "ยืนยันการออกจากระบบ",
-    en: "Confirm Logout"
-  },
-  "dialog.logoutDescription": {
-    th: "คุณแน่ใจหรือไม่ที่ต้องการออกจากระบบ?",
-    en: "Are you sure you want to logout?"
-  },
-  "dialog.cancel": {
-    th: "ยกเลิก",
-    en: "Cancel"
-  },
-  "dialog.confirm": {
-    th: "ยืนยัน",
-    en: "Confirm"
-  },
-  "nav.settings": {
-    th: "ตั้งค่า",
-    en: "Settings"
-  },
-  "nav.admin": {
-    th: "แอดมิน",
-    en: "Admin Panel"
-  },
-  "nav.stats": {
-    th: "สถิติ",
-    en: "Statistics"
-  },
-  "nav.login": {
-    th: "เข้าสู่ระบบ",
-    en: "Login"
-  },
-  "nav.signup": {
-    th: "สมัครสมาชิก",
-    en: "Sign Up"
-  },
+  // Navigation
+  "nav.home": { th: "หน้าหลัก", en: "Home" },
+  "nav.addSubscription": { th: "เพิ่ม Subscription", en: "Add Subscription" },
+  "nav.profile": { th: "โปรไฟล์", en: "Profile" },
+  "nav.notifications": { th: "การแจ้งเตือน", en: "Notifications" },
+  "nav.logout": { th: "ออกจากระบบ", en: "Logout" },
+  "nav.settings": { th: "ตั้งค่า", en: "Settings" },
+  "nav.admin": { th: "แอดมิน", en: "Admin Panel" },
+  "nav.stats": { th: "สถิติ", en: "Statistics" },
+  "nav.login": { th: "เข้าสู่ระบบ", en: "Login" },
+  "nav.signup": { th: "สมัครสมาชิก", en: "Sign Up" },
 
-  // Home Page - Header
-  "home.title": {
-    th: "Submo",
-    en: "Submo"
-  },
-  "home.tagline": {
-    th: "Subscription Monitoring",
-    en: "Subscription Monitoring"
-  },
-  "home.seo.title": {
-    th: "Submo - Subscription Monitoring",
-    en: "Submo - Subscription Monitoring"
-  },
-  "home.seo.description": {
-    th: "ติดตามค่าใช้จ่ายสมาชิก แจ้งเตือนก่อนชำระเงิน และดูภาพรวมการใช้จ่ายของคุณ",
-    en: "Track subscription costs, get payment reminders, and view your spending overview"
-  },
-  "home.welcome": {
-    th: "ยินดีต้อนรับสู่ Submo.ai",
-    en: "Welcome to Submo.ai"
-  },
-  "home.description": {
-    th: "จัดการ Subscription ทั้งหมดของคุณในที่เดียว ติดตามค่าใช้จ่าย และไม่พลาดทุกการต่ออายุ",
-    en: "Manage all your subscriptions in one place. Track expenses and never miss a renewal."
-  },
+  // Dialogs
+  "dialog.logoutTitle": { th: "ยืนยันการออกจากระบบ", en: "Confirm Logout" },
+  "dialog.logoutDescription": { th: "คุณแน่ใจหรือไม่ที่ต้องการออกจากระบบ?", en: "Are you sure you want to logout?" },
+  "dialog.cancel": { th: "ยกเลิก", en: "Cancel" },
+  "dialog.confirm": { th: "ยืนยัน", en: "Confirm" },
 
-  // Dashboard Cards
-  "dashboard.totalCost": {
-    th: "ค่าใช้จ่ายทั้งหมด",
-    en: "Total Cost"
-  },
-  "dashboard.activeSubscriptions": {
-    th: "Subscription ที่ใช้งาน",
-    en: "Active Subscriptions"
-  },
-  "dashboard.upcomingRenewals": {
-    th: "ต่ออายุเร็วๆ นี้",
-    en: "Upcoming Renewals"
-  },
-  "dashboard.perMonth": {
-    th: "/เดือน",
-    en: "/month"
-  },
-  "dashboard.perYear": {
-    th: "/ปี",
-    en: "/year"
-  },
-  "dashboard.items": {
-    th: "รายการ",
-    en: "items"
-  },
-  "dashboard.within30Days": {
-    th: "ใน 30 วันนี้",
-    en: "within 30 days"
-  },
+  // Home
+  "home.title": { th: "Submo", en: "Submo" },
+  "home.tagline": { th: "Subscription Monitoring", en: "Subscription Monitoring" },
+  "home.seo.title": { th: "Submo - Subscription Monitoring", en: "Submo - Subscription Monitoring" },
+  "home.seo.description": { th: "ติดตามค่าใช้จ่ายสมาชิก แจ้งเตือนก่อนชำระเงิน และดูภาพรวมการใช้จ่ายของคุณ", en: "Track subscription costs, get payment reminders, and view your spending overview" },
+  "home.welcome": { th: "ยินดีต้อนรับสู่ Submo.ai", en: "Welcome to Submo.ai" },
+  "home.description": { th: "จัดการ Subscription ทั้งหมดของคุณในที่เดียว ติดตามค่าใช้จ่าย และไม่พลาดทุกการต่ออายุ", en: "Manage all your subscriptions in one place. Track expenses and never miss a renewal." },
 
-  // Subscription List
-  "subscriptions.title": {
-    th: "รายการ Subscription",
-    en: "Subscription List"
-  },
-  "subscriptions.sort": {
-    th: "เรียงตาม",
-    en: "Sort by"
-  },
-  "subscriptions.sortNewest": {
-    th: "เพิ่มล่าสุด",
-    en: "Newest"
-  },
-  "subscriptions.sortOldest": {
-    th: "เพิ่มเก่าสุด",
-    en: "Oldest"
-  },
-  "subscriptions.sortPriceHigh": {
-    th: "ราคา: มาก → น้อย",
-    en: "Price: High → Low"
-  },
-  "subscriptions.sortPriceLow": {
-    th: "ราคา: น้อย → มาก",
-    en: "Price: Low → High"
-  },
-  "subscriptions.sortNameAZ": {
-    th: "ชื่อ: A → Z",
-    en: "Name: A → Z"
-  },
-  "subscriptions.sortNameZA": {
-    th: "ชื่อ: Z → A",
-    en: "Name: Z → A"
-  },
-  "subscriptions.sortNextBilling": {
-    th: "วันต่ออายุ: ใกล้สุด",
-    en: "Next Billing: Soonest"
-  },
-  "subscriptions.sortNextBillingDesc": {
-    th: "วันต่ออายุ: ไกลสุด",
-    en: "Next Billing: Furthest"
-  },
-  "subscriptions.sortCategory": {
-    th: "หมวดหมู่",
-    en: "Category"
-  },
-  "subscriptions.page": {
-    th: "หน้า",
-    en: "Page"
-  },
-  "subscriptions.of": {
-    th: "จาก",
-    en: "of"
-  },
-  "subscriptions.items": {
-    th: "รายการ",
-    en: "items"
-  },
-  "subscriptions.searchPlaceholder": {
-    th: "ค้นหาชื่อ Subscription...",
-    en: "Search subscriptions..."
-  },
-  "subscriptions.showing": {
-    th: "แสดง",
-    en: "Showing"
-  },
-  "subscriptions.empty": {
-    th: "ยังไม่มี Subscription",
-    en: "No subscriptions yet"
-  },
-  "subscriptions.emptyDesc": {
-    th: "เริ่มต้นเพิ่ม Subscription แรกของคุณเลย",
-    en: "Start by adding your first subscription"
-  },
-  "subscriptions.monthly": {
-    th: "รายเดือน",
-    en: "Monthly"
-  },
-  "subscriptions.quarterly": {
-    th: "รายไตรมาส",
-    en: "Quarterly"
-  },
-  "subscriptions.halfYearly": {
-    th: "ราย 6 เดือน",
-    en: "Half-yearly"
-  },
-  "subscriptions.daysLeft": {
-    th: "เหลือ {days} วัน",
-    en: "{days} days left"
-  },
-  "subscriptions.yearly": {
-    th: "รายปี",
-    en: "Yearly"
-  },
-  "subscriptions.nextBilling": {
-    th: "ต่ออายุถัดไป",
-    en: "Next billing"
-  },
-  "subscriptions.sharedWith": {
-    th: "แบ่งปันกับ",
-    en: "Shared with"
-  },
-  "subscriptions.people": {
-    th: "คน",
-    en: "people"
-  },
-  "subscriptions.edit": {
-    th: "แก้ไข",
-    en: "Edit"
-  },
-  "subscriptions.delete": {
-    th: "ลบ",
-    en: "Delete"
-  },
-  "subscriptions.confirmDelete": {
-    th: "ยืนยันการลบ",
-    en: "Confirm Delete"
-  },
-  "subscriptions.confirmDeleteDesc": {
-    th: "คุณแน่ใจหรือไม่ที่จะลบ Subscription นี้?",
-    en: "Are you sure you want to delete this subscription?"
-  },
-  "subscriptions.cancel": {
-    th: "ยกเลิก",
-    en: "Cancel"
-  },
-  "subscriptions.perYear": {
-    th: "/ปี",
-    en: "/year"
-  },
-  "subscriptions.perMonth": {
-    th: "/เดือน",
-    en: "/month"
-  },
-  "subscriptions.browseAllTemplates": {
-    th: "ดูเทมเพลตทั้งหมด",
-    en: "Browse All Templates"
-  },
-  "subscriptions.noTemplatesFound": {
-    th: "ไม่พบเทมเพลต",
-    en: "No templates found"
-  },
-  "subscriptions.searchTemplates": {
-    th: "ค้นหาเทมเพลต...",
-    en: "Search templates..."
-  },
-  "subscriptions.cantFindAddCustom": {
-    th: "ไม่พบบริการที่ต้องการ?",
-    en: "Service not found?"
-  },
-  "subscriptions.addCustomService": {
-    th: "เพิ่มบริการที่คุณต้องการ",
-    en: "Add custom service"
-  },
+  // Dashboard
+  "dashboard.totalCost": { th: "ค่าใช้จ่ายทั้งหมด", en: "Total Cost" },
+  "dashboard.activeSubscriptions": { th: "Subscription ที่ใช้งาน", en: "Active Subscriptions" },
+  "dashboard.upcomingRenewals": { th: "ต่ออายุเร็วๆ นี้", en: "Upcoming Renewals" },
+  "dashboard.perMonth": { th: "/เดือน", en: "/month" },
+  "dashboard.perYear": { th: "/ปี", en: "/year" },
+  "dashboard.items": { th: "รายการ", en: "items" },
+  "dashboard.within30Days": { th: "ใน 30 วันนี้", en: "within 30 days" },
 
-  // Add Subscription Page
-  "addSub.title": {
-    th: "เพิ่มรายการสมาชิก",
-    en: "Add Subscription"
-  },
-  "addSub.subtitle": {
-    th: "เพิ่ม Subscription ใหม่",
-    en: "Add a new subscription"
-  },
-  "addSub.select_template": {
-    th: "เลือกบริการ",
-    en: "Select Service"
-  },
-  "addSub.fill_details": {
-    th: "กรอกรายละเอียด",
-    en: "Fill Details"
-  },
-  "addSub.review": {
-    th: "ตรวจสอบ",
-    en: "Review"
-  },
-  "addSub.custom_service": {
-    th: "บริการอื่นๆ (กำหนดเอง)",
-    en: "Custom Service"
-  },
+  // Subscriptions List
+  "subscriptions.title": { th: "รายการ Subscription", en: "Subscription List" },
+  "subscriptions.sort": { th: "เรียงตาม", en: "Sort by" },
+  "subscriptions.sortNewest": { th: "เพิ่มล่าสุด", en: "Newest" },
+  "subscriptions.sortOldest": { th: "เพิ่มเก่าสุด", en: "Oldest" },
+  "subscriptions.sortPriceHigh": { th: "ราคา: มาก → น้อย", en: "Price: High → Low" },
+  "subscriptions.sortPriceLow": { th: "ราคา: น้อย → มาก", en: "Price: Low → High" },
+  "subscriptions.sortNameAZ": { th: "ชื่อ: A → Z", en: "Name: A → Z" },
+  "subscriptions.sortNameZA": { th: "ชื่อ: Z → A", en: "Name: Z → A" },
+  "subscriptions.sortNextBilling": { th: "วันต่ออายุ: ใกล้สุด", en: "Next Billing: Soonest" },
+  "subscriptions.sortNextBillingDesc": { th: "วันต่ออายุ: ไกลสุด", en: "Next Billing: Furthest" },
+  "subscriptions.sortCategory": { th: "หมวดหมู่", en: "Category" },
+  "subscriptions.page": { th: "หน้า", en: "Page" },
+  "subscriptions.of": { th: "จาก", en: "of" },
+  "subscriptions.items": { th: "รายการ", en: "items" },
+  "subscriptions.searchPlaceholder": { th: "ค้นหาชื่อ Subscription...", en: "Search subscriptions..." },
+  "subscriptions.showing": { th: "แสดง", en: "Showing" },
+  "subscriptions.empty": { th: "ยังไม่มี Subscription", en: "No subscriptions yet" },
+  "subscriptions.emptyDesc": { th: "เริ่มต้นเพิ่ม Subscription แรกของคุณเลย", en: "Start by adding your first subscription" },
+  "subscriptions.monthly": { th: "รายเดือน", en: "Monthly" },
+  "subscriptions.quarterly": { th: "รายไตรมาส", en: "Quarterly" },
+  "subscriptions.halfYearly": { th: "ราย 6 เดือน", en: "Half-yearly" },
+  "subscriptions.daysLeft": { th: "เหลือ {days} วัน", en: "{days} days left" },
+  "subscriptions.yearly": { th: "รายปี", en: "Yearly" },
+  "subscriptions.nextBilling": { th: "ต่ออายุถัดไป", en: "Next billing" },
+  "subscriptions.sharedWith": { th: "แบ่งปันกับ", en: "Shared with" },
+  "subscriptions.people": { th: "คน", en: "people" },
+  "subscriptions.edit": { th: "แก้ไข", en: "Edit" },
+  "subscriptions.delete": { th: "ลบ", en: "Delete" },
+  "subscriptions.confirmDelete": { th: "ยืนยันการลบ", en: "Confirm Delete" },
+  "subscriptions.confirmDeleteDesc": { th: "คุณแน่ใจหรือไม่ที่จะลบ Subscription นี้?", en: "Are you sure you want to delete this subscription?" },
+  "subscriptions.cancel": { th: "ยกเลิก", en: "Cancel" },
+  "subscriptions.perYear": { th: "/ปี", en: "/year" },
+  "subscriptions.perMonth": { th: "/เดือน", en: "/month" },
+  "subscriptions.browseAllTemplates": { th: "ดูเทมเพลตทั้งหมด", en: "Browse All Templates" },
+  "subscriptions.noTemplatesFound": { th: "ไม่พบเทมเพลต", en: "No templates found" },
+  "subscriptions.searchTemplates": { th: "ค้นหาเทมเพลต...", en: "Search templates..." },
+  "subscriptions.cantFindAddCustom": { th: "ไม่พบบริการที่ต้องการ?", en: "Service not found?" },
+  "subscriptions.addCustomService": { th: "เพิ่มบริการที่คุณต้องการ", en: "Add custom service" },
+  "subscription.monthly_cost": { th: "ค่าใช้จ่ายรายเดือน", en: "Monthly Cost" },
+  "subscription.yearly_cost": { th: "ค่าใช้จ่ายรายปี", en: "Yearly Cost" },
+  "subscription.add_success": { th: "เพิ่มรายการเรียบร้อยแล้ว", en: "Subscription added successfully" },
+  "subscription.update_success": { th: "อัปเดตรายการเรียบร้อยแล้ว", en: "Subscription updated successfully" },
+  "subscription.payment_method": { th: "วิธีการชำระเงิน", en: "Payment Method" },
+
+  // Add/Edit Subscription
+  "addSub.title": { th: "เพิ่มรายการสมาชิก", en: "Add Subscription" },
+  "addSub.subtitle": { th: "เพิ่ม Subscription ใหม่", en: "Add a new subscription" },
+  "addSub.select_template": { th: "เลือกบริการ", en: "Select Service" },
+  "addSub.fill_details": { th: "กรอกรายละเอียด", en: "Fill Details" },
+  "addSub.review": { th: "ตรวจสอบ", en: "Review" },
+  "addSub.custom_service": { th: "บริการอื่นๆ (กำหนดเอง)", en: "Custom Service" },
+  "addSub.basicInfo": { th: "ข้อมูลพื้นฐาน", en: "Basic Info" },
+  "addSub.popularTemplates": { th: "บริการยอดนิยม", en: "Popular Services" },
+  "addSub.name": { th: "ชื่อบริการ", en: "Service Name" },
+  "addSub.category": { th: "หมวดหมู่", en: "Category" },
+  "addSub.selectCategory": { th: "เลือกหมวดหมู่", en: "Select Category" },
+  "addSub.cost": { th: "ราคา", en: "Cost" },
+  "addSub.costPlaceholder": { th: "0.00", en: "0.00" },
+  "addSub.currency": { th: "สกุลเงิน", en: "Currency" },
+  "addSub.billing": { th: "รอบการชำระเงิน", en: "Billing Cycle" },
+  "addSub.paymentInfo": { th: "ข้อมูลการชำระเงิน", en: "Payment Info" },
+  "addSub.startDate": { th: "วันที่เริ่ม", en: "Start Date" },
+  "addSub.nextBillingDate": { th: "วันชำระเงินครั้งถัดไป", en: "Next Billing Date" },
+  "addSub.autoCalculated": { th: "คำนวณอัตโนมัติ", en: "Auto-calculated" },
+  "addSub.paymentMethod": { th: "วิธีชำระเงิน", en: "Payment Method" },
+  "addSub.selectPayment": { th: "เลือกวิธีชำระเงิน", en: "Select Payment Method" },
+  "addSub.cardNumber": { th: "เลขบัตร (4 ตัวท้าย)", en: "Card Number (Last 4)" },
+  "addSub.cardPlaceholder": { th: "1234", en: "1234" },
+  "addSub.quickToggles": { th: "ตั้งค่าด่วน", en: "Quick Settings" },
+  "addSub.remind3Days": { th: "แจ้งเตือนล่วงหน้า 3 วัน", en: "Remind 3 days before" },
+  "addSub.remind7Days": { th: "แจ้งเตือนล่วงหน้า 7 วัน", en: "Remind 7 days before" },
+  "addSub.additionalInfo": { th: "ข้อมูลเพิ่มเติม", en: "Additional Info" },
+  "addSub.optionalContext": { th: "ข้อมูลเสริม (ไม่บังคับ)", en: "Optional details" },
+  "addSub.usageFrequency": { th: "ความถี่การใช้งาน", en: "Usage Frequency" },
+  "addSub.often": { th: "บ่อย", en: "Often" },
+  "addSub.sometimes": { th: "บางครั้ง", en: "Sometimes" },
+  "addSub.rarely": { th: "นานๆ ครั้ง", en: "Rarely" },
+  "addSub.notes": { th: "บันทึกช่วยจำ", en: "Notes" },
+  "addSub.notesPlaceholder": { th: "เพิ่มบันทึก...", en: "Add notes..." },
+  "addSub.submitting": { th: "กำลังบันทึก...", en: "Submitting..." },
+  "addSub.submit": { th: "เพิ่ม Subscription", en: "Add Subscription" },
+  "addSub.costSummary": { th: "สรุปค่าใช้จ่าย", en: "Cost Summary" },
+  "addSub.subscription": { th: "รายการ", en: "Subscription" },
+  "addSub.billedYearly": { th: "จ่ายรายปี", en: "Billed Yearly" },
+  "addSub.calculatedYearly": { th: "คำนวณเป็นรายปี", en: "Calculated Yearly" },
+  "addSub.yearlyBillingInfo": { th: "ข้อมูลการชำระรายปี", en: "Yearly Billing Info" },
+  "addSub.monthlyBillingInfo": { th: "ข้อมูลการชำระรายเดือน", en: "Monthly Billing Info" },
+  "addSub.nextBilling": { th: "รอบบิลถัดไป", en: "Next Billing" },
+  "addSub.remindersEnabled": { th: "เปิดแจ้งเตือนแล้ว", en: "Reminders Enabled" },
+  "addSub.beforeBilling": { th: "ก่อนถึงกำหนด", en: "before billing" },
+  "addSub.highCostWarning": { th: "คำเตือนราคาสูง", en: "High Cost Warning" },
+  "addSub.highCostDesc": { th: "รายการนี้มีราคาสูงกว่าค่าเฉลี่ย", en: "This cost is higher than average" },
+  "addSub.templateSelected": { th: "เลือกเทมเพลตแล้ว", en: "Template Selected" },
+  "addSub.templateSelectedDesc": { th: "ข้อมูลถูกกรอกอัตโนมัติจากเทมเพลต", en: "Details auto-filled from template" },
+  "addSub.description": { th: "รายละเอียด", en: "Description" },
+  "addSub.descriptionPlaceholder": { th: "ระบุรายละเอียด...", en: "Enter description..." },
+  "addSub.pricingInfo": { th: "ข้อมูลราคา", en: "Pricing Info" },
+  "addSub.selectCurrency": { th: "เลือกสกุลเงิน", en: "Select Currency" },
+  "addSub.selectBilling": { th: "เลือกรอบบิล", en: "Select Billing Cycle" },
+  "addSub.billingMonthly": { th: "รายเดือน", en: "Monthly" },
+  "addSub.billingYearly": { th: "รายปี", en: "Yearly" },
+  "editSub.title": { th: "แก้ไข Subscription", en: "Edit Subscription" },
 
   // Common
-  "common.loading": {
-    th: "กำลังโหลด...",
-    en: "Loading..."
-  },
-  "common.save": {
-    th: "บันทึก",
-    en: "Save"
-  },
-  "common.cancel": {
-    th: "ยกเลิก",
-    en: "Cancel"
-  },
-  "common.continue": {
-    th: "ถัดไป",
-    en: "Continue"
-  },
+  "common.loading": { th: "กำลังโหลด...", en: "Loading..." },
+  "common.save": { th: "บันทึก", en: "Save" },
+  "common.cancel": { th: "ยกเลิก", en: "Cancel" },
+  "common.continue": { th: "ถัดไป", en: "Continue" },
+  "common.step": { th: "ขั้นตอน", en: "Step" },
+  "common.of": { th: "จาก", en: "of" },
+  "common.optional": { th: "ไม่บังคับ", en: "Optional" },
+  "common.select": { th: "เลือก", en: "Select" },
+  "common.previous": { th: "ย้อนกลับ", en: "Previous" },
+  "common.back": { th: "กลับ", en: "Back" },
+  "common.or": { th: "หรือ", en: "or" },
+  "common.days": { th: "วัน", en: "Days" },
+  "common.saving": { th: "กำลังบันทึก...", en: "Saving..." },
+  "common.error": { th: "ข้อผิดพลาด", en: "Error" },
+  "common.error_occurred": { th: "เกิดข้อผิดพลาดขึ้น", en: "An error occurred" },
+  "common.success": { th: "สำเร็จ", en: "Success" },
+  "common.unknown": { th: "ไม่ระบุ", en: "Unknown" },
+  "common.billingCycle.monthly": { th: "รายเดือน", en: "Monthly" },
+  "common.billingCycle.yearly": { th: "รายปี", en: "Yearly" },
+  "common.billingCycle.quarterly": { th: "รายไตรมาส", en: "Quarterly" },
+  "common.billingCycle.half-yearly": { th: "รายครึ่งปี", en: "Half-yearly" },
 
-  // Intelligence Layer
-  "intelligence.costBreakdown": {
-    th: "การคำนวณค่าใช้จ่าย",
-    en: "Cost Breakdown"
-  },
-  "intelligence.monthlyEquivalent": {
-    th: "รายเดือน",
-    en: "Monthly"
-  },
-  "intelligence.yearlyEquivalent": {
-    th: "รายปี",
-    en: "Yearly"
-  },
-  "intelligence.dailyCost": {
-    th: "รายวัน",
-    en: "Daily cost"
-  },
-  "intelligence.spendingContext": {
-    th: "บริบทการใช้จ่าย",
-    en: "Spending Context"
-  },
-  "intelligence.ofTotalSpending": {
-    th: "ของค่าใช้จ่ายรวมทั้งหมด",
-    en: "of total spending"
-  },
-  "intelligence.rankingOf": {
-    th: "อันดับที่ {rank} จาก {total}",
-    en: "Ranked {rank} of {total}"
-  },
-  "intelligence.highYearlyCost": {
-    th: "⚠️ บริการนี้มีค่าใช้จ่ายมากกว่า {amount} บาท/ปี",
-    en: "⚠️ This subscription costs over {amount}/year"
-  },
-  "intelligence.multipleInCategory": {
-    th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ",
-    en: "🔁 You already have {count} subscriptions in this category"
-  },
-  "intelligence.rarelyUsed": {
-    th: "✂️ บริการที่ใช้ไม่บ่อยมักจะถูกยกเลิกโดยผู้ใช้",
-    en: "✂️ Rarely used services are often cancelled"
-  },
-  "intelligence.yearlyBillingSuggestion": {
-    th: "💡 ลองพิจารณาจ่ายแบบรายปี อาจประหยัดได้ประมาณ {savings} บาท",
-    en: "💡 Consider yearly billing to save approx {savings}"
-  },
-  "intelligence.reminderSuggestion": {
-    th: "🔔 แนะนำให้เปิดการแจ้งเตือนเพื่อไม่ให้ลืมบริการนี้",
-    en: "🔔 Recommended to enable reminders for this service"
-  },
-  "intelligence.summary": {
-    th: "🧠 Submo Insight",
-    en: "🧠 Submo Insight"
-  },
-  "intelligence.summaryYearlyCost": {
-    th: "บริการนี้มีค่าใช้จ่าย {amount} ต่อปี",
-    en: "This service costs {amount} per year"
-  },
-  "intelligence.summaryPercentage": {
-    th: "คิดเป็น {percent}% ของค่าใช้จ่ายรายเดือนของคุณ",
-    en: "Accounts for {percent}% of your monthly spending"
-  },
-  "intelligence.summaryReminder": {
-    th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว",
-    en: "Reminders enabled to prevent forgetting"
-  },
-  "intelligence.noActionRequired": {
-    th: "ไม่ต้องทำอะไรเพิ่มเติม",
-    en: "No additional action required"
-  }
+  // Auth
+  "auth.loginError": { th: "เข้าสู่ระบบไม่สำเร็จ", en: "Login failed" },
+  "auth.loginSuccess": { th: "เข้าสู่ระบบสำเร็จ", en: "Login successful" },
+  "auth.email": { th: "อีเมล", en: "Email" },
+  "auth.password": { th: "รหัสผ่าน", en: "Password" },
+  "auth.emailPlaceholder": { th: "กรอกอีเมล", en: "Enter email" },
+  "auth.passwordPlaceholder": { th: "กรอกรหัสผ่าน", en: "Enter password" },
+  "auth.forgotPassword": { th: "ลืมรหัสผ่าน?", en: "Forgot password?" },
+  "auth.loggingIn": { th: "กำลังเข้าสู่ระบบ...", en: "Logging in..." },
+  "auth.login": { th: "เข้าสู่ระบบ", en: "Login" },
+  "auth.noAccount": { th: "ยังไม่มีบัญชี?", en: "Don't have an account?" },
+  "auth.signup": { th: "สมัครสมาชิก", en: "Sign Up" },
+  "auth.signupError": { th: "สมัครสมาชิกไม่สำเร็จ", en: "Sign up failed" },
+  "auth.signupSuccess": { th: "สมัครสมาชิกสำเร็จ", en: "Sign up successful" },
+  "auth.checkEmail": { th: "ตรวจสอบอีเมล", en: "Check your email" },
+  "auth.resetLinkSent": { th: "ส่งลิงก์รีเซ็ตรหัสผ่านแล้ว", en: "Reset link sent" },
+  "auth.checkSpam": { th: "โปรดตรวจสอบโฟลเดอร์สแปม", en: "Please check spam folder" },
+  "auth.backToLogin": { th: "กลับไปหน้าเข้าสู่ระบบ", en: "Back to Login" },
+  "auth.signingUp": { th: "กำลังสมัครสมาชิก...", en: "Signing up..." },
+  "auth.confirmPassword": { th: "ยืนยันรหัสผ่าน", en: "Confirm Password" },
+  "auth.hasAccount": { th: "มีบัญชีอยู่แล้ว?", en: "Already have an account?" },
+  "auth.sendEmailError": { th: "ส่งอีเมลไม่สำเร็จ", en: "Failed to send email" },
+  "auth.emailSent": { th: "ส่งอีเมลแล้ว", en: "Email sent" },
+  "auth.checkEmailDesc": { th: "เราได้ส่งลิงก์รีเซ็ตรหัสผ่านไปที่อีเมลของคุณแล้ว", en: "We sent a password reset link to your email" },
+  "auth.linkSentTo": { th: "ส่งลิงก์ไปที่", en: "Link sent to" },
+  "auth.checkSpamFolder": { th: "ตรวจสอบกล่องจดหมายขยะหากไม่พบในกล่องจดหมายหลัก", en: "Check spam folder if not found in inbox" },
+  "auth.forgotPasswordDesc": { th: "กรอกอีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน", en: "Enter your email to receive a password reset link" },
+  "auth.sendingEmail": { th: "กำลังส่งอีเมล...", en: "Sending email..." },
+  "auth.sendResetLink": { th: "ส่งลิงก์รีเซ็ต", en: "Send Reset Link" },
+  "auth.rememberPassword": { th: "จำรหัสผ่านได้แล้ว?", en: "Remember password?" },
+  "auth.invalidLink": { th: "ลิงก์ไม่ถูกต้อง", en: "Invalid Link" },
+  "auth.requestNewLink": { th: "ขอลิงก์ใหม่", en: "Request new link" },
+  "auth.weakPassword": { th: "รหัสผ่านไม่ปลอดภัย", en: "Weak password" },
+  "auth.passwordMismatch": { th: "รหัสผ่านไม่ตรงกัน", en: "Passwords do not match" },
+  "auth.weakPasswordDesc": { th: "รหัสผ่านควรมีความยาวอย่างน้อย 6 ตัวอักษร", en: "Password should be at least 6 characters" },
+  "auth.changePasswordFailed": { th: "เปลี่ยนรหัสผ่านไม่สำเร็จ", en: "Failed to change password" },
+  "auth.passwordChanged": { th: "เปลี่ยนรหัสผ่านสำเร็จ", en: "Password Changed" },
+  "auth.redirectingLogin": { th: "กำลังนำไปหน้าเข้าสู่ระบบ...", en: "Redirecting to login..." },
+  "auth.changePasswordError": { th: "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน", en: "Error changing password" },
+  "auth.passwordChangedDesc": { th: "คุณสามารถเข้าสู่ระบบด้วยรหัสผ่านใหม่ได้แล้ว", en: "You can now login with your new password" },
+  "auth.resetPassword": { th: "ตั้งค่ารหัสผ่านใหม่", en: "Reset Password" },
+  "auth.enterNewPassword": { th: "กรอกรหัสผ่านใหม่ของคุณ", en: "Enter your new password" },
+  "auth.newPassword": { th: "รหัสผ่านใหม่", en: "New Password" },
+  "auth.strength.weak": { th: "อ่อน", en: "Weak" },
+  "auth.strength.medium": { th: "ปานกลาง", en: "Medium" },
+  "auth.strength.strong": { th: "แข็งแรง", en: "Strong" },
+  "auth.passwordRequirements": { th: "ความต้องการรหัสผ่าน", en: "Password Requirements" },
+  "auth.confirmNewPassword": { th: "ยืนยันรหัสผ่านใหม่", en: "Confirm New Password" },
+  "auth.passwordMatch": { th: "รหัสผ่านตรงกัน", en: "Passwords match" },
+  "auth.passwordMismatchDesc": { th: "รหัสผ่านที่กรอกไม่ตรงกัน", en: "Passwords do not match" },
+  "auth.changingPassword": { th: "กำลังเปลี่ยนรหัสผ่าน...", en: "Changing password..." },
+  "auth.changePassword": { th: "เปลี่ยนรหัสผ่าน", en: "Change Password" },
+  "auth.fullNamePlaceholder": { th: "ชื่อ-นามสกุล", en: "Full Name" },
+
+  // Charts
+  "charts.emptyTitle": { th: "ไม่มีข้อมูล", en: "No Data" },
+  "charts.emptyDesc": { th: "เพิ่ม Subscription เพื่อดูสถิติ", en: "Add subscriptions to see charts" },
+  "charts.addFirst": { th: "เพิ่มรายการแรก", en: "Add First Subscription" },
+  "charts.monthlyByCategory": { th: "ค่าใช้จ่ายรายเดือนตามหมวดหมู่", en: "Monthly Cost by Category" },
+  "charts.categoryDistribution": { th: "สัดส่วนค่าใช้จ่ายตามหมวดหมู่", en: "Cost Distribution by Category" },
+  "charts.paymentMethodCost": { th: "ค่าใช้จ่ายตามวิธีชำระเงิน", en: "Cost by Payment Method" },
+  "charts.paymentMethodDistribution": { th: "สัดส่วนวิธีชำระเงิน", en: "Payment Method Distribution" },
+
+  // Profile
+  "profile.title": { th: "โปรไฟล์", en: "Profile" },
+  "profile.manageAccount": { th: "จัดการบัญชี", en: "Manage Account" },
+  "profile.myProfile": { th: "โปรไฟล์ของฉัน", en: "My Profile" },
+  "profile.noName": { th: "ไม่มีชื่อ", en: "No Name" },
+  "profile.memberSince": { th: "สมาชิกตั้งแต่", en: "Member since" },
+  "profile.usageStats": { th: "สถิติการใช้งาน", en: "Usage Stats" },
+  "profile.totalSubs": { th: "รายการทั้งหมด", en: "Total Subs" },
+  "profile.activeSubs": { th: "รายการที่ใช้งาน", en: "Active Subs" },
+  "profile.monthlyCost": { th: "ยอดรวมรายเดือน", en: "Monthly Cost" },
+  "profile.yearlyCost": { th: "ยอดรวมรายปี", en: "Yearly Cost" },
+  "profile.personalInfo": { th: "ข้อมูลส่วนตัว", en: "Personal Info" },
+  "profile.updateInfo": { th: "อัปเดตข้อมูลของคุณ", en: "Update your information" },
+  "profile.email": { th: "อีเมล", en: "Email" },
+  "profile.fullName": { th: "ชื่อ-นามสกุล", en: "Full Name" },
+  "profile.avatarUrl": { th: "รูปโปรไฟล์ (URL)", en: "Avatar URL" },
+  "profile.avatarUploadDesc": { th: "หรืออัปโหลดรูปภาพ", en: "Or upload an image" },
+  "profile.saving": { th: "กำลังบันทึก...", en: "Saving..." },
+  "profile.saveChanges": { th: "บันทึกการเปลี่ยนแปลง", en: "Save Changes" },
+  "profile.security": { th: "ความปลอดภัย", en: "Security" },
+  "profile.changePasswordDesc": { th: "เปลี่ยนรหัสผ่านเพื่อความปลอดภัย", en: "Change your password for security" },
+  "profile.currencySettings": { th: "การตั้งค่าสกุลเงิน", en: "Currency Settings" },
+  "profile.selectCurrencyDesc": { th: "เลือกสกุลเงินหลักที่ต้องการแสดง", en: "Select your preferred display currency" },
+  "profile.displayCurrency": { th: "สกุลเงินที่แสดง", en: "Display Currency" },
+  "profile.currencyUpdated": { th: "อัปเดตสกุลเงินแล้ว", en: "Currency updated" },
+  "profile.currencyAutoConvert": { th: "แปลงค่าเงินอัตโนมัติ", en: "Auto-convert currency" },
+  "profile.currentCurrency": { th: "สกุลเงินปัจจุบัน", en: "Current Currency" },
+  "profile.dangerZone": { th: "พื้นที่อันตราย", en: "Danger Zone" },
+  "profile.irreversibleAction": { th: "การกระทำนี้ไม่สามารถย้อนกลับได้", en: "This action cannot be undone" },
+  "profile.deleteAccount": { th: "ลบเมมเบอร์", en: "Delete Account" },
+  "profile.deleteConfirmTitle": { th: "ยืนยันการลบบัญชี", en: "Confirm Account Deletion" },
+  "profile.deleteConfirmDesc": { th: "คุณแน่ใจหรือไม่ที่จะลบบัญชีของคุณ? ข้อมูลทั้งหมดจะหายไป", en: "Are you sure you want to delete your account? All data will be lost." },
+  "profile.deleteHistory": { th: "ลบประวัติ", en: "Delete History" },
+  "profile.cannotUndo": { th: "ไม่สามารถกู้คืนได้", en: "Cannot be undone" },
+  "profile.confirmDelete": { th: "ยืนยันลบ", en: "Confirm Delete" },
+  "profile.country": { th: "ประเทศ", en: "Country" },
+  "profile.error": { th: "เกิดข้อผิดพลาด", en: "Error occurred" },
+  "profile.success": { th: "สำเร็จ", en: "Success" },
+  "profile.fileTooLarge": { th: "ไฟล์ใหญ่เกินไป", en: "File too large" },
+  "profile.fileTooLargeDesc": { th: "ขนาดไฟล์ต้องไม่เกิน 5MB", en: "File size must be less than 5MB" },
+  "profile.invalidFileType": { th: "ประเภทไฟล์ไม่ถูกต้อง", en: "Invalid file type" },
+  "profile.invalidFileTypeDesc": { th: "รองรับเฉพาะไฟล์รูปภาพ (JPEG, PNG, GIF)", en: "Only image files are supported" },
+  "profile.avatarUploaded": { th: "อัปโหลดรูปโปรไฟล์แล้ว", en: "Avatar uploaded" },
+  "profile.passwordMismatch": { th: "รหัสผ่านไม่ตรงกัน", en: "Passwords do not match" },
+  "profile.passwordMismatchDesc": { th: "กรุณากรอกรหัสผ่านให้ตรงกัน", en: "Please enter matching passwords" },
+  "profile.passwordTooShort": { th: "รหัสผ่านสั้นเกินไป", en: "Password too short" },
+  "profile.passwordTooShortDesc": { th: "รหัสผ่านต้องยาวอย่างน้อย 6 ตัวอักษร", en: "Password must be at least 6 characters" },
+
+  // Notifications Page
+  "notif.title": { th: "การแจ้งเตือน", en: "Notifications" },
+  "notif.saved": { th: "บันทึกแล้ว", en: "Saved" },
+  "notif.settingsSaved": { th: "บันทึกการตั้งค่าแล้ว", en: "Settings saved" },
+  "notif.pushEnabled": { th: "เปิด Push Notification แล้ว", en: "Push notifications enabled" },
+  "notif.pushEnabledDesc": { th: "คุณจะได้รับการแจ้งเตือนผ่านเบราว์เซอร์", en: "You will receive browser notifications" },
+  "notif.pushError": { th: "เกิดข้อผิดพลาดกับ Push Notification", en: "Push notification error" },
+  "notif.pushDeniedDesc": { th: "กรุณาอนุญาตการแจ้งเตือนในเบราว์เซอร์", en: "Please allow notifications in browser" },
+  "notif.markedAllRead": { th: "อ่านทั้งหมดแล้ว", en: "Marked all as read" },
+  "notif.deleted": { th: "ลบแล้ว", en: "Deleted" },
+  "notif.pageTitle": { th: "การแจ้งเตือน", en: "Notifications" },
+  "notif.pageDesc": { th: "จัดการการตั้งค่าการแจ้งเตือนของคุณ", en: "Manage your notification settings" },
+  "notif.backToHome": { th: "กลับหน้าหลัก", en: "Back to Home" },
+  "notif.new": { th: "ใหม่", en: "New" },
+  "notif.history": { th: "ประวัติ", en: "History" },
+  "notif.email": { th: "อีเมล", en: "Email" },
+  "notif.emailDesc": { th: "รับการแจ้งเตือนผ่านอีเมล", en: "Receive notifications via email" },
+  "notif.enableEmail": { th: "เปิดใช้งานอีเมล", en: "Enable Email" },
+  "notif.beforeDue": { th: "ก่อนกำหนด", en: "Before Due" },
+  "notif.7days": { th: "7 วัน", en: "7 Days" },
+  "notif.3days": { th: "3 วัน", en: "3 Days" },
+  "notif.1day": { th: "1 วัน", en: "1 Day" },
+  "notif.onDueDate": { th: "วันครบกำหนด", en: "On Due Date" },
+  "notif.otherNotifs": { th: "การแจ้งเตือนอื่นๆ", en: "Other Notifications" },
+  "notif.monthlySummary": { th: "สรุปรายเดือน", en: "Monthly Summary" },
+  "notif.priceChanges": { th: "การเปลี่ยนแปลงราคา", en: "Price Changes" },
+  "notif.push": { th: "Push Notification", en: "Push Notification" },
+  "notif.pushDesc": { th: "รับการแจ้งเตือนบนอุปกรณ์ของคุณ", en: "Receive notifications on your device" },
+  "notif.pushUnsupported": { th: "เบราว์เซอร์ไม่รองรับ", en: "Browser not supported" },
+  "notif.pushDenied": { th: "ถูกปฏิเสธ", en: "Denied" },
+  "notif.enablePush": { th: "เปิดใช้งาน Push", en: "Enable Push" },
+  "notif.pushGranted": { th: "ได้รับอนุญาตแล้ว", en: "Granted" },
+  "notif.enable": { th: "เปิดใช้งาน", en: "Enable" },
+  "notif.preferences": { th: "การตั้งค่า", en: "Preferences" },
+  "notif.preferencesDesc": { th: "เลือกช่องทางการรับแจ้งเตือน", en: "Choose notification channels" },
+  "notif.time": { th: "เวลาแจ้งเตือน", en: "Notification Time" },
+  "notif.timeDesc": { th: "เวลาที่คุณต้องการรับการแจ้งเตือน", en: "Time to receive notifications" },
+  "notif.quietHours": { th: "ช่วงเวลาห้ามรบกวน", en: "Quiet Hours" },
+  "notif.start": { th: "เริ่ม", en: "Start" },
+  "notif.end": { th: "สิ้นสุด", en: "End" },
+  "notif.quietHoursDesc": { th: "ปิดการแจ้งเตือนในช่วงเวลานี้", en: "Silence notifications during this time" },
+  "notif.timezone": { th: "เขตเวลา", en: "Timezone" },
+  "notif.timezoneDesc": { th: "เขตเวลาปัจจุบันของคุณ", en: "Your current timezone" },
+  "notif.historyTitle": { th: "ประวัติการแจ้งเตือน", en: "Notification History" },
+  "notif.showing": { th: "แสดง", en: "Showing" },
+  "notif.recent": { th: "ล่าสุด", en: "Recent" },
+  "notif.markAllRead": { th: "อ่านทั้งหมด", en: "Mark All Read" },
+  "notif.empty": { th: "ไม่มีการแจ้งเตือน", en: "No Notifications" },
+  "notif.emptyDesc": { th: "คุณยังไม่มีการแจ้งเตือนใดๆ", en: "You don't have any notifications yet" },
+  "notif.inApp": { th: "ในแอป", en: "In-App" },
+
+  // Toast & Validation
+  "toast.deleteSuccess": { th: "ลบสำเร็จ", en: "Delete Successful" },
+  "toast.deleted": { th: "รายการถูกลบแล้ว", en: "Item deleted" },
+  "toast.deleteError": { th: "ลบไม่สำเร็จ", en: "Delete Failed" },
+  "toast.updateError": { th: "อัปเดตไม่สำเร็จ", en: "Update Failed" },
+  "toast.logoutSuccess": { th: "ออกจากระบบแล้ว", en: "Logged out successfully" },
+  "toast.logoutError": { th: "ออกจากระบบไม่สำเร็จ", en: "Logout failed" },
+  "toast.errorLoading": { th: "โหลดข้อมูลไม่สำเร็จ", en: "Error Loading" },
+  "toast.errorLoadingDesc": { th: "ไม่สามารถโหลดข้อมูลได้", en: "Could not load data" },
+  "toast.accountDeleted": { th: "บัญชีถูกลบแล้ว", en: "Account Deleted" },
+  "toast.accountDeletedDesc": { th: "บัญชีของคุณถูกลบออกจากระบบแล้ว", en: "Your account has been removed from the system" },
+  "toast.accountDeleteError": { th: "ลบบัญชีไม่สำเร็จ", en: "Account Deletion Failed" },
+  "validation.required": { th: "จำเป็นต้องระบุ", en: "Required" },
+  "validation.minLength": { th: "สั้นเกินไป", en: "Too short" },
+  "validation.maxLength": { th: "ยาวเกินไป", en: "Too long" },
+  "validation.characters": { th: "ตัวอักษร", en: "characters" },
+  "validation.positiveNumber": { th: "ต้องเป็นจำนวนบวก", en: "Must be a positive number" },
+  "validation.invalidUrl": { th: "URL ไม่ถูกต้อง", en: "Invalid URL" },
+  "validation.invalidDate": { th: "วันที่ไม่ถูกต้อง", en: "Invalid date" },
+
+  // Time
+  "time.justNow": { th: "เมื่อกี้", en: "Just now" },
+  "time.minutesAgo": { th: "{m} นาทีที่แล้ว", en: "{m}m ago" },
+  "time.hoursAgo": { th: "{h} ชั่วโมงที่แล้ว", en: "{h}h ago" },
+  "time.daysAgo": { th: "{d} วันที่แล้ว", en: "{d}d ago" },
+
+  // Categories
+  "category.design": { th: "ออกแบบ", en: "Design" },
+  "category.development": { th: "พัฒนาโปรแกรม", en: "Development" },
+  "category.productivity": { th: "การทำงาน", en: "Productivity" },
+  "category.entertainment": { th: "บันเทิง", en: "Entertainment" },
+  "category.cloud-storage": { th: "คลาวด์", en: "Cloud Storage" },
+  "category.gaming": { th: "เกม", en: "Gaming" },
+  "category.education": { th: "การศึกษา", en: "Education" },
+  "category.fitness": { th: "สุขภาพ", en: "Fitness" },
+  "category.news": { th: "ข่าวสาร", en: "News" },
+  "category.other": { th: "อื่นๆ", en: "Other" },
+
+  // Payment Methods
+  "payment.select_method": { th: "เลือกวิธีชำระเงิน", en: "Select Payment Method" },
+
+  // Admin
+  "admin.templates.table.icon": { th: "ไอคอน", en: "Icon" },
+  "admin.templates.table.name": { th: "ชื่อ", en: "Name" },
+  "admin.templates.table.website": { th: "เว็บไซต์", en: "Website" },
+  "admin.templates.table.category": { th: "หมวดหมู่", en: "Category" },
+  "admin.templates.table.amount": { th: "ราคา", en: "Amount" },
+  "admin.templates.table.users": { th: "ผู้ใช้", en: "Users" },
+  "admin.templates.table.status": { th: "สถานะ", en: "Status" },
+  "admin.templates.table.actions": { th: "จัดการ", en: "Actions" },
+  "admin.templateName": { th: "ชื่อเทมเพลต", en: "Template Name" },
+  "admin.enterTemplateName": { th: "ระบุชื่อเทมเพลต", en: "Enter template name" },
+  "admin.websiteUrl": { th: "URL เว็บไซต์", en: "Website URL" },
+  "admin.faviconAutomatic": { th: "ดึง Favicon อัตโนมัติ", en: "Auto-fetch Favicon" },
+  "admin.category": { th: "หมวดหมู่", en: "Category" },
+  "admin.selectCategory": { th: "เลือกหมวดหมู่", en: "Select Category" },
+  "admin.templates.form.amount": { th: "ราคาเริ่มต้น", en: "Default Amount" },
+  "admin.currency": { th: "สกุลเงิน", en: "Currency" },
+  "admin.billingCycle": { th: "รอบบิล", en: "Billing Cycle" },
+  "admin.description": { th: "คำอธิบาย", en: "Description" },
+  "admin.enterDescription": { th: "กรอกคำอธิบาย", en: "Enter description" },
+  "admin.templates.form.usageCount": { th: "จำนวนผู้ใช้", en: "Usage Count" },
+  "admin.templates.form.usageCountHelp": { th: "จำนวนผู้ใช้ที่เลือกเทมเพลตนี้", en: "Number of users using this template" },
+  "admin.templates.form.isActiveHelp": { th: "เปิดใช้งานเทมเพลตนี้", en: "Enable this template" },
+  "admin.confirmDeletePaymentMethod": { th: "ยืนยันการลบวิธีชำระเงิน", en: "Confirm delete payment method" },
+
+  // Intelligence Layer (NEW)
+  "intelligence.costBreakdown": { th: "การคำนวณค่าใช้จ่าย", en: "Cost Breakdown" },
+  "intelligence.monthlyEquivalent": { th: "รายเดือน", en: "Monthly" },
+  "intelligence.yearlyEquivalent": { th: "รายปี", en: "Yearly" },
+  "intelligence.dailyCost": { th: "รายวัน", en: "Daily cost" },
+  "intelligence.spendingContext": { th: "บริบทการใช้จ่าย", en: "Spending Context" },
+  "intelligence.ofTotalSpending": { th: "ของค่าใช้จ่ายรวมทั้งหมด", en: "of total spending" },
+  "intelligence.highYearlyCost": { th: "⚠️ บริการนี้มีค่าใช้จ่ายมากกว่า {amount} บาท/ปี", en: "⚠️ This subscription costs over {amount}/year" },
+  "intelligence.multipleInCategory": { th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ", en: "🔁 You already have {count} subscriptions in this category" },
+  "intelligence.rarelyUsed": { th: "✂️ บริการที่ใช้ไม่บ่อยมักจะถูกยกเลิกโดยผู้ใช้", en: "✂️ Rarely used services are often cancelled" },
+  "intelligence.yearlyBillingSuggestion": { th: "💡 ลองพิจารณาจ่ายแบบรายปี อาจประหยัดได้ประมาณ {savings} บาท", en: "💡 Consider yearly billing to save approx {savings}" },
+  "intelligence.reminderSuggestion": { th: "🔔 แนะนำให้เปิดการแจ้งเตือนเพื่อไม่ให้ลืมบริการนี้", en: "🔔 Recommended to enable reminders for this service" },
+  "intelligence.summary": { th: "🧠 Submo Insight", en: "🧠 Submo Insight" },
+  "intelligence.summaryYearlyCost": { th: "บริการนี้มีค่าใช้จ่าย {amount} ต่อปี", en: "This service costs {amount} per year" },
+  "intelligence.summaryPercentage": { th: "คิดเป็น {percent}% ของค่าใช้จ่ายรายเดือนของคุณ", en: "Accounts for {percent}% of your monthly spending" },
+  "intelligence.summaryReminder": { th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว", en: "Reminders enabled to prevent forgetting" },
+  "intelligence.noActionRequired": { th: "ไม่ต้องทำอะไรเพิ่มเติม", en: "No additional action required" },
+  "intelligence.rankingOf": { th: "อันดับที่ {rank} จาก {total}", en: "Ranked {rank} of {total}" }
 };
 
 export type TranslationKey = keyof typeof translations;
