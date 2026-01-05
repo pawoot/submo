@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import MobileNav from "@/components/MobileNav";
 import MobileHeader from "@/components/MobileHeader";
@@ -8,10 +8,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { subscriptionService } from "@/services/subscriptionService";
-import { getAllCategories } from "@/services/adminCategoryService";
 import { authService } from "@/services/authService";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
@@ -19,40 +16,18 @@ import { getTranslation } from "@/lib/translations";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Plus, 
-  Search, 
-  Calendar,
-  DollarSign,
-  TrendingUp,
+  Search,
   Bell,
-  BellOff,
-  Edit,
-  Trash2,
-  MoreVertical
+  Calendar,
+  TrendingUp,
+  DollarSign,
+  CheckCircle2
 } from "lucide-react";
-import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-import { SubscriptionCharts } from "@/components/SubscriptionCharts";
-import { InsightPanel } from "@/components/InsightPanel";
-import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import type { Database } from "@/integrations/supabase/types";
 
-// Use the exact type returned by subscriptionService to avoid mismatches
 type ServiceSubscription = Awaited<ReturnType<typeof subscriptionService.getUserSubscriptions>>[number];
-// Base Subscription type for components that expect the raw table row
-type TableSubscription = Database["public"]["Tables"]["subscriptions"]["Row"];
-
-interface Category {
-  id: string;
-  name_en: string;
-  name_th: string;
-  slug: string;
-}
 
 export default function Dashboard() {
   const router = useRouter();
@@ -62,16 +37,10 @@ export default function Dashboard() {
 
   const [user, setUser] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<ServiceSubscription[]>([]);
-  const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
-  const [filterStatus, setFilterStatus] = useState<string>("all");
-  const [filterCategory, setFilterCategory] = useState<string>("all");
-  const [sortBy, setSortBy] = useState<string>("next_billing");
-
-  // Stats
   const [totalMonthly, setTotalMonthly] = useState(0);
-  const [totalYearly, setTotalYearly] = useState(0);
+  const [upcomingPayments, setUpcomingPayments] = useState<ServiceSubscription[]>([]);
 
   useEffect(() => {
     loadData();
@@ -84,20 +53,30 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [currentUser, subsData, catsData] = await Promise.all([
+      const [currentUser, subsData] = await Promise.all([
         authService.getCurrentUser(),
-        subscriptionService.getUserSubscriptions(),
-        getAllCategories()
+        subscriptionService.getUserSubscriptions()
       ]);
       
       setUser(currentUser);
       setSubscriptions(subsData || []);
-      setCategories(catsData || []);
+      
+      // Calculate upcoming payments (next 30 days)
+      const now = new Date();
+      const thirtyDaysLater = new Date(now.getTime() + 30 * 24 * 60 * 60 * 1000);
+      const upcoming = (subsData || [])
+        .filter(sub => {
+          const nextBilling = new Date(sub.next_billing_date);
+          return sub.is_active && nextBilling >= now && nextBilling <= thirtyDaysLater;
+        })
+        .sort((a, b) => new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime());
+      
+      setUpcomingPayments(upcoming);
     } catch (error) {
       console.error("Error loading data:", error);
       toast({
-        title: "Error",
-        description: "Failed to load subscriptions",
+        title: t("common.error"),
+        description: t("common.errorOccurred"),
         variant: "destructive"
       });
     } finally {
@@ -114,10 +93,8 @@ export default function Dashboard() {
       const price = sub.amount || 0;
       const currency = sub.currency || "THB";
       
-      // Convert to preferred currency
       const priceInPreferred = await convertAmount(price, currency);
       
-      // Calculate monthly cost based on billing cycle
       let monthlyCost = priceInPreferred;
       if (sub.billing_cycle === "yearly") {
         monthlyCost = priceInPreferred / 12;
@@ -131,95 +108,17 @@ export default function Dashboard() {
     }
     
     setTotalMonthly(monthlyTotal);
-    setTotalYearly(monthlyTotal * 12);
   };
 
   const filteredSubscriptions = subscriptions.filter(sub => {
-    // Search filter
     if (searchQuery && !sub.name.toLowerCase().includes(searchQuery.toLowerCase())) {
       return false;
     }
-    
-    // Status filter
-    if (filterStatus === "active" && !sub.is_active) return false;
-    if (filterStatus === "inactive" && sub.is_active) return false;
-    
-    // Category filter
-    if (filterCategory !== "all" && sub.category_id !== filterCategory) {
-      return false;
-    }
-    
     return true;
   });
 
-  const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
-    switch (sortBy) {
-      case "next_billing":
-        return new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime();
-      case "cost_high":
-        return b.amount - a.amount;
-      case "cost_low":
-        return a.amount - b.amount;
-      case "name":
-        return a.name.localeCompare(b.name);
-      default:
-        return 0;
-    }
-  });
-
-  const activeCount = subscriptions.filter(s => s.is_active).length;
-  const inactiveCount = subscriptions.filter(s => !s.is_active).length;
-
-  const toggleReminder = async (subscriptionId: string, currentState: boolean) => {
-    try {
-      await subscriptionService.updateSubscription(subscriptionId, {
-        reminder_enabled: !currentState
-      });
-      
-      setSubscriptions(prev => 
-        prev.map(sub => 
-          sub.id === subscriptionId 
-            ? { ...sub, reminder_enabled: !currentState }
-            : sub
-        )
-      );
-      
-      toast({
-        title: t("common.success"),
-        description: !currentState 
-          ? t("notifications.reminderEnabled")
-          : t("notifications.reminderDisabled")
-      });
-    } catch (error) {
-      toast({
-        title: t("common.error"),
-        description: t("common.errorOccurred"),
-        variant: "destructive"
-      });
-    }
-  };
-
-  const deleteSubscription = async (subscriptionId: string, subscriptionName: string) => {
-    if (!confirm(`${t("common.confirmDelete")} "${subscriptionName}"?`)) {
-      return;
-    }
-    
-    try {
-      await subscriptionService.delete(subscriptionId);
-      setSubscriptions(prev => prev.filter(sub => sub.id !== subscriptionId));
-      
-      toast({
-        title: t("common.success"),
-        description: t("subscription.deleteSuccess")
-      });
-    } catch (error) {
-      toast({
-        title: t("common.error"),
-        description: t("common.errorOccurred"),
-        variant: "destructive"
-      });
-    }
-  };
+  const activeSubscriptions = filteredSubscriptions.filter(s => s.is_active);
+  const activeCount = activeSubscriptions.length;
 
   if (loading) {
     return (
@@ -241,275 +140,266 @@ export default function Dashboard() {
         description={t("dashboard.subtitle")}
       />
       
-      <div className="min-h-screen bg-background pb-20 md:pb-0">
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-900 pb-20 md:pb-0">
         {/* Mobile Header */}
         <div className="md:hidden">
           <MobileHeader user={user} />
         </div>
 
-        {/* Desktop Navigation */}
-        <div className="hidden md:block border-b">
-          <div className="container mx-auto px-4 py-4">
+        {/* Desktop Header */}
+        <div className="hidden md:block border-b bg-white dark:bg-gray-800">
+          <div className="container mx-auto px-6 py-4">
             <div className="flex items-center justify-between">
-              <h1 className="text-2xl font-bold">{t("nav.dashboard")}</h1>
-              <Button onClick={() => router.push("/add-subscription")}>
-                <Plus className="w-4 h-4 mr-2" />
-                {t("subscription.add")}
-              </Button>
+              <div>
+                <h1 className="text-2xl font-bold">Submo</h1>
+                <p className="text-sm text-muted-foreground">Subscription Monitoring</p>
+              </div>
+              <div className="flex items-center gap-4">
+                <Button variant="ghost" size="icon">
+                  <Bell className="w-5 h-5" />
+                </Button>
+                <Button onClick={() => router.push("/add-subscription")}>
+                  <Plus className="w-4 h-4 mr-2" />
+                  {t("subscription.add")}
+                </Button>
+              </div>
             </div>
           </div>
         </div>
 
-        <div className="container mx-auto px-4 py-6">
-          {/* Stats Cards */}
-          <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {t("dashboard.totalMonthly")}
-                </CardTitle>
-                <DollarSign className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">
-                  {formatPrice(totalMonthly)}
-                </div>
-                <p className="text-xs text-muted-foreground">
-                  {formatPrice(totalYearly)} {t("dashboard.perYear")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {t("dashboard.activeSubscriptions")}
-                </CardTitle>
-                <TrendingUp className="h-4 w-4 text-green-600" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{activeCount}</div>
-                <p className="text-xs text-muted-foreground">
-                  {inactiveCount} {t("dashboard.inactive")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
-                <CardTitle className="text-sm font-medium">
-                  {t("dashboard.totalSubscriptions")}
-                </CardTitle>
-                <Calendar className="h-4 w-4 text-muted-foreground" />
-              </CardHeader>
-              <CardContent>
-                <div className="text-2xl font-bold">{subscriptions.length}</div>
-              </CardContent>
-            </Card>
-          </div>
-
-          {/* Tabs */}
-          <Tabs defaultValue="list" className="space-y-6">
-            <TabsList className="grid w-full md:w-auto grid-cols-4">
-              <TabsTrigger value="list">{t("dashboard.list")}</TabsTrigger>
-              <TabsTrigger value="analytics">{t("dashboard.analytics")}</TabsTrigger>
-              <TabsTrigger value="insights">{t("dashboard.insights")}</TabsTrigger>
-              <TabsTrigger value="savings">{t("dashboard.savings")}</TabsTrigger>
-            </TabsList>
-
-            {/* List Tab */}
-            <TabsContent value="list" className="space-y-6">
-              {/* Filters */}
+        <div className="container mx-auto px-4 md:px-6 py-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            {/* Left Column - Stats & Charts */}
+            <div className="lg:col-span-2 space-y-6">
+              {/* Search & Quick Stats */}
               <Card>
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-                    <div className="relative">
-                      <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        placeholder={t("common.search")}
-                        value={searchQuery}
-                        onChange={(e) => setSearchQuery(e.target.value)}
-                        className="pl-10"
-                      />
+                  <div className="relative mb-6">
+                    <Search className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+                    <Input
+                      placeholder={t("common.search")}
+                      value={searchQuery}
+                      onChange={(e) => setSearchQuery(e.target.value)}
+                      className="pl-10"
+                    />
+                  </div>
+                  
+                  <div className="grid grid-cols-3 gap-4 text-center">
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">{t("dashboard.today")}</p>
+                      <p className="text-2xl font-bold">฿0</p>
                     </div>
-
-                    <Select value={filterStatus} onValueChange={setFilterStatus}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("subscription.status")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        <SelectItem value="active">{t("subscription.active")}</SelectItem>
-                        <SelectItem value="inactive">{t("subscription.inactive")}</SelectItem>
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={filterCategory} onValueChange={setFilterCategory}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("subscription.category")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="all">{t("common.all")}</SelectItem>
-                        {categories.map(cat => (
-                          <SelectItem key={cat.id} value={cat.id}>
-                            {language === "th" ? cat.name_th : cat.name_en}
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-
-                    <Select value={sortBy} onValueChange={setSortBy}>
-                      <SelectTrigger>
-                        <SelectValue placeholder={t("common.sortBy")} />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="next_billing">{t("subscription.nextBilling")}</SelectItem>
-                        <SelectItem value="cost_high">{t("subscription.costHigh")}</SelectItem>
-                        <SelectItem value="cost_low">{t("subscription.costLow")}</SelectItem>
-                        <SelectItem value="name">{t("subscription.name")}</SelectItem>
-                      </SelectContent>
-                    </Select>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">{t("dashboard.thisWeek")}</p>
+                      <p className="text-2xl font-bold">฿0</p>
+                    </div>
+                    <div>
+                      <p className="text-sm text-muted-foreground mb-1">{t("dashboard.thisMonth")}</p>
+                      <p className="text-2xl font-bold">{formatPrice(totalMonthly)}</p>
+                    </div>
                   </div>
                 </CardContent>
               </Card>
 
-              {/* Subscriptions List */}
-              {sortedSubscriptions.length === 0 ? (
-                <Card>
-                  <CardContent className="py-12 text-center">
-                    <p className="text-muted-foreground">{t("subscription.noSubscriptions")}</p>
-                    <Button 
-                      className="mt-4"
-                      onClick={() => router.push("/add-subscription")}
-                    >
-                      <Plus className="w-4 h-4 mr-2" />
-                      {t("subscription.addFirst")}
+              {/* Monthly Total */}
+              <Card className="bg-gradient-to-br from-blue-500 to-purple-600 text-white">
+                <CardContent className="pt-6">
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm opacity-90 mb-2">{t("dashboard.monthlyTotal")}</p>
+                      <p className="text-4xl font-bold">{formatPrice(totalMonthly)}</p>
+                      <p className="text-sm opacity-90 mt-2">{t("dashboard.perMonth")}</p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <Button variant="secondary" size="sm">
+                        {t("common.details")}
+                      </Button>
+                      <Button variant="secondary" size="icon">
+                        <TrendingUp className="w-4 h-4" />
+                      </Button>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* Charts Placeholder */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <TrendingUp className="w-5 h-5" />
+                    {t("dashboard.spendingByCategory")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="h-64 flex items-center justify-center text-muted-foreground">
+                    {t("dashboard.chartsComingSoon")}
+                  </div>
+                </CardContent>
+              </Card>
+
+              {/* All Subscriptions List */}
+              <Card>
+                <CardHeader>
+                  <div className="flex items-center justify-between">
+                    <CardTitle>{t("subscription.all")} ({activeCount})</CardTitle>
+                    <Button variant="outline" size="sm">
+                      {t("common.sortBy")}
                     </Button>
-                  </CardContent>
-                </Card>
-              ) : (
-                <div className="grid grid-cols-1 gap-4">
-                  {sortedSubscriptions.map(sub => {
-                    const category = categories.find(c => c.id === sub.category_id);
-                    const nextBilling = new Date(sub.next_billing_date);
-                    const daysUntil = Math.ceil((nextBilling.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
-                    
-                    return (
-                      <Card key={sub.id} className="hover:shadow-lg transition-shadow">
-                        <CardContent className="p-6">
-                          <div className="flex items-start justify-between">
-                            <div className="flex items-start space-x-4 flex-1">
-                              <SubscriptionIcon
-                                name={sub.name}
-                                iconUrl={sub.icon_url}
-                                websiteUrl={sub.website_url}
-                                size="md"
-                              />
-                              
-                              <div className="flex-1 min-w-0">
-                                <h3 className="font-semibold text-lg mb-1">{sub.name}</h3>
-                                
-                                <div className="flex flex-wrap gap-2 mb-2">
-                                  <Badge variant={sub.is_active ? "default" : "secondary"}>
-                                    {sub.is_active ? t("subscription.active") : t("subscription.inactive")}
-                                  </Badge>
-                                  
-                                  {category && (
-                                    <Badge variant="outline">
-                                      {language === "th" ? category.name_th : category.name_en}
-                                    </Badge>
-                                  )}
-                                  
-                                  <Badge variant="outline">
-                                    {t(`subscription.${sub.billing_cycle}`)}
-                                  </Badge>
-                                </div>
-                                
-                                <div className="text-sm text-muted-foreground space-y-1">
-                                  <p>
-                                    {t("subscription.nextBilling")}: {nextBilling.toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
-                                    {daysUntil <= 7 && (
-                                      <span className="text-orange-600 ml-2">
-                                        ({daysUntil} {t("common.days")})
-                                      </span>
-                                    )}
-                                  </p>
-                                  
-                                  {sub.notes && (
-                                    <p className="line-clamp-1">{sub.notes}</p>
-                                  )}
-                                </div>
-                              </div>
-                            </div>
-                            
-                            <div className="flex items-center space-x-4 ml-4">
-                              <div className="text-right">
-                                <div className="text-xl font-bold">
-                                  {formatCurrency(sub.amount, sub.currency)}
-                                </div>
-                                <div className="text-sm text-muted-foreground">
-                                  / {t(`subscription.${sub.billing_cycle}`)}
-                                </div>
-                              </div>
-                              
-                              <DropdownMenu>
-                                <DropdownMenuTrigger asChild>
-                                  <Button variant="ghost" size="icon">
-                                    <MoreVertical className="h-4 w-4" />
-                                  </Button>
-                                </DropdownMenuTrigger>
-                                <DropdownMenuContent align="end">
-                                  <DropdownMenuItem onClick={() => router.push(`/edit-subscription/${sub.id}`)}>
-                                    <Edit className="h-4 w-4 mr-2" />
-                                    {t("common.edit")}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem onClick={() => toggleReminder(sub.id, sub.reminder_enabled)}>
-                                    {sub.reminder_enabled ? (
-                                      <>
-                                        <BellOff className="h-4 w-4 mr-2" />
-                                        {t("notifications.disableReminder")}
-                                      </>
-                                    ) : (
-                                      <>
-                                        <Bell className="h-4 w-4 mr-2" />
-                                        {t("notifications.enableReminder")}
-                                      </>
-                                    )}
-                                  </DropdownMenuItem>
-                                  <DropdownMenuItem 
-                                    onClick={() => deleteSubscription(sub.id, sub.name)}
-                                    className="text-destructive"
-                                  >
-                                    <Trash2 className="h-4 w-4 mr-2" />
-                                    {t("common.delete")}
-                                  </DropdownMenuItem>
-                                </DropdownMenuContent>
-                              </DropdownMenu>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-4">
+                    {activeSubscriptions.length === 0 ? (
+                      <div className="py-8 text-center">
+                        <p className="text-muted-foreground mb-4">{t("subscription.noSubscriptions")}</p>
+                        <Button onClick={() => router.push("/add-subscription")}>
+                          <Plus className="w-4 h-4 mr-2" />
+                          {t("subscription.addFirst")}
+                        </Button>
+                      </div>
+                    ) : (
+                      activeSubscriptions.map(sub => (
+                        <div 
+                          key={sub.id}
+                          className="flex items-center justify-between p-4 rounded-lg border hover:border-primary cursor-pointer transition-colors"
+                          onClick={() => router.push(`/edit-subscription/${sub.id}`)}
+                        >
+                          <div className="flex items-center gap-4">
+                            <SubscriptionIcon
+                              name={sub.name}
+                              iconUrl={sub.icon_url}
+                              websiteUrl={sub.website_url}
+                              size="md"
+                            />
+                            <div>
+                              <h3 className="font-semibold">{sub.name}</h3>
+                              <p className="text-sm text-muted-foreground">
+                                {t(`subscription.${sub.billing_cycle}`)}
+                              </p>
                             </div>
                           </div>
-                        </CardContent>
-                      </Card>
-                    );
-                  })}
-                </div>
-              )}
-            </TabsContent>
+                          <div className="text-right">
+                            <p className="font-bold">{formatCurrency(sub.amount, sub.currency)}</p>
+                            <p className="text-sm text-muted-foreground">
+                              {new Date(sub.next_billing_date).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
+                            </p>
+                          </div>
+                        </div>
+                      ))
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
 
-            {/* Analytics Tab */}
-            <TabsContent value="analytics">
-              <SubscriptionCharts />
-            </TabsContent>
+            {/* Right Column - Upcoming Payments & Active Subscriptions */}
+            <div className="space-y-6">
+              {/* Upcoming Payments */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Calendar className="w-5 h-5 text-orange-500" />
+                    {t("subscription.upcomingPayments")}
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {upcomingPayments.length === 0 ? (
+                      <p className="text-sm text-muted-foreground text-center py-4">
+                        {t("subscription.noUpcomingPayments")}
+                      </p>
+                    ) : (
+                      upcomingPayments.map(sub => {
+                        const nextBilling = new Date(sub.next_billing_date);
+                        const daysUntil = Math.ceil((nextBilling.getTime() - new Date().getTime()) / (1000 * 60 * 60 * 24));
+                        
+                        return (
+                          <div key={sub.id} className="flex items-start gap-3 p-3 rounded-lg bg-orange-50 dark:bg-orange-950/20">
+                            <div className="flex-1 min-w-0">
+                              <p className="font-medium text-sm">{sub.name}</p>
+                              <p className="text-xs text-muted-foreground">
+                                {daysUntil === 0 ? t("common.today") : `${daysUntil} ${t("common.days")}`}
+                              </p>
+                            </div>
+                            <p className="font-bold text-sm whitespace-nowrap">
+                              {formatCurrency(sub.amount, sub.currency)}
+                            </p>
+                          </div>
+                        );
+                      })
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Insights Tab */}
-            <TabsContent value="insights">
-              <InsightPanel subscriptions={subscriptions as unknown as TableSubscription[]} />
-            </TabsContent>
+              {/* Active Subscriptions Summary */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <CheckCircle2 className="w-5 h-5 text-green-500" />
+                    {t("subscription.active")} ({activeCount})
+                  </CardTitle>
+                </CardHeader>
+                <CardContent>
+                  <div className="space-y-3">
+                    {activeSubscriptions.slice(0, 5).map(sub => (
+                      <div 
+                        key={sub.id}
+                        className="flex items-center justify-between p-3 rounded-lg border cursor-pointer hover:border-primary transition-colors"
+                        onClick={() => router.push(`/edit-subscription/${sub.id}`)}
+                      >
+                        <div className="flex items-center gap-3">
+                          <SubscriptionIcon
+                            name={sub.name}
+                            iconUrl={sub.icon_url}
+                            websiteUrl={sub.website_url}
+                            size="sm"
+                          />
+                          <div>
+                            <p className="font-medium text-sm">{sub.name}</p>
+                            <p className="text-xs text-muted-foreground">
+                              {t(`subscription.${sub.billing_cycle}`)}
+                            </p>
+                          </div>
+                        </div>
+                        <p className="font-bold text-sm">
+                          {formatCurrency(sub.amount, sub.currency)}
+                        </p>
+                      </div>
+                    ))}
+                    
+                    {activeCount > 5 && (
+                      <Button 
+                        variant="outline" 
+                        className="w-full"
+                        onClick={() => {/* Scroll to all subscriptions */}}
+                      >
+                        {t("common.viewAll")} ({activeCount})
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
 
-            {/* Savings Tab */}
-            <TabsContent value="savings">
-              <SavingsRecommendation subscriptions={subscriptions as unknown as TableSubscription[]} />
-            </TabsContent>
-          </Tabs>
+              {/* Quick Stats */}
+              <Card className="bg-gradient-to-br from-green-500 to-emerald-600 text-white">
+                <CardContent className="pt-6">
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm opacity-90">{t("subscription.count")}</span>
+                      <span className="text-2xl font-bold">{activeCount}</span>
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <span className="text-sm opacity-90">{t("dashboard.avgPerMonth")}</span>
+                      <span className="text-xl font-bold">
+                        {activeCount > 0 ? formatPrice(totalMonthly / activeCount) : "฿0"}
+                      </span>
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+            </div>
+          </div>
         </div>
 
         {/* Mobile Navigation */}
