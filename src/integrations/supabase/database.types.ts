@@ -15,6 +15,53 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_actions_log: {
+        Row: {
+          action_type: string
+          admin_user_id: string
+          affected_count: number | null
+          after_state: Json | null
+          before_state: Json | null
+          created_at: string | null
+          id: string
+          metadata: Json | null
+          target_entity: string
+          target_id: string | null
+        }
+        Insert: {
+          action_type: string
+          admin_user_id: string
+          affected_count?: number | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_entity: string
+          target_id?: string | null
+        }
+        Update: {
+          action_type?: string
+          admin_user_id?: string
+          affected_count?: number | null
+          after_state?: Json | null
+          before_state?: Json | null
+          created_at?: string | null
+          id?: string
+          metadata?: Json | null
+          target_entity?: string
+          target_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_actions_log_admin_user_id_fkey"
+            columns: ["admin_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       categories: {
         Row: {
           color: string | null
@@ -411,7 +458,31 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      admin_bulk_fix_categories: {
+        Args: { p_new_category_id: string; p_old_category_text: string }
+        Returns: Json
+      }
+      admin_fix_subscription_category: {
+        Args: { p_new_category_id: string; p_subscription_id: string }
+        Returns: Json
+      }
+      admin_fix_subscription_payment_method: {
+        Args: { p_new_payment_method_id: string; p_subscription_id: string }
+        Returns: Json
+      }
+      get_migration_health: { Args: never; Returns: Json }
+      log_admin_action: {
+        Args: {
+          p_action_type: string
+          p_affected_count?: number
+          p_after_state?: Json
+          p_before_state?: Json
+          p_metadata?: Json
+          p_target_entity: string
+          p_target_id?: string
+        }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
