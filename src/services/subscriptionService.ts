@@ -301,7 +301,7 @@ export const subscriptionService = {
   /**
    * Calculate next renewal date based on billing cycle
    */
-  async getNextRenewalDate(billingCycle: string, currentBillingDate: string): Promise<string> {
+  getNextRenewalDate(billingCycle: string, currentBillingDate: string): string {
     const date = new Date(currentBillingDate);
     const now = new Date();
     

@@ -54,42 +54,47 @@ export default function NotificationsPage() {
         
         if (!subsData || subsData.length === 0) {
           setSubscriptions([]);
+          setLoading(false);
           return;
         }
 
-        // Calculate all values asynchronously
-        const now = new Date();
-        const processed: SubscriptionWithReminder[] = await Promise.all(
-          subsData.map(async (sub) => {
-            // Calculate next renewal date
-            const nextRenewal = await subscriptionService.getNextRenewalDate(
-              sub.billing_cycle,
-              sub.next_billing_date
-            );
-            
-            // Calculate days until renewal
-            const nextRenewalDate = new Date(nextRenewal);
-            const daysUntilRenewal = Math.ceil(
-              (nextRenewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-            );
-            
-            // Calculate reminder date
-            const reminderDays = sub.reminder_days || 7;
-            const reminderDate = new Date(nextRenewalDate);
-            reminderDate.setDate(reminderDate.getDate() - reminderDays);
-            
-            return {
-              ...sub,
-              reminder_enabled: sub.reminder_enabled || false,
-              reminder_days: reminderDays,
-              next_reminder_date: reminderDate.toISOString(),
-              nextRenewalDate: nextRenewal,
-              daysUntilRenewal: daysUntilRenewal
-            };
-          })
-        );
+        // 1. Add basic reminder info
+        const subsWithReminders = subsData.map(sub => {
+          const reminderDays = sub.reminder_days || 7;
+          const nextBilling = new Date(sub.next_billing_date);
+          const reminderDate = new Date(nextBilling);
+          reminderDate.setDate(reminderDate.getDate() - reminderDays);
+          
+          return {
+            ...sub,
+            reminder_enabled: sub.reminder_enabled || false,
+            reminder_days: reminderDays,
+            next_reminder_date: reminderDate.toISOString()
+          };
+        });
 
-        // Sort: Enabled first, then by days remaining
+        // 2. Calculate renewal dates (now synchronous)
+        const now = new Date();
+        const processed = subsWithReminders.map((sub) => {
+          // ✅ No await needed - synchronous function
+          const nextRenewal = subscriptionService.getNextRenewalDate(
+            sub.billing_cycle,
+            sub.next_billing_date
+          );
+          
+          const nextRenewalDate = new Date(nextRenewal);
+          const daysUntil = Math.ceil(
+            (nextRenewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          
+          return {
+            ...sub,
+            nextRenewalDate: nextRenewal,
+            daysUntilRenewal: daysUntil
+          };
+        });
+
+        // 3. Sort by priority
         processed.sort((a, b) => {
           // Priority 1: Enabled reminders first
           if (a.reminder_enabled && !b.reminder_enabled) return -1;
