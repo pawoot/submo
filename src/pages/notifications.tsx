@@ -52,8 +52,8 @@ export default function NotificationsPage() {
 
         setNotifications(notifData || []);
         
-        // Process subscriptions with reminder info
-        const subsWithReminders: SubscriptionWithReminder[] = (subsData || []).map(sub => {
+        // 1. First pass: add basic reminder info
+        const initialMap = (subsData || []).map(sub => {
           const reminderDays = sub.reminder_days || 7;
           const nextBilling = new Date(sub.next_billing_date);
           const reminderDate = new Date(nextBilling);
@@ -67,17 +67,38 @@ export default function NotificationsPage() {
           };
         });
 
-        // Sort by next reminder date (closest first)
-        subsWithReminders.sort((a, b) => {
+        // 2. Second pass: calculate renewal dates asynchronously
+        const now = new Date();
+        const processed = await Promise.all(
+          initialMap.map(async (sub) => {
+            const nextRenewal = await subscriptionService.getNextRenewalDate(
+              sub.billing_cycle,
+              sub.next_billing_date
+            );
+            
+            const daysUntil = Math.ceil(
+              (new Date(nextRenewal).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+            );
+            
+            return {
+              ...sub,
+              nextRenewalDate: nextRenewal,
+              daysUntilRenewal: daysUntil
+            };
+          })
+        );
+
+        // 3. Sort: Enabled first, then by days remaining
+        processed.sort((a, b) => {
+          // Priority 1: Enabled reminders first
           if (!a.reminder_enabled && b.reminder_enabled) return 1;
           if (a.reminder_enabled && !b.reminder_enabled) return -1;
-          if (a.next_reminder_date && b.next_reminder_date) {
-            return new Date(a.next_reminder_date).getTime() - new Date(b.next_reminder_date).getTime();
-          }
-          return 0;
+          
+          // Priority 2: Closest renewal date first
+          return a.daysUntilRenewal - b.daysUntilRenewal;
         });
 
-        setSubscriptions(subsWithReminders);
+        setSubscriptions(processed);
       } catch (error) {
         console.error("Error loading notifications:", error);
         toast({
