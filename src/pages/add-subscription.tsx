@@ -84,7 +84,7 @@ export default function AddSubscription() {
 
       // Redirect after short delay
       setTimeout(() => {
-        router.push("/dashboard");
+        router.push("/");
       }, 1500);
     } catch (error) {
       console.error("Error creating subscription:", error);
@@ -122,7 +122,7 @@ export default function AddSubscription() {
         <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center gap-4">
-              <Link href="/dashboard">
+              <Link href="/">
                 <Button variant="ghost" size="icon">
                   <ArrowLeft className="w-5 h-5" />
                 </Button>

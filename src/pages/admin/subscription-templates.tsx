@@ -91,10 +91,10 @@ export default function AdminSubscriptionTemplates() {
       if (profile?.role === "admin") {
         setIsAdmin(true);
       } else {
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (error) {
-      router.push("/dashboard");
+      router.push("/");
     }
   };
 

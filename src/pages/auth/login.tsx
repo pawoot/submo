@@ -43,7 +43,7 @@ export default function LoginPage() {
           title: t("auth.loginSuccess"),
           description: `${t("home.welcome")} ${user.email}`,
         });
-        router.push("/dashboard");
+        router.push("/");
       }
     } catch (err) {
       setError(t("auth.loginError"));
