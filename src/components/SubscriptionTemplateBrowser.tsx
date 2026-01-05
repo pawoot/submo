@@ -244,8 +244,9 @@ export function SubscriptionTemplateBrowser({
               </span>
               <button
                 onClick={() => {
+                  setShowAllModal(false);
                   onClose();
-                  onCustom();
+                  onCustom?.();
                 }}
                 className="text-sm text-blue-600 hover:text-blue-700 hover:underline font-medium"
               >
