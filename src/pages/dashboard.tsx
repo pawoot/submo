@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
-import { MobileNav } from "@/components/MobileNav";
-import { MobileHeader } from "@/components/MobileHeader";
+import MobileNav from "@/components/MobileNav";
+import MobileHeader from "@/components/MobileHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -20,11 +20,9 @@ import { formatCurrency } from "@/lib/utils";
 import { 
   Plus, 
   Search, 
-  Filter,
   Calendar,
   DollarSign,
   TrendingUp,
-  TrendingDown,
   Bell,
   BellOff,
   Edit,
@@ -42,23 +40,12 @@ import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { InsightPanel } from "@/components/InsightPanel";
 import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
+import type { Database } from "@/integrations/supabase/types";
 
-interface Subscription {
-  id: string;
-  name: string;
-  amount: number;
-  currency: string;
-  billing_cycle: string;
-  next_billing_date: string;
-  category_id: string | null;
-  payment_method_id: string | null;
-  reminder_enabled: boolean;
-  status: string;
-  website_url?: string;
-  logo_url?: string;
-  favicon_url?: string;
-  notes?: string;
-}
+// Use the exact type returned by subscriptionService to avoid mismatches
+type ServiceSubscription = Awaited<ReturnType<typeof subscriptionService.getUserSubscriptions>>[number];
+// Base Subscription type for components that expect the raw table row
+type TableSubscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 interface Category {
   id: string;
@@ -74,7 +61,7 @@ export default function Dashboard() {
   const t = (key: string) => getTranslation(key as any, language);
 
   const [user, setUser] = useState<any>(null);
-  const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
+  const [subscriptions, setSubscriptions] = useState<ServiceSubscription[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -415,7 +402,7 @@ export default function Dashboard() {
                             <div className="flex items-start space-x-4 flex-1">
                               <SubscriptionIcon
                                 name={sub.name}
-                                logoUrl={sub.logo_url}
+                                iconUrl={sub.icon_url}
                                 faviconUrl={sub.favicon_url}
                                 size="md"
                               />
@@ -511,17 +498,17 @@ export default function Dashboard() {
 
             {/* Analytics Tab */}
             <TabsContent value="analytics">
-              <SubscriptionCharts subscriptions={subscriptions} />
+              <SubscriptionCharts />
             </TabsContent>
 
             {/* Insights Tab */}
             <TabsContent value="insights">
-              <InsightPanel subscriptions={subscriptions} />
+              <InsightPanel subscriptions={subscriptions as unknown as TableSubscription[]} />
             </TabsContent>
 
             {/* Savings Tab */}
             <TabsContent value="savings">
-              <SavingsRecommendation subscriptions={subscriptions} />
+              <SavingsRecommendation subscriptions={subscriptions as unknown as TableSubscription[]} />
             </TabsContent>
           </Tabs>
         </div>
