@@ -263,7 +263,7 @@ export default function EditSubscription() {
       setValue("currency", template.currency, { shouldValidate: true });
     }
     if (template.billing_cycle) {
-      setValue("billing_cycle", template.billing_cycle, { shouldValidate: true });
+      setValue("billing_cycle", template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly", { shouldValidate: true });
     }
     if (template.website_url) {
       setValue("website_url", template.website_url, { shouldValidate: true });
