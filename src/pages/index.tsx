@@ -470,7 +470,7 @@ export default function Home() {
           {/* Intelligence Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <InsightPanel subscriptions={subscriptions} currency={preferredCurrency} />
+              <InsightPanel subscriptions={displaySubscriptions} />
               
               {/* Cost Toggle & Summary */}
               <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border">
@@ -479,12 +479,31 @@ export default function Home() {
                       <DollarSign className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
                    </div>
                    <div>
-                      <p className="text-sm text-slate-500 dark:text-slate-400">
-                        {viewMode === "monthly" ? t("dashboard.totalCost") + " (" + t("dashboard.perMonth") + ")" : t("dashboard.totalCost") + " (" + t("dashboard.perYear") + ")"}
-                      </p>
-                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
-                        {formatCurrency(viewMode === "monthly" ? totals.monthly : totals.yearly, preferredCurrency)}
-                      </h2>
+                      <div className="flex items-baseline gap-2">
+                        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                          {formatCurrency(viewMode === "monthly" ? totals.monthly : totals.yearly, preferredCurrency)}
+                        </h2>
+                        <span className="text-sm text-slate-500 dark:text-slate-400">
+                          / {viewMode === "monthly" ? t("dashboard.perMonth") : t("dashboard.perYear")}
+                        </span>
+                      </div>
+                      
+                      {/* Annual Cost Emphasis - Metaphor */}
+                      {viewMode === "yearly" && (
+                        <p className="text-xs text-indigo-600 dark:text-indigo-400 mt-1 font-medium flex items-center gap-1">
+                          <span>≈</span>
+                          {totals.yearly < 5000 ? (language === 'th' ? 'อาหารมื้อหรู 1 มื้อ' : 'A nice dinner') :
+                           totals.yearly < 15000 ? (language === 'th' ? 'รองเท้าผ้าใบดีๆ 1 คู่' : 'A pair of premium sneakers') :
+                           totals.yearly < 30000 ? (language === 'th' ? 'สมาร์ทโฟนเครื่องใหม่' : 'A new mid-range smartphone') :
+                           (language === 'th' ? 'ทริปเที่ยวต่างประเทศระยะสั้น' : 'A short international trip')}
+                        </p>
+                      )}
+                      
+                      {viewMode === "monthly" && (
+                        <p className="text-xs text-slate-500 mt-1">
+                          {language === 'th' ? 'ค่าใช้จ่ายรวมทั้งหมด' : 'Total subscription spending'}
+                        </p>
+                      )}
                    </div>
                 </div>
                 <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
@@ -516,7 +535,7 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              <SavingsRecommendation subscriptions={subscriptions} currency={preferredCurrency} />
+              <SavingsRecommendation subscriptions={displaySubscriptions} />
               
               {/* Stats Cards Vertical Stack */}
               <div className="grid grid-cols-1 gap-4">

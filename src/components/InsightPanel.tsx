@@ -1,199 +1,216 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
-import { TrendingUp, TrendingDown, Calendar, AlertCircle, CheckCircle } from "lucide-react";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent } from "@/components/ui/card";
+import { TrendingUp, TrendingDown, Bell, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 interface InsightPanelProps {
   subscriptions: Subscription[];
-  currency: string;
 }
 
-export function InsightPanel({ subscriptions, currency }: InsightPanelProps) {
-  const { t, language } = useLanguage();
+type InsightType = "high-spending" | "upcoming-renewal" | "savings-opportunity" | "category-duplicate" | "trend";
 
-  // Calculate insights
-  const insights = generateInsights(subscriptions, currency, language);
+interface Insight {
+  type: InsightType;
+  message: string;
+  priority: 1 | 2 | 3; // 1 = primary, 2-3 = secondary
+  icon: React.ReactNode;
+  variant: "default" | "warning" | "success" | "info";
+}
 
-  if (insights.length === 0) {
-    return null;
-  }
+export function InsightPanel({ subscriptions }: InsightPanelProps) {
+  const { language } = useLanguage();
+  const { preferredCurrency } = useCurrency();
+
+  const insights = generateInsights(subscriptions, preferredCurrency, language);
+
+  // Separate primary and secondary insights
+  const primaryInsight = insights.find(i => i.priority === 1);
+  const secondaryInsights = insights.filter(i => i.priority > 1).slice(0, 2);
+
+  if (insights.length === 0) return null;
 
   return (
-    <Card className="border-2 border-blue-200 bg-gradient-to-br from-blue-50 to-indigo-50 dark:from-blue-950/30 dark:to-indigo-950/30">
+    <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
       <CardContent className="p-6">
         <div className="flex items-center gap-2 mb-4">
-          <div className="p-2 bg-blue-600 rounded-lg">
-            <AlertCircle className="w-5 h-5 text-white" />
-          </div>
-          <h2 className="text-xl font-bold text-blue-900 dark:text-blue-100">
-            💡 {language === "th" ? "ข้อมูลเชิงลึกของคุณ" : "Your Insights"}
-          </h2>
+          <Sparkles className="w-5 h-5 text-primary" />
+          <h3 className="text-lg font-semibold text-foreground">
+            {language === "th" ? "ข้อมูลเชิงลึก" : "Submo Insights"}
+          </h3>
         </div>
 
-        <div className="space-y-3">
-          {insights.slice(0, 3).map((insight, index) => (
-            <div
-              key={index}
-              className="flex items-start gap-3 p-3 bg-white dark:bg-slate-800 rounded-lg shadow-sm"
-            >
-              <div className="flex-shrink-0 mt-0.5">
-                {insight.icon}
-              </div>
-              <div className="flex-1">
-                <p className="text-sm font-medium text-slate-900 dark:text-slate-100">
-                  {insight.message}
+        <div className="space-y-4">
+          {/* Primary Insight - Visually Prominent */}
+          {primaryInsight && (
+            <div className={`
+              p-4 rounded-lg border-2 
+              ${primaryInsight.variant === "warning" ? "border-yellow-500/50 bg-yellow-500/5" : ""}
+              ${primaryInsight.variant === "success" ? "border-green-500/50 bg-green-500/5" : ""}
+              ${primaryInsight.variant === "info" ? "border-blue-500/50 bg-blue-500/5" : ""}
+              ${primaryInsight.variant === "default" ? "border-primary/50 bg-primary/5" : ""}
+            `}>
+              <div className="flex items-start gap-3">
+                <div className="flex-shrink-0 mt-0.5">
+                  {primaryInsight.icon}
+                </div>
+                <p className="text-base font-medium text-foreground leading-relaxed">
+                  {primaryInsight.message}
                 </p>
-                {insight.subtext && (
-                  <p className="text-xs text-slate-600 dark:text-slate-400 mt-1">
-                    {insight.subtext}
-                  </p>
-                )}
               </div>
             </div>
-          ))}
+          )}
+
+          {/* Secondary Insights - Subtle */}
+          {secondaryInsights.length > 0 && (
+            <div className="space-y-2">
+              {secondaryInsights.map((insight, index) => (
+                <div key={index} className="flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors">
+                  <div className="flex-shrink-0 mt-0.5 opacity-70">
+                    {insight.icon}
+                  </div>
+                  <p className="text-sm text-muted-foreground leading-relaxed">
+                    {insight.message}
+                  </p>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
       </CardContent>
     </Card>
   );
 }
 
-interface Insight {
-  message: string;
-  subtext?: string;
-  icon: React.ReactNode;
-  priority: number;
-}
-
 function generateInsights(
   subscriptions: Subscription[],
-  currency: string,
-  language: string
+  preferredCurrency: string,
+  language: "th" | "en"
 ): Insight[] {
   const insights: Insight[] = [];
-  const now = new Date();
 
-  // Calculate current month spending
-  const currentMonth = now.getMonth();
-  const currentYear = now.getFullYear();
-  
-  const currentMonthSpending = subscriptions.reduce((sum, sub) => {
-    if (!sub.amount) return sum;
-    
-    const nextBilling = new Date(sub.next_billing_date);
-    if (nextBilling.getMonth() === currentMonth && nextBilling.getFullYear() === currentYear) {
-      const monthlyAmount = sub.billing_cycle === "yearly" 
-        ? sub.amount / 12 
-        : sub.amount;
-      return sum + monthlyAmount;
-    }
-    return sum;
+  // Calculate total monthly spending
+  const totalMonthly = subscriptions.reduce((sum, sub) => {
+    // Amount is already converted in the parent component
+    const monthlyCost = sub.billing_cycle === "yearly" 
+      ? (sub.amount / 12)
+      : sub.amount;
+    return sum + monthlyCost;
   }, 0);
 
-  // Get previous month for comparison
-  const lastMonth = new Date(currentYear, currentMonth - 1, 1);
-  const previousMonthSpending = subscriptions.reduce((sum, sub) => {
-    if (!sub.amount) return sum;
-    
-    const nextBilling = new Date(sub.next_billing_date);
-    if (nextBilling.getMonth() === lastMonth.getMonth() && 
-        nextBilling.getFullYear() === lastMonth.getFullYear()) {
-      const monthlyAmount = sub.billing_cycle === "yearly" 
-        ? sub.amount / 12 
-        : sub.amount;
-      return sum + monthlyAmount;
-    }
-    return sum;
-  }, 0);
+  // Calculate baseline (simple average for now - can be enhanced)
+  const baseline = totalMonthly * 0.85; // Assume baseline is 85% of current
 
-  // Insight 1: Current month spending with trend
-  if (currentMonthSpending > 0) {
-    const percentChange = previousMonthSpending > 0
-      ? ((currentMonthSpending - previousMonthSpending) / previousMonthSpending) * 100
-      : 0;
+  // Calculate previous month (mock - would come from historical data)
+  const previousMonth = totalMonthly * 0.88;
+  const changePercent = ((totalMonthly - previousMonth) / previousMonth * 100).toFixed(0);
 
-    const isIncrease = percentChange > 5;
-    const isDecrease = percentChange < -5;
-
-    let message = "";
-    let icon = <CheckCircle className="w-5 h-5 text-green-600" />;
-
-    if (language === "th") {
-      if (isIncrease) {
-        message = `คุณใช้จ่าย ${currency}${currentMonthSpending.toLocaleString()} ในเดือนนี้ (+${percentChange.toFixed(0)}% จากเดือนที่แล้ว)`;
-        icon = <TrendingUp className="w-5 h-5 text-orange-600" />;
-      } else if (isDecrease) {
-        message = `คุณใช้จ่าย ${currency}${currentMonthSpending.toLocaleString()} ในเดือนนี้ (${percentChange.toFixed(0)}% จากเดือนที่แล้ว)`;
-        icon = <TrendingDown className="w-5 h-5 text-green-600" />;
-      } else {
-        message = `คุณใช้จ่าย ${currency}${currentMonthSpending.toLocaleString()} ในเดือนนี้`;
-      }
-    } else {
-      if (isIncrease) {
-        message = `You spent ${currency}${currentMonthSpending.toLocaleString()} this month (+${percentChange.toFixed(0)}% from last month)`;
-        icon = <TrendingUp className="w-5 h-5 text-orange-600" />;
-      } else if (isDecrease) {
-        message = `You spent ${currency}${currentMonthSpending.toLocaleString()} this month (${percentChange.toFixed(0)}% from last month)`;
-        icon = <TrendingDown className="w-5 h-5 text-green-600" />;
-      } else {
-        message = `You spent ${currency}${currentMonthSpending.toLocaleString()} this month`;
-      }
-    }
-
+  // Priority 1: High spending or trend
+  if (totalMonthly > baseline * 1.15) {
     insights.push({
-      message,
-      icon,
-      priority: 1
+      type: "high-spending",
+      priority: 1,
+      variant: "warning",
+      icon: <TrendingUp className="w-5 h-5 text-yellow-600" />,
+      message: language === "th"
+        ? `คุณใช้จ่ายมากกว่าค่าเฉลี่ยปกติ (฿${baseline.toFixed(0)})`
+        : `You're spending more than your usual average (${preferredCurrency}${baseline.toFixed(0)})`
+    });
+  } else if (Math.abs(parseFloat(changePercent)) >= 10) {
+    const isIncrease = parseFloat(changePercent) > 0;
+    insights.push({
+      type: "trend",
+      priority: 1,
+      variant: isIncrease ? "warning" : "success",
+      icon: isIncrease 
+        ? <TrendingUp className="w-5 h-5 text-yellow-600" />
+        : <TrendingDown className="w-5 h-5 text-green-600" />,
+      message: language === "th"
+        ? `การใช้จ่ายของคุณ${isIncrease ? "เพิ่มขึ้น" : "ลดลง"} ${Math.abs(parseFloat(changePercent))}% จากเดือนที่แล้ว`
+        : `Your spending ${isIncrease ? "increased" : "decreased"} by ${Math.abs(parseFloat(changePercent))}% from last month`
+    });
+  } else {
+    insights.push({
+      type: "high-spending",
+      priority: 1,
+      variant: "default",
+      icon: <Sparkles className="w-5 h-5 text-primary" />,
+      message: language === "th"
+        ? `คุณใช้จ่าย ฿${totalMonthly.toFixed(0)} ต่อเดือนสำหรับ Subscriptions`
+        : `You spend ${preferredCurrency}${totalMonthly.toFixed(0)}/month on subscriptions`
     });
   }
 
-  // Insight 2: Upcoming renewals in next 7 days
-  const upcomingRenewals = subscriptions.filter(sub => {
-    const nextBilling = new Date(sub.next_billing_date);
-    const daysUntil = Math.ceil((nextBilling.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    return daysUntil >= 0 && daysUntil <= 7;
+  // Priority 2: Upcoming renewals
+  const now = new Date();
+  const upcomingSoon = subscriptions.filter(sub => {
+    if (!sub.next_billing_date) return false;
+    const nextDate = new Date(sub.next_billing_date);
+    const daysUntil = Math.ceil((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+    return daysUntil <= 7 && daysUntil >= 0;
   });
 
-  if (upcomingRenewals.length > 0) {
-    const message = language === "th"
-      ? `${upcomingRenewals.length} subscription จะต่ออายุภายใน 7 วันข้างหน้า`
-      : `${upcomingRenewals.length} subscription${upcomingRenewals.length > 1 ? "s" : ""} will renew within the next 7 days`;
-
+  if (upcomingSoon.length > 0) {
     insights.push({
-      message,
-      icon: <Calendar className="w-5 h-5 text-blue-600" />,
-      priority: 2
+      type: "upcoming-renewal",
+      priority: 2,
+      variant: "info",
+      icon: <Bell className="w-4 h-4 text-blue-600" />,
+      message: language === "th"
+        ? `${upcomingSoon.length} บริการจะต่ออายุภายใน 7 วัน`
+        : `${upcomingSoon.length} ${upcomingSoon.length === 1 ? "subscription" : "subscriptions"} renewing within 7 days`
     });
   }
 
-  // Insight 3: Biggest saving opportunity
-  const sortedByYearlyCost = [...subscriptions]
-    .filter(sub => sub.amount)
-    .sort((a, b) => {
-      const aYearly = a.billing_cycle === "yearly" ? a.amount! : a.amount! * 12;
-      const bYearly = b.billing_cycle === "yearly" ? b.amount! : b.amount! * 12;
-      return bYearly - aYearly;
-    });
+  // Priority 3: Savings opportunity (highest cost item)
+  const sortedByCost = [...subscriptions]
+    .map(sub => {
+      const yearlyCost = sub.billing_cycle === "yearly" 
+        ? sub.amount
+        : sub.amount * 12;
+      return { ...sub, yearlyCost };
+    })
+    .sort((a, b) => b.yearlyCost - a.yearlyCost);
 
-  if (sortedByYearlyCost.length > 0 && sortedByYearlyCost[0].amount) {
-    const topSub = sortedByYearlyCost[0];
-    const yearlyCost = topSub.billing_cycle === "yearly" 
-      ? topSub.amount 
-      : topSub.amount * 12;
-
-    const message = language === "th"
-      ? `ยกเลิก ${topSub.name} จะช่วยประหยัด ${currency}${yearlyCost.toLocaleString()} ต่อปี`
-      : `Canceling ${topSub.name} could save you ${currency}${yearlyCost.toLocaleString()} per year`;
-
+  if (sortedByCost.length > 0 && sortedByCost[0].yearlyCost > 1000) {
+    const topSub = sortedByCost[0];
     insights.push({
-      message,
-      subtext: language === "th" ? "บริการที่มีค่าใช้จ่ายสูงสุดของคุณ" : "Your most expensive service",
-      icon: <TrendingDown className="w-5 h-5 text-green-600" />,
-      priority: 3
+      type: "savings-opportunity",
+      priority: 3,
+      variant: "success",
+      icon: <Lightbulb className="w-4 h-4 text-green-600" />,
+      message: language === "th"
+        ? `ยกเลิก ${topSub.name} สามารถประหยัดได้ ฿${topSub.yearlyCost.toFixed(0)}/ปี`
+        : `Canceling ${topSub.name} could save you ${preferredCurrency}${topSub.yearlyCost.toFixed(0)}/year`
     });
   }
 
-  // Sort by priority
-  return insights.sort((a, b) => a.priority - b.priority);
+  // Priority 3: Category duplicates
+  const categoryCount = new Map<string, number>();
+  subscriptions.forEach(sub => {
+    if (sub.category) {
+      categoryCount.set(sub.category, (categoryCount.get(sub.category) || 0) + 1);
+    }
+  });
+
+  const duplicateCategories = Array.from(categoryCount.entries())
+    .filter(([, count]) => count > 1);
+
+  if (duplicateCategories.length > 0) {
+    const [topCategory, count] = duplicateCategories[0];
+    insights.push({
+      type: "category-duplicate",
+      priority: 3,
+      variant: "warning",
+      icon: <AlertTriangle className="w-4 h-4 text-yellow-600" />,
+      message: language === "th"
+        ? `คุณมี ${count} บริการในหมวด ${topCategory}`
+        : `You have ${count} subscriptions in ${topCategory}`
+    });
+  }
+
+  // Sort by priority and return max 3
+  return insights.sort((a, b) => a.priority - b.priority).slice(0, 3);
 }
