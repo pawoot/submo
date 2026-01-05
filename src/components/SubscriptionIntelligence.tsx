@@ -291,9 +291,17 @@ export function SubscriptionIntelligence({
                     {spendingContext.percentageOfTotal}% {t("intelligence.ofTotalSpending")}
                   </p>
                   {spendingContext.rank <= 3 && (
-                    <Badge variant="secondary" className="bg-purple-100 dark:bg-purple-900 text-purple-700 dark:text-purple-300">
-                      {t("intelligence.rank").replace("{rank}", spendingContext.rank.toString()).replace("{total}", spendingContext.totalSubscriptions.toString())}
-                    </Badge>
+                    <div className="text-sm font-medium">
+                      {spendingContext.rank > 0 && spendingContext.totalSubscriptions > 0 ? (
+                        <span className="text-blue-600 dark:text-blue-400">
+                          {t("intelligence.rankingOf")
+                            .replace("{rank}", spendingContext.rank.toString())
+                            .replace("{total}", spendingContext.totalSubscriptions.toString())}
+                        </span>
+                      ) : (
+                        ""
+                      )}
+                    </div>
                   )}
                 </div>
               </div>

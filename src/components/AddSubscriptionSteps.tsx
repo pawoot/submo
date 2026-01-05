@@ -92,6 +92,7 @@ export function AddSubscriptionSteps({
   const { t, language } = useLanguage();
   const { formatAmount } = useCurrency();
   const dateLocale = language === 'th' ? th : enUS;
+  const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),

@@ -238,20 +238,19 @@ export function SubscriptionTemplateBrowser({
             </div>
             
             {/* Custom Service Link */}
-            <div className="border-t pt-4 mt-4 text-center">
+            <div className="mt-4 pt-4 border-t border-slate-200 dark:border-slate-700 text-center">
               <p className="text-sm text-slate-500 mb-2">
-                {t("subscriptions.notFoundAddCustom")}
+                {t("subscriptions.cantFindAddCustom")}
               </p>
               <button
+                type="button"
                 onClick={() => {
-                  if (onCustom) {
-                    onCustom();
-                  }
-                  onClose();
+                  onClose(); // Close dialog first
+                  onCustom(); // Then trigger custom service flow
                 }}
-                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+                className="text-blue-600 hover:text-blue-700 dark:text-blue-400 dark:hover:text-blue-300 text-sm font-medium hover:underline"
               >
-                {t("subscriptions.addCustomService")}
+                + {t("subscriptions.addCustomService")}
               </button>
             </div>
           </div>
