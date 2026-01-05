@@ -98,6 +98,24 @@ export async function getLatestMigrationReport(): Promise<MigrationReport | null
 }
 
 /**
+ * Get migration report by ID
+ */
+export async function getMigrationReportById(reportId: string): Promise<MigrationReport | null> {
+  const { data, error } = await (supabase as any)
+    .from("migration_reports")
+    .select("*")
+    .eq("id", reportId)
+    .single();
+
+  if (error) {
+    console.error("Error fetching migration report:", error);
+    return null;
+  }
+
+  return data as MigrationReport;
+}
+
+/**
  * Get all migration reports (paginated)
  */
 export async function getMigrationReports(
