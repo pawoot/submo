@@ -1,3 +1,4 @@
+import { useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SubscriptionIconProps {
@@ -9,8 +10,10 @@ interface SubscriptionIconProps {
 }
 
 export function SubscriptionIcon({ name, websiteUrl, size = "md" }: SubscriptionIconProps) {
+  const [imageError, setImageError] = useState(false);
+  
   const faviconUrl = websiteUrl 
-    ? `https://www.google.com/s2/favicons?domain=${new URL(websiteUrl).hostname}&sz=128`
+    ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(websiteUrl).hostname)}&sz=128`
     : null;
 
   const sizeClasses = {
@@ -19,28 +22,26 @@ export function SubscriptionIcon({ name, websiteUrl, size = "md" }: Subscription
     lg: "w-16 h-16 text-base",
   };
 
+  const showFavicon = faviconUrl && !imageError;
+
   return (
     <div className={cn(
       "relative rounded-full flex items-center justify-center overflow-hidden",
-      "bg-white border border-slate-200 dark:border-slate-700 shadow-sm", // Changed from bg-blue-500/10 to bg-white
+      "bg-white border border-slate-200 dark:border-slate-700 shadow-sm",
       sizeClasses[size]
     )}>
-      {faviconUrl && (
+      {showFavicon ? (
         <img 
           src={faviconUrl}
           alt={name}
           className="w-full h-full object-cover p-2"
-          onError={(e) => {
-            e.currentTarget.style.display = "none";
-          }}
+          onError={() => setImageError(true)}
         />
+      ) : (
+        <span className="font-semibold text-slate-700 dark:text-slate-300">
+          {name.charAt(0).toUpperCase()}
+        </span>
       )}
-      <span className={cn(
-        "font-semibold text-slate-700 dark:text-slate-300", // Better contrast on white background
-        { "block": !faviconUrl, "hidden": faviconUrl }
-      )} style={{ display: faviconUrl ? "none" : "block" }}>
-        {name.charAt(0).toUpperCase()}
-      </span>
     </div>
   );
 }
