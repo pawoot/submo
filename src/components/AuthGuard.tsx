@@ -47,10 +47,13 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
           setAuthenticated(true);
         }
       } else {
+        // Only redirect if we're sure user is not authenticated
+        setAuthenticated(false);
         router.push("/auth/login");
       }
     } catch (error) {
       console.error("Auth check error:", error);
+      setAuthenticated(false);
       router.push("/auth/login");
     } finally {
       setLoading(false);

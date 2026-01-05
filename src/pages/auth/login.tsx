@@ -26,9 +26,14 @@ export default function LoginPage() {
   useEffect(() => {
     // Check if user is already logged in
     const checkAuth = async () => {
-      const session = await authService.getCurrentSession();
-      if (session) {
-        router.push("/");
+      try {
+        const session = await authService.getCurrentSession();
+        if (session) {
+          router.push("/");
+        }
+      } catch (error) {
+        console.error("Auth check error:", error);
+        // User is not logged in, stay on login page
       }
     };
     checkAuth();
