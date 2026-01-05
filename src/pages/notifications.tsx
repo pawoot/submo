@@ -27,6 +27,35 @@ interface SubscriptionWithReminder extends Subscription {
   daysUntilRenewal: number;
 }
 
+// Helper function to calculate next renewal date
+function calculateNextRenewal(billingCycle: string, currentBillingDate: string): string {
+  const date = new Date(currentBillingDate);
+  const now = new Date();
+  
+  // If date is in future, return as-is
+  if (date > now) {
+    return date.toISOString();
+  }
+
+  // Move date forward based on billing cycle
+  while (date <= now) {
+    if (billingCycle === "monthly") {
+      date.setMonth(date.getMonth() + 1);
+    } else if (billingCycle === "yearly") {
+      date.setFullYear(date.getFullYear() + 1);
+    } else if (billingCycle === "quarterly") {
+      date.setMonth(date.getMonth() + 3);
+    } else if (billingCycle === "weekly") {
+      date.setDate(date.getDate() + 7);
+    } else {
+      // Default to monthly
+      date.setMonth(date.getMonth() + 1);
+    }
+  }
+  
+  return date.toISOString();
+}
+
 export default function NotificationsPage() {
   const router = useRouter();
   const { t } = useLanguage();
@@ -58,16 +87,16 @@ export default function NotificationsPage() {
           return;
         }
 
-        // Process subscriptions with manual date calculation
+        // Process subscriptions with manual inline calculation
         const now = new Date();
         const processed = subsData.map(sub => {
-          // Manual renewal date calculation (inline to avoid any async issues)
+          // Calculate next renewal date inline
           const billingDate = new Date(sub.next_billing_date);
           const nextRenewal = new Date(billingDate);
           
-          // If date is in future, use it as-is
+          // If date is in future, use as-is
           if (billingDate <= now) {
-            // Move date forward based on billing cycle
+            // Move forward based on cycle
             while (nextRenewal <= now) {
               if (sub.billing_cycle === "monthly") {
                 nextRenewal.setMonth(nextRenewal.getMonth() + 1);
@@ -78,7 +107,6 @@ export default function NotificationsPage() {
               } else if (sub.billing_cycle === "weekly") {
                 nextRenewal.setDate(nextRenewal.getDate() + 7);
               } else {
-                // Default to monthly for unknown cycles
                 nextRenewal.setMonth(nextRenewal.getMonth() + 1);
               }
             }
@@ -104,7 +132,7 @@ export default function NotificationsPage() {
           };
         });
 
-        // Sort by priority: enabled first, then by days until renewal
+        // Sort by priority
         processed.sort((a, b) => {
           if (a.reminder_enabled && !b.reminder_enabled) return -1;
           if (!a.reminder_enabled && b.reminder_enabled) return 1;
@@ -353,6 +381,15 @@ export default function NotificationsPage() {
                       </div>
                       {subscriptions.filter(s => s.reminder_enabled).map((sub) => {
                         const isUrgent = sub.daysUntilRenewal <= 3;
+                        const renewalDate = new Date(sub.nextRenewalDate);
+                        const renewalText = renewalDate.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        });
+                        const daysText = sub.daysUntilRenewal > 0 
+                          ? `in ${sub.daysUntilRenewal} day${sub.daysUntilRenewal !== 1 ? "s" : ""}`
+                          : "today";
                         
                         return (
                           <Card key={sub.id} className={isUrgent ? "border-orange-200 bg-orange-50/50" : ""}>
@@ -371,13 +408,9 @@ export default function NotificationsPage() {
                                     <div className="flex items-center gap-2">
                                       <Calendar className="h-3 w-3" />
                                       <span>
-                                        Renewal: {new Date(sub.nextRenewalDate).toLocaleDateString("en-US", {
-                                          month: "short",
-                                          day: "numeric",
-                                          year: "numeric"
-                                        })}
+                                        Renewal: {renewalText}
                                         <span className={isUrgent ? "text-orange-600 font-medium" : ""}>
-                                          {" "}({sub.daysUntilRenewal > 0 ? `in ${sub.daysUntilRenewal} day${sub.daysUntilRenewal !== 1 ? "s" : ""}` : "today"})
+                                          {" "}({daysText})
                                         </span>
                                       </span>
                                     </div>
@@ -435,51 +468,54 @@ export default function NotificationsPage() {
                           DISABLED ({subscriptions.filter(s => !s.reminder_enabled).length})
                         </h3>
                       </div>
-                      {subscriptions.filter(s => !s.reminder_enabled).map((sub) => (
-                        <Card key={sub.id} className="opacity-60">
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <h4 className="font-semibold mb-1">{sub.name}</h4>
-                                <div className="space-y-1 text-sm text-muted-foreground">
+                      {subscriptions.filter(s => !s.reminder_enabled).map((sub) => {
+                        const renewalDate = new Date(sub.nextRenewalDate);
+                        const renewalText = renewalDate.toLocaleDateString("en-US", {
+                          month: "short",
+                          day: "numeric",
+                          year: "numeric"
+                        });
+                        
+                        return (
+                          <Card key={sub.id} className="opacity-60">
+                            <CardContent className="p-4">
+                              <div className="flex items-start justify-between gap-4">
+                                <div className="flex-1">
+                                  <h4 className="font-semibold mb-1">{sub.name}</h4>
+                                  <div className="space-y-1 text-sm text-muted-foreground">
+                                    <div className="flex items-center gap-2">
+                                      <Calendar className="h-3 w-3" />
+                                      <span>Renewal: {renewalText}</span>
+                                    </div>
+                                    <div className="text-xs">
+                                      Amount: {formatAmount(sub.amount, sub.currency)}
+                                      {sub.billing_cycle === "yearly" && " / year"}
+                                      {sub.billing_cycle === "monthly" && " / month"}
+                                    </div>
+                                  </div>
+                                </div>
+                                <div className="flex flex-col items-end gap-2">
                                   <div className="flex items-center gap-2">
-                                    <Calendar className="h-3 w-3" />
-                                    <span>
-                                      Renewal: {new Date(sub.nextRenewalDate).toLocaleDateString("en-US", {
-                                        month: "short",
-                                        day: "numeric",
-                                        year: "numeric"
-                                      })}
-                                    </span>
+                                    <span className="text-xs text-muted-foreground">Disabled</span>
+                                    <Switch
+                                      checked={sub.reminder_enabled}
+                                      onCheckedChange={() => handleToggleReminder(sub.id, sub.reminder_enabled)}
+                                    />
                                   </div>
-                                  <div className="text-xs">
-                                    Amount: {formatAmount(sub.amount, sub.currency)}
-                                    {sub.billing_cycle === "yearly" && " / year"}
-                                    {sub.billing_cycle === "monthly" && " / month"}
-                                  </div>
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => router.push(`/edit-subscription/${sub.id}`)}
+                                    className="h-8 px-2"
+                                  >
+                                    <Edit className="h-3 w-3" />
+                                  </Button>
                                 </div>
                               </div>
-                              <div className="flex flex-col items-end gap-2">
-                                <div className="flex items-center gap-2">
-                                  <span className="text-xs text-muted-foreground">Disabled</span>
-                                  <Switch
-                                    checked={sub.reminder_enabled}
-                                    onCheckedChange={() => handleToggleReminder(sub.id, sub.reminder_enabled)}
-                                  />
-                                </div>
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => router.push(`/edit-subscription/${sub.id}`)}
-                                  className="h-8 px-2"
-                                >
-                                  <Edit className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      ))}
+                            </CardContent>
+                          </Card>
+                        );
+                      })}
                     </div>
                   )}
                 </>
@@ -511,59 +547,64 @@ export default function NotificationsPage() {
                     </div>
                   )}
                   <div className="space-y-3">
-                    {notifications.map((notification) => (
-                      <Card
-                        key={notification.id}
-                        className={!notification.is_read ? "border-primary/50 bg-primary/5" : ""}
-                      >
-                        <CardContent className="p-4">
-                          <div className="flex items-start justify-between gap-4">
-                            <div className="flex-1">
-                              <div className="flex items-center gap-2 mb-1">
-                                <h4 className="font-semibold">{notification.title}</h4>
-                                {!notification.is_read && (
-                                  <Badge variant="default" className="h-5 px-1.5 text-[10px]">
-                                    New
-                                  </Badge>
-                                )}
+                    {notifications.map((notification) => {
+                      const notifDate = new Date(notification.created_at);
+                      const notifText = notifDate.toLocaleDateString("en-US", {
+                        month: "short",
+                        day: "numeric",
+                        year: "numeric",
+                        hour: "2-digit",
+                        minute: "2-digit"
+                      });
+                      
+                      return (
+                        <Card
+                          key={notification.id}
+                          className={!notification.is_read ? "border-primary/50 bg-primary/5" : ""}
+                        >
+                          <CardContent className="p-4">
+                            <div className="flex items-start justify-between gap-4">
+                              <div className="flex-1">
+                                <div className="flex items-center gap-2 mb-1">
+                                  <h4 className="font-semibold">{notification.title}</h4>
+                                  {!notification.is_read && (
+                                    <Badge variant="default" className="h-5 px-1.5 text-[10px]">
+                                      New
+                                    </Badge>
+                                  )}
+                                </div>
+                                <p className="text-sm text-muted-foreground mb-2">
+                                  {notification.message}
+                                </p>
+                                <p className="text-xs text-muted-foreground">
+                                  {notifText}
+                                </p>
                               </div>
-                              <p className="text-sm text-muted-foreground mb-2">
-                                {notification.message}
-                              </p>
-                              <p className="text-xs text-muted-foreground">
-                                {new Date(notification.created_at).toLocaleDateString("en-US", {
-                                  month: "short",
-                                  day: "numeric",
-                                  year: "numeric",
-                                  hour: "2-digit",
-                                  minute: "2-digit"
-                                })}
-                              </p>
-                            </div>
-                            <div className="flex gap-1">
-                              {!notification.is_read && (
+                              <div className="flex gap-1">
+                                {!notification.is_read && (
+                                  <Button
+                                    variant="ghost"
+                                    size="sm"
+                                    onClick={() => handleMarkAsRead(notification.id)}
+                                    className="h-8 px-2"
+                                  >
+                                    <Check className="h-3 w-3" />
+                                  </Button>
+                                )}
                                 <Button
                                   variant="ghost"
                                   size="sm"
-                                  onClick={() => handleMarkAsRead(notification.id)}
-                                  className="h-8 px-2"
+                                  onClick={() => handleDeleteNotification(notification.id)}
+                                  className="h-8 px-2 text-destructive hover:text-destructive"
                                 >
-                                  <Check className="h-3 w-3" />
+                                  <Trash2 className="h-3 w-3" />
                                 </Button>
-                              )}
-                              <Button
-                                variant="ghost"
-                                size="sm"
-                                onClick={() => handleDeleteNotification(notification.id)}
-                                className="h-8 px-2 text-destructive hover:text-destructive"
-                              >
-                                <Trash2 className="h-3 w-3" />
-                              </Button>
+                              </div>
                             </div>
-                          </div>
-                        </CardContent>
-                      </Card>
-                    ))}
+                          </CardContent>
+                        </Card>
+                      );
+                    })}
                   </div>
                 </>
               )}
