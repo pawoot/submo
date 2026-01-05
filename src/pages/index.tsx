@@ -230,7 +230,7 @@ export default function LandingPage() {
         </nav>
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-32 pb-32 px-4 sm:px-6 lg:px-8">
+        <section className="relative overflow-hidden pt-32 pb-20 px-4 sm:px-6 lg:px-8">
           {/* Animated Background Elements with Parallax */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div 
@@ -256,55 +256,161 @@ export default function LandingPage() {
               transition: "transform 0.1s ease-out"
             }}
           >
-            <div className="text-center max-w-4xl mx-auto">
-              <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-8 border border-white/20">
-                <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
-                <span className="text-sm">ใช้งานฟรี ไม่ต้องผูกบัตรเครดิต</span>
-              </div>
-              
-              <h1 className="text-5xl sm:text-6xl lg:text-7xl font-bold mb-6 leading-tight">
-                จัดการ <span className="bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent">Subscription</span> ทั้งหมด<br />
-                ในที่เดียว
-              </h1>
-              
-              <p className="text-xl sm:text-2xl text-blue-200 mb-12 max-w-3xl mx-auto leading-relaxed">
-                ติดตามค่าใช้จ่าย แจ้งเตือนก่อนต่ออายุ และประหยัดเงินได้จริง<br />
-                ด้วย AI ที่ช่วยวิเคราะห์รูปแบบการใช้จ่ายของคุณ
-              </p>
-
-              <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-16">
-                <Link href="/auth/signup">
-                  <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
-                    เริ่มใช้งานฟรี
-                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                  </Button>
-                </Link>
-                <Link href="#features">
-                  <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 rounded-xl">
-                    ดูฟีเจอร์ทั้งหมด
-                  </Button>
-                </Link>
-              </div>
-
-              {/* Stats */}
-              <div className="grid grid-cols-3 gap-8 max-w-3xl mx-auto">
-                <div className="text-center">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                    10K+
-                  </div>
-                  <div className="text-blue-200">ผู้ใช้งาน</div>
+            <div className="grid lg:grid-cols-2 gap-12 items-center">
+              {/* Left Column - Text Content */}
+              <div className="text-center lg:text-left">
+                <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-8 border border-white/20">
+                  <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
+                  <span className="text-sm">ใช้งานฟรี ไม่ต้องผูกบัตรเครดิต</span>
                 </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                    50K+
-                  </div>
-                  <div className="text-blue-200">Subscription</div>
+                
+                <h1 className="text-4xl sm:text-5xl lg:text-6xl font-bold mb-6 leading-tight">
+                  คุณกำลัง <span className="text-red-500">"จ่ายทิ้ง"</span><br />
+                  ปีละกี่บาท?
+                </h1>
+                
+                <p className="text-lg sm:text-xl text-blue-200 mb-4 leading-relaxed">
+                  Netflix ที่ไม่ได้ดู, Adobe ที่ลืมยกเลิก, Fitness ที่ไม่ได้ไป
+                </p>
+                <p className="text-lg sm:text-xl font-bold text-white mb-8">
+                  <span className="text-blue-400">Submo</span> ช่วยคุณคืนค่าและหยุดรายจ่ายแผงเหล่านี้... ในคลิกเดียว
+                </p>
+
+                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
+                  <Link href="/auth/signup">
+                    <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
+                      เริ่มใช้งานฟรี
+                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                    </Button>
+                  </Link>
+                  <Link href="#features">
+                    <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 rounded-xl">
+                      ดูฟีเจอร์ทั้งหมด
+                    </Button>
+                  </Link>
                 </div>
-                <div className="text-center">
-                  <div className="text-4xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-2">
-                    ฿2M+
+
+                {/* Stats */}
+                <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0">
+                  <div className="text-center lg:text-left">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
+                      10K+
+                    </div>
+                    <div className="text-blue-200 text-sm">ผู้ใช้งาน</div>
                   </div>
-                  <div className="text-blue-200">ประหยัดได้</div>
+                  <div className="text-center lg:text-left">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
+                      50K+
+                    </div>
+                    <div className="text-blue-200 text-sm">Subscription</div>
+                  </div>
+                  <div className="text-center lg:text-left">
+                    <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
+                      ฿2M+
+                    </div>
+                    <div className="text-blue-200 text-sm">ประหยัดได้</div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Right Column - Phone Mockup */}
+              <div className="relative flex justify-center lg:justify-end">
+                {/* Floating Animation Wrapper */}
+                <div className="relative animate-float">
+                  {/* Phone Frame */}
+                  <div className="relative w-[320px] sm:w-[360px] h-[640px] sm:h-[720px] bg-gradient-to-br from-gray-900 via-gray-800 to-gray-900 rounded-[3rem] p-3 shadow-2xl border-8 border-gray-700">
+                    {/* Screen */}
+                    <div className="w-full h-full bg-gradient-to-br from-gray-900 to-black rounded-[2.5rem] overflow-hidden relative">
+                      {/* Status Bar */}
+                      <div className="flex justify-between items-center px-6 pt-4 pb-3">
+                        <span className="text-white text-xs">9:41</span>
+                        <div className="flex space-x-1">
+                          <div className="w-4 h-4 bg-white/20 rounded-full"></div>
+                          <div className="w-4 h-4 bg-white/20 rounded-full"></div>
+                        </div>
+                      </div>
+
+                      {/* Content */}
+                      <div className="px-5 py-4">
+                        {/* Total Amount */}
+                        <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-5 mb-4 border border-gray-700/50">
+                          <div className="text-gray-400 text-xs mb-2">ยอดรายจ่ายปีนี้ (Yearly)</div>
+                          <div className="text-white text-3xl font-bold">
+                            ฿ 45,900<span className="text-red-500">.00</span>
+                          </div>
+                        </div>
+
+                        {/* Warning Alert */}
+                        <div className="absolute top-40 right-4 bg-red-500/90 backdrop-blur-sm rounded-xl p-3 shadow-lg animate-bounce z-10 max-w-[180px]">
+                          <div className="flex items-start space-x-2">
+                            <Bell className="h-4 w-4 text-white flex-shrink-0 mt-0.5" />
+                            <div>
+                              <div className="text-white text-xs font-bold">WARNING</div>
+                              <div className="text-white text-xs">คุณเสียเงินล่วงไป</div>
+                              <div className="text-white text-xs font-bold">แล้ว ฿5,400</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Subscription List */}
+                        <div className="space-y-3">
+                          {/* Netflix */}
+                          <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-red-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">N</span>
+                              </div>
+                              <div>
+                                <div className="text-white font-semibold text-sm">Netflix Premium</div>
+                                <div className="text-gray-400 text-xs">ต่อบัตรอีก 2 วัน</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-bold">-฿419</div>
+                              <div className="text-red-400 text-xs">เกือบไม่ได้ดู</div>
+                            </div>
+                          </div>
+
+                          {/* Adobe */}
+                          <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">A</span>
+                              </div>
+                              <div>
+                                <div className="text-white font-semibold text-sm">Adobe Creative</div>
+                                <div className="text-gray-400 text-xs">ไม่ได้ใช้งาน 3 เดือน</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-bold">-฿1,800</div>
+                              <div className="text-red-400 text-xs">ยกเลิกด่วน</div>
+                            </div>
+                          </div>
+
+                          {/* Spotify */}
+                          <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">S</span>
+                              </div>
+                              <div>
+                                <div className="text-white font-semibold text-sm">Spotify Duo</div>
+                                <div className="text-gray-400 text-xs">ใช้งานสม่ำเสมอ: เมื่อวาน</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-bold">-฿219</div>
+                              <div className="text-green-400 text-xs">ปกติ</div>
+                            </div>
+                          </div>
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Notch */}
+                    <div className="absolute top-0 left-1/2 transform -translate-x-1/2 w-32 h-7 bg-black rounded-b-3xl"></div>
+                  </div>
                 </div>
               </div>
             </div>
