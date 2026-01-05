@@ -9,7 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Switch } from "@/components/ui/switch";
 import { Bell, BellOff, Calendar, AlertCircle, Trash2, Edit, Check } from "lucide-react";
 import { notificationService } from "@/services/notificationService";
-import { subscriptionService, getUserSubscriptions } from "@/services/subscriptionService";
+import { getUserSubscriptions } from "@/services/subscriptionService";
 import { authService } from "@/services/authService";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -58,49 +58,56 @@ export default function NotificationsPage() {
           return;
         }
 
-        // 1. Add basic reminder info
-        const subsWithReminders = subsData.map(sub => {
+        // Process subscriptions with manual date calculation
+        const now = new Date();
+        const processed = subsData.map(sub => {
+          // Manual renewal date calculation (inline to avoid any async issues)
+          const billingDate = new Date(sub.next_billing_date);
+          const nextRenewal = new Date(billingDate);
+          
+          // If date is in future, use it as-is
+          if (billingDate <= now) {
+            // Move date forward based on billing cycle
+            while (nextRenewal <= now) {
+              if (sub.billing_cycle === "monthly") {
+                nextRenewal.setMonth(nextRenewal.getMonth() + 1);
+              } else if (sub.billing_cycle === "yearly") {
+                nextRenewal.setFullYear(nextRenewal.getFullYear() + 1);
+              } else if (sub.billing_cycle === "quarterly") {
+                nextRenewal.setMonth(nextRenewal.getMonth() + 3);
+              } else if (sub.billing_cycle === "weekly") {
+                nextRenewal.setDate(nextRenewal.getDate() + 7);
+              } else {
+                // Default to monthly for unknown cycles
+                nextRenewal.setMonth(nextRenewal.getMonth() + 1);
+              }
+            }
+          }
+          
+          const nextRenewalISO = nextRenewal.toISOString();
+          const daysUntil = Math.ceil(
+            (nextRenewal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          );
+          
+          // Calculate reminder info
           const reminderDays = sub.reminder_days || 7;
-          const nextBilling = new Date(sub.next_billing_date);
-          const reminderDate = new Date(nextBilling);
+          const reminderDate = new Date(billingDate);
           reminderDate.setDate(reminderDate.getDate() - reminderDays);
           
           return {
             ...sub,
             reminder_enabled: sub.reminder_enabled || false,
             reminder_days: reminderDays,
-            next_reminder_date: reminderDate.toISOString()
-          };
-        });
-
-        // 2. Calculate renewal dates (now synchronous)
-        const now = new Date();
-        const processed = subsWithReminders.map((sub) => {
-          // ✅ No await needed - synchronous function
-          const nextRenewal = subscriptionService.getNextRenewalDate(
-            sub.billing_cycle,
-            sub.next_billing_date
-          );
-          
-          const nextRenewalDate = new Date(nextRenewal);
-          const daysUntil = Math.ceil(
-            (nextRenewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
-          );
-          
-          return {
-            ...sub,
-            nextRenewalDate: nextRenewal,
+            next_reminder_date: reminderDate.toISOString(),
+            nextRenewalDate: nextRenewalISO,
             daysUntilRenewal: daysUntil
           };
         });
 
-        // 3. Sort by priority
+        // Sort by priority: enabled first, then by days until renewal
         processed.sort((a, b) => {
-          // Priority 1: Enabled reminders first
           if (a.reminder_enabled && !b.reminder_enabled) return -1;
           if (!a.reminder_enabled && b.reminder_enabled) return 1;
-          
-          // Priority 2: Closest renewal date first
           return a.daysUntilRenewal - b.daysUntilRenewal;
         });
 
@@ -177,19 +184,21 @@ export default function NotificationsPage() {
 
   const handleToggleReminder = async (subscriptionId: string, currentState: boolean) => {
     try {
-      // Optimistic update
-      setSubscriptions(prev =>
-        prev.map(sub =>
-          sub.id === subscriptionId
-            ? { ...sub, reminder_enabled: !currentState }
-            : sub
-        ).sort((a, b) => {
-          if (a.reminder_enabled && !b.reminder_enabled) return -1;
-          if (!a.reminder_enabled && b.reminder_enabled) return 1;
-          return a.daysUntilRenewal - b.daysUntilRenewal;
-        })
+      const updatedSubs = subscriptions.map(sub =>
+        sub.id === subscriptionId
+          ? { ...sub, reminder_enabled: !currentState }
+          : sub
       );
+      
+      updatedSubs.sort((a, b) => {
+        if (a.reminder_enabled && !b.reminder_enabled) return -1;
+        if (!a.reminder_enabled && b.reminder_enabled) return 1;
+        return a.daysUntilRenewal - b.daysUntilRenewal;
+      });
+      
+      setSubscriptions(updatedSubs);
 
+      const { subscriptionService } = await import("@/services/subscriptionService");
       await subscriptionService.update(subscriptionId, { reminder_enabled: !currentState });
 
       toast({
@@ -201,7 +210,6 @@ export default function NotificationsPage() {
       
     } catch (error) {
       console.error("Error toggling reminder:", error);
-      // Revert optimistic update
       setSubscriptions(prev =>
         prev.map(sub =>
           sub.id === subscriptionId
@@ -219,19 +227,21 @@ export default function NotificationsPage() {
 
   const handleRemoveReminder = async (subscriptionId: string) => {
     try {
-      // Optimistic update
-      setSubscriptions(prev =>
-        prev.map(sub =>
-          sub.id === subscriptionId
-            ? { ...sub, reminder_enabled: false }
-            : sub
-        ).sort((a, b) => {
-          if (a.reminder_enabled && !b.reminder_enabled) return -1;
-          if (!a.reminder_enabled && b.reminder_enabled) return 1;
-          return a.daysUntilRenewal - b.daysUntilRenewal;
-        })
+      const updatedSubs = subscriptions.map(sub =>
+        sub.id === subscriptionId
+          ? { ...sub, reminder_enabled: false }
+          : sub
       );
+      
+      updatedSubs.sort((a, b) => {
+        if (a.reminder_enabled && !b.reminder_enabled) return -1;
+        if (!a.reminder_enabled && b.reminder_enabled) return 1;
+        return a.daysUntilRenewal - b.daysUntilRenewal;
+      });
+      
+      setSubscriptions(updatedSubs);
 
+      const { subscriptionService } = await import("@/services/subscriptionService");
       await subscriptionService.update(subscriptionId, { reminder_enabled: false });
 
       toast({
@@ -323,7 +333,7 @@ export default function NotificationsPage() {
                       <BellOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No Subscriptions Found</h3>
                       <p className="text-muted-foreground mb-4">
-                        You haven't added any subscriptions yet
+                        You haven&apos;t added any subscriptions yet
                       </p>
                       <Button onClick={() => router.push("/")}>
                         Go to Dashboard
@@ -485,7 +495,7 @@ export default function NotificationsPage() {
                       <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
                       <h3 className="text-lg font-semibold mb-2">No Notifications</h3>
                       <p className="text-muted-foreground">
-                        You don't have any notifications yet
+                        You don&apos;t have any notifications yet
                       </p>
                     </div>
                   </CardContent>
