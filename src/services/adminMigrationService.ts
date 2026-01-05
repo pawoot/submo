@@ -63,6 +63,12 @@ export interface UnmappedRecord {
   record_id: string;
 }
 
+export interface UnmappedRecordDetailed extends UnmappedRecord {
+  subscription_id: string | null;
+  category_name: string | null;
+  payment_method_name: string | null;
+}
+
 /**
  * Get migration health summary
  */
@@ -199,6 +205,156 @@ export async function getUnmappedRecords(filters?: {
       record_id: row.record_id,
     };
   });
+}
+
+/**
+ * Get unmapped records with detailed subscription info (for report detail page)
+ */
+export async function getUnmappedRecordsDetailed(filters?: {
+  report_id?: string;
+  issue_type?: string;
+  entity?: string;
+  status?: string;
+  date_from?: string;
+  date_to?: string;
+}): Promise<UnmappedRecordDetailed[]> {
+  let query = (supabase as any)
+    .from("migration_report_rows")
+    .select(`
+      id,
+      report_id,
+      entity,
+      issue_type,
+      record_id,
+      details,
+      status,
+      created_at,
+      resolved_at,
+      resolved_by
+    `)
+    .order("created_at", { ascending: false });
+
+  if (filters?.report_id) {
+    query = query.eq("report_id", filters.report_id);
+  }
+
+  if (filters?.issue_type) {
+    query = query.eq("issue_type", filters.issue_type);
+  }
+
+  if (filters?.entity) {
+    query = query.eq("entity", filters.entity);
+  }
+
+  if (filters?.status) {
+    query = query.eq("status", filters.status);
+  }
+
+  if (filters?.date_from) {
+    query = query.gte("created_at", filters.date_from);
+  }
+
+  if (filters?.date_to) {
+    query = query.lte("created_at", filters.date_to);
+  }
+
+  const { data, error } = await query;
+
+  if (error) {
+    console.error("Error fetching unmapped records detailed:", error);
+    return [];
+  }
+
+  // Transform data for UI with subscription details
+  const records = await Promise.all(
+    (data || []).map(async (row: any) => {
+      const details = row.details as any;
+      let subscriptionName = details?.subscription_name || null;
+      let categoryName = null;
+      let paymentMethodName = null;
+
+      // If entity is subscriptions, fetch additional details
+      if (row.entity === "subscriptions" && row.record_id) {
+        const { data: subscription } = await supabase
+          .from("subscriptions")
+          .select(`
+            name,
+            category_id,
+            payment_method_id,
+            categories (name_en),
+            payment_methods (name_en)
+          `)
+          .eq("id", row.record_id)
+          .single();
+
+        if (subscription) {
+          subscriptionName = subscription.name;
+          categoryName = (subscription as any).categories?.name_en || null;
+          paymentMethodName = (subscription as any).payment_methods?.name_en || null;
+        }
+      }
+
+      return {
+        id: row.id,
+        entity: row.entity,
+        issue_type: row.issue_type,
+        subscription_name: subscriptionName,
+        legacy_value: details?.legacy_value || details?.category_legacy || details?.payment_method_legacy || null,
+        current_mapped_value: categoryName || paymentMethodName || details?.current_mapped_value || null,
+        created_at: row.created_at,
+        status: row.status,
+        record_id: row.record_id,
+        subscription_id: row.entity === "subscriptions" ? row.record_id : null,
+        category_name: categoryName,
+        payment_method_name: paymentMethodName,
+      };
+    })
+  );
+
+  return records;
+}
+
+/**
+ * Mark record as resolved
+ */
+export async function markRecordResolved(
+  recordId: string,
+  resolvedBy: string,
+  note?: string
+): Promise<{ success: boolean; error?: string }> {
+  // First fetch current details to preserve existing data
+  const { data: current, error: fetchError } = await (supabase as any)
+    .from("migration_report_rows")
+    .select("details")
+    .eq("id", recordId)
+    .single();
+
+  if (fetchError) {
+    console.error("Error fetching record details:", fetchError);
+    return { success: false, error: fetchError.message };
+  }
+
+  const newDetails = {
+    ...(current?.details || {}),
+    resolution_note: note || "Manually resolved",
+  };
+
+  const { error } = await (supabase as any)
+    .from("migration_report_rows")
+    .update({
+      status: "resolved",
+      resolved_at: new Date().toISOString(),
+      resolved_by: resolvedBy,
+      details: newDetails,
+    })
+    .eq("id", recordId);
+
+  if (error) {
+    console.error("Error marking record resolved:", error);
+    return { success: false, error: error.message };
+  }
+
+  return { success: true };
 }
 
 /**
