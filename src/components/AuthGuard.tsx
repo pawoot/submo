@@ -17,12 +17,16 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
     checkAuth();
 
     const { data: authListener } = supabase.auth.onAuthStateChange(
-      (event, session) => {
+      async (event, session) => {
         if (event === "SIGNED_OUT") {
+          setAuthenticated(false);
           router.push("/auth/login");
-        } else if (event === "SIGNED_IN") {
+        } else if (event === "SIGNED_IN" && session) {
+          // Wait a bit for profile to be created (for OAuth logins)
+          await new Promise(resolve => setTimeout(resolve, 1000));
+          
           if (requireAdmin) {
-            checkAdminStatus(session?.user?.id);
+            await checkAdminStatus(session.user.id);
           } else {
             setAuthenticated(true);
             setLoading(false);
@@ -41,13 +45,15 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
       const { data: { session } } = await supabase.auth.getSession();
       
       if (session) {
+        // Give some time for profile to be created if it's a new OAuth login
+        await new Promise(resolve => setTimeout(resolve, 500));
+        
         if (requireAdmin) {
           await checkAdminStatus(session.user.id);
         } else {
           setAuthenticated(true);
         }
       } else {
-        // Only redirect if we're sure user is not authenticated
         setAuthenticated(false);
         router.push("/auth/login");
       }
@@ -62,24 +68,34 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
 
   async function checkAdminStatus(userId?: string) {
     if (!userId) {
+      setAuthenticated(false);
       router.push("/dashboard");
       return;
     }
 
     try {
-      const { data: profile } = await supabase
+      const { data: profile, error } = await supabase
         .from("profiles")
-        .select("role")
+        .select("role, is_admin")
         .eq("id", userId)
         .single();
 
-      if (profile?.role === "admin") {
+      if (error) {
+        console.error("Error fetching profile:", error);
+        setAuthenticated(false);
+        router.push("/dashboard");
+        return;
+      }
+
+      if (profile?.role === "admin" || profile?.is_admin === true) {
         setAuthenticated(true);
       } else {
+        setAuthenticated(false);
         router.push("/dashboard");
       }
     } catch (error) {
       console.error("Admin check error:", error);
+      setAuthenticated(false);
       router.push("/dashboard");
     }
   }
