@@ -142,7 +142,7 @@ function generateRecommendations(
   });
 
   // Find duplicate categories
-  const categoryCount = new Map<string, Subscription[]>();
+  const categoryCount = new Map<string, SubscriptionWithCosts[]>();
   subsWithCosts.forEach(sub => {
     if (sub.category) {
       const existing = categoryCount.get(sub.category) || [];

@@ -519,18 +519,65 @@ export default function Home() {
               <SavingsRecommendation subscriptions={subscriptions} currency={preferredCurrency} />
               
               {/* Stats Cards Vertical Stack */}
-              <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+              <div className="grid grid-cols-1 gap-4">
                 <Card className="border-l-4 border-l-green-500 shadow-sm">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-slate-500 mb-1">{t("dashboard.activeSubscriptions")}</p>
-                    <div className="text-2xl font-bold">{subscriptions.length}</div>
+                  <CardContent className="p-4 flex items-center justify-between">
+                    <div>
+                      <p className="text-xs text-slate-500 mb-1">{t("dashboard.activeSubscriptions")}</p>
+                      <div className="text-2xl font-bold">{subscriptions.length}</div>
+                    </div>
+                    <div className="p-2 bg-green-100 rounded-full">
+                       <CreditCard className="w-5 h-5 text-green-600" />
+                    </div>
                   </CardContent>
                 </Card>
-                <Card className="border-l-4 border-l-orange-500 shadow-sm">
-                  <CardContent className="p-4">
-                    <p className="text-xs text-slate-500 mb-1">{t("dashboard.upcomingRenewals")}</p>
-                    <div className="text-2xl font-bold">{subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 7).length}</div>
-                    <p className="text-xs text-orange-600 mt-1">{t("dashboard.within30Days")}</p>
+                
+                {/* Upcoming Billing Timeline */}
+                <Card className="border-l-4 border-l-orange-500 shadow-sm overflow-hidden">
+                  <CardHeader className="p-4 pb-2 bg-orange-50/50">
+                    <CardTitle className="text-sm font-semibold flex items-center gap-2 text-orange-800">
+                      <Calendar className="w-4 h-4" />
+                      {t("dashboard.upcomingRenewals")} (30 Days)
+                    </CardTitle>
+                  </CardHeader>
+                  <CardContent className="p-0">
+                    <div className="divide-y divide-orange-100 max-h-[300px] overflow-y-auto">
+                      {subscriptions
+                        .filter(s => {
+                          const days = getDaysUntilRenewal(s.next_billing_date);
+                          return days >= 0 && days <= 30;
+                        })
+                        .sort((a, b) => getDaysUntilRenewal(a.next_billing_date) - getDaysUntilRenewal(b.next_billing_date))
+                        .map(sub => {
+                          const days = getDaysUntilRenewal(sub.next_billing_date);
+                          return (
+                            <div key={sub.id} className="p-3 flex items-center gap-3 hover:bg-orange-50/30 transition-colors">
+                              <div className="text-center min-w-[3rem]">
+                                <span className={`text-lg font-bold ${days <= 7 ? "text-orange-600" : "text-slate-700"}`}>
+                                  {days === 0 ? "Today" : days}
+                                </span>
+                                <p className="text-[10px] text-slate-500 leading-none">days</p>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm font-medium truncate text-slate-900 dark:text-slate-100">{sub.name}</p>
+                                <p className="text-xs text-slate-500">
+                                  {new Date(sub.next_billing_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                                </p>
+                              </div>
+                              <div className="text-right">
+                                <span className="text-sm font-semibold text-slate-900 dark:text-slate-100">
+                                  {formatCurrency(Number(sub.amount), preferredCurrency)}
+                                </span>
+                              </div>
+                            </div>
+                          );
+                        })}
+                        {subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 30).length === 0 && (
+                          <div className="p-4 text-center text-sm text-slate-500">
+                            No upcoming renewals
+                          </div>
+                        )}
+                    </div>
                   </CardContent>
                 </Card>
               </div>

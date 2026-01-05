@@ -254,7 +254,7 @@ export function SubscriptionCharts() {
       ) : (
         <>
           {/* Charts Grid */}
-          <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="shadow-lg border-2 border-gray-100">
               <CardHeader className="bg-gradient-to-r from-indigo-50 to-white">
                 <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
@@ -263,95 +263,29 @@ export function SubscriptionCharts() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="h-[350px] w-full">
+                <div className="h-[300px] w-full">
                   {calculating ? (
                     <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={categoryChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                        <XAxis 
+                          dataKey="name" 
+                          angle={-45} 
+                          textAnchor="end" 
+                          height={80} 
+                          tick={{ fontSize: 11 }} 
+                          interval={0}
+                        />
+                        <YAxis tick={{ fontSize: 11 }} />
                         <Tooltip 
                           formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
-                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                         />
-                        <Bar dataKey="amount" fill="#6366f1" radius={[8, 8, 0, 0]}>
+                        <Bar dataKey="amount" fill="#6366f1" radius={[6, 6, 0, 0]}>
                           {categoryChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Bar>
-                      </BarChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-lg border-2 border-gray-100">
-              <CardHeader className="bg-gradient-to-r from-purple-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
-                  <PieChartIcon className="w-6 h-6 text-purple-600" />
-                  {t("charts.categoryDistribution")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="h-[350px] w-full">
-                  {calculating ? (
-                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <PieChart>
-                        <Pie
-                          data={categoryChartData}
-                          cx="50%"
-                          cy="50%"
-                          labelLine={true}
-                          label={({ name, percentage }: any) => `${name} ${percentage}%`}
-                          outerRadius={100}
-                          fill="#8884d8"
-                          dataKey="amount"
-                          nameKey="name"
-                        >
-                          {categoryChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip 
-                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
-                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
-                        />
-                      </PieChart>
-                    </ResponsiveContainer>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-
-            <Card className="shadow-lg border-2 border-gray-100">
-              <CardHeader className="bg-gradient-to-r from-blue-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
-                  <CreditCard className="w-6 h-6 text-blue-600" />
-                  {t("charts.paymentMethodCost")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="pt-6">
-                <div className="h-[350px] w-full">
-                  {calculating ? (
-                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={paymentChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" />
-                        <XAxis dataKey="name" angle={-45} textAnchor="end" height={80} tick={{ fontSize: 12 }} />
-                        <YAxis tick={{ fontSize: 12 }} />
-                        <Tooltip 
-                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
-                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
-                        />
-                        <Bar dataKey="amount" fill="#3b82f6" radius={[8, 8, 0, 0]}>
-                          {paymentChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell key={`cell-${index}`} fill={entry.color || "#6366f1"} />
                           ))}
                         </Bar>
                       </BarChart>
@@ -369,7 +303,7 @@ export function SubscriptionCharts() {
                 </CardTitle>
               </CardHeader>
               <CardContent className="pt-6">
-                <div className="h-[350px] w-full">
+                <div className="h-[300px] w-full">
                   {calculating ? (
                     <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
                   ) : (
@@ -379,27 +313,35 @@ export function SubscriptionCharts() {
                           data={paymentChartData}
                           cx="50%"
                           cy="50%"
-                          labelLine={true}
-                          label={({ name, percentage }: any) => {
-                             const label = name;
-                             return `${label} ${percentage}%`;
-                          }}
+                          innerRadius={60}
                           outerRadius={100}
-                          fill="#8884d8"
+                          paddingAngle={2}
                           dataKey="amount"
                           nameKey="name"
                         >
                           {paymentChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
+                            <Cell key={`cell-${index}`} fill={entry.color || "#10b981"} />
                           ))}
                         </Pie>
                         <Tooltip 
                           formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
-                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0" }}
+                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                         />
+                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-500 text-xs">
+                          Methods
+                        </text>
                       </PieChart>
                     </ResponsiveContainer>
                   )}
+                  {/* Legend */}
+                  <div className="mt-4 flex flex-wrap justify-center gap-3">
+                    {paymentChartData.map((entry, index) => (
+                      <div key={index} className="flex items-center gap-1.5 text-xs text-slate-600">
+                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color || "#10b981" }} />
+                        <span>{entry.name} ({entry.percentage}%)</span>
+                      </div>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>
