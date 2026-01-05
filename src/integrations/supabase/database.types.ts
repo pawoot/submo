@@ -275,6 +275,7 @@ export type Database = {
       subscriptions: {
         Row: {
           amount: number
+          auto_renew: boolean | null
           billing_cycle: string
           card_last_4: string | null
           category: string | null
@@ -308,6 +309,7 @@ export type Database = {
         }
         Insert: {
           amount: number
+          auto_renew?: boolean | null
           billing_cycle: string
           card_last_4?: string | null
           category?: string | null
@@ -341,6 +343,7 @@ export type Database = {
         }
         Update: {
           amount?: number
+          auto_renew?: boolean | null
           billing_cycle?: string
           card_last_4?: string | null
           category?: string | null

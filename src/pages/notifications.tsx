@@ -57,6 +57,7 @@ export default function NotificationsPage() {
              sub.next_billing_date
           );
           
+          // 2. Calculate renewal dates (now synchronous)
           const now = new Date();
           const renewalDate = new Date(nextRenewal);
           const daysUntil = Math.ceil((renewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
