@@ -25,6 +25,7 @@ import {
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
+import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import type { Database } from "@/integrations/supabase/types";
 
 type ServiceSubscription = Awaited<ReturnType<typeof subscriptionService.getUserSubscriptions>>[number];
