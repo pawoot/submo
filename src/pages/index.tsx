@@ -88,7 +88,7 @@ export default function Home() {
   const { toast } = useToast();
   const router = useRouter();
   const { preferredCurrency, convertAmount, formatAmount, isLoading: currencyLoading } = useCurrency();
-  const { t } = useLanguage();
+  const { t, language } = useLanguage();
 
   const getCategoryColor = (category: string) => {
     const colors: { [key: string]: string } = {
