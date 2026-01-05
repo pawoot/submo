@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import SEO from "@/components/SEO";
@@ -22,22 +22,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false);
   const [googleLoading, setGoogleLoading] = useState(false);
   const [error, setError] = useState("");
-
-  useEffect(() => {
-    // Check if user is already logged in
-    const checkAuth = async () => {
-      try {
-        const session = await authService.getCurrentSession();
-        if (session) {
-          router.push("/");
-        }
-      } catch (error) {
-        console.error("Auth check error:", error);
-        // User is not logged in, stay on login page
-      }
-    };
-    checkAuth();
-  }, [router]);
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault();
