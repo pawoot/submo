@@ -503,7 +503,10 @@ export default function Home() {
           {/* Intelligence Section */}
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             <div className="lg:col-span-2 space-y-6">
-              <InsightPanel subscriptions={displaySubscriptions} />
+              <InsightPanel 
+                subscriptions={displaySubscriptions} 
+                onToggleReminder={handleToggleReminder}
+              />
               
               {/* Cost Toggle & Summary */}
               <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border">
@@ -568,7 +571,11 @@ export default function Home() {
             </div>
 
             <div className="space-y-6">
-              <SavingsRecommendation subscriptions={displaySubscriptions} />
+              {/* Savings Recommendation */}
+              <SavingsRecommendation 
+                subscriptions={convertedSubscriptions}
+                onToggleReminder={handleToggleReminder}
+              />
               
               {/* Stats Cards Vertical Stack */}
               <div className="grid grid-cols-1 gap-4">

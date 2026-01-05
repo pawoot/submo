@@ -411,13 +411,14 @@ export const translations = {
   "intelligence.rankingOf": { th: "อันดับที่ {rank} จาก {total}", en: "Ranked {rank} of {total}" },
 
   // New Notification Keys
-  "reminderOn": { th: "เปิดแจ้งเตือน", en: "Turn on reminders" },
-  "reminderOff": { th: "ปิดแจ้งเตือน", en: "Turn off reminders" },
-  "reminderSettings": { th: "ตั้งค่าการแจ้งเตือน", en: "Reminder settings" },
-  "turnOnReminder": { th: "เปิดการแจ้งเตือน", en: "Enable reminders" },
-  "turnOffReminder": { th: "ปิดการแจ้งเตือน", en: "Disable reminders" },
-  "reminderEnabled": { th: "🔔 เปิดการแจ้งเตือนแล้ว", en: "Reminders are enabled" },
-  "reminderDisabled": { th: "🔕 ปิดการแจ้งเตือนแล้ว", en: "Reminders are disabled" }
+  "subscriptions.reminderOn": { th: "เปิดแจ้งเตือน", en: "Turn on reminders" },
+  "subscriptions.reminderOff": { th: "ปิดแจ้งเตือน", en: "Turn off reminders" },
+  "subscriptions.reminderSettings": { th: "ตั้งค่าการแจ้งเตือน", en: "Reminder settings" },
+  "subscriptions.turnOnReminder": { th: "เปิดการแจ้งเตือน", en: "Enable reminders" },
+  "subscriptions.turnOffReminder": { th: "ปิดการแจ้งเตือน", en: "Disable reminders" },
+  "subscriptions.reminderEnabled": { th: "🔔 เปิดการแจ้งเตือนแล้ว", en: "Reminders are enabled" },
+  "subscriptions.reminderDisabled": { th: "🔕 ปิดการแจ้งเตือนแล้ว", en: "Reminders are disabled" },
+  "subscriptions.remindLater": { th: "เตือนภายหลัง", en: "Remind me later" }
 };
 
 export type TranslationKey = keyof typeof translations;

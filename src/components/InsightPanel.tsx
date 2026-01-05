@@ -2,33 +2,44 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent } from "@/components/ui/card";
-import { TrendingUp, TrendingDown, Bell, Lightbulb, AlertTriangle, Sparkles } from "lucide-react";
+import { Button } from "@/components/ui/button";
+import { TrendingUp, TrendingDown, Bell, Lightbulb, AlertTriangle, Sparkles, X } from "lucide-react";
+import { useState } from "react";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 interface InsightPanelProps {
   subscriptions: Subscription[];
+  onToggleReminder?: (id: string, currentEnabled: boolean) => Promise<void>;
 }
 
-type InsightType = "high-spending" | "upcoming-renewal" | "savings-opportunity" | "category-duplicate" | "trend";
+type InsightType = "high-spending" | "upcoming-renewal" | "savings-opportunity" | "category-duplicate" | "trend" | "reminder-suggestion";
 
 interface Insight {
   type: InsightType;
   message: string;
-  priority: 1 | 2 | 3; // 1 = primary, 2-3 = secondary
+  priority: 1 | 2 | 3;
   icon: React.ReactNode;
   variant: "default" | "warning" | "success" | "info";
+  subscriptionId?: string;
+  action?: "enable-reminder" | "view-details";
 }
 
-export function InsightPanel({ subscriptions }: InsightPanelProps) {
-  const { language } = useLanguage();
+export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelProps) {
+  const { language, t } = useLanguage();
   const { preferredCurrency } = useCurrency();
+  const [dismissedInsights, setDismissedInsights] = useState<string[]>([]);
 
-  const insights = generateInsights(subscriptions, preferredCurrency, language);
+  const insights = generateInsights(subscriptions, preferredCurrency, language)
+    .filter(i => !dismissedInsights.includes(i.message));
 
   // Separate primary and secondary insights
   const primaryInsight = insights.find(i => i.priority === 1);
   const secondaryInsights = insights.filter(i => i.priority > 1).slice(0, 2);
+
+  const handleDismiss = (message: string) => {
+    setDismissedInsights(prev => [...prev, message]);
+  };
 
   if (insights.length === 0) return null;
 
@@ -46,19 +57,50 @@ export function InsightPanel({ subscriptions }: InsightPanelProps) {
           {/* Primary Insight - Visually Prominent */}
           {primaryInsight && (
             <div className={`
-              p-4 rounded-lg border-2 
+              p-4 rounded-lg border-2 relative
               ${primaryInsight.variant === "warning" ? "border-yellow-500/50 bg-yellow-500/5" : ""}
               ${primaryInsight.variant === "success" ? "border-green-500/50 bg-green-500/5" : ""}
               ${primaryInsight.variant === "info" ? "border-blue-500/50 bg-blue-500/5" : ""}
               ${primaryInsight.variant === "default" ? "border-primary/50 bg-primary/5" : ""}
             `}>
+              <button 
+                onClick={() => handleDismiss(primaryInsight.message)}
+                className="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1"
+              >
+                <X className="w-3 h-3" />
+              </button>
+              
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   {primaryInsight.icon}
                 </div>
-                <p className="text-base font-medium text-foreground leading-relaxed">
-                  {primaryInsight.message}
-                </p>
+                <div className="flex-1">
+                  <p className="text-base font-medium text-foreground leading-relaxed mb-2">
+                    {primaryInsight.message}
+                  </p>
+                  
+                  {primaryInsight.action === "enable-reminder" && primaryInsight.subscriptionId && onToggleReminder && (
+                    <div className="flex gap-2 mt-2">
+                      <Button 
+                        size="sm" 
+                        variant="outline" 
+                        className="h-8 text-xs bg-background hover:bg-background/90"
+                        onClick={() => onToggleReminder(primaryInsight.subscriptionId!, false)}
+                      >
+                        <Bell className="w-3 h-3 mr-1.5" />
+                        {t("subscriptions.turnOnReminder")}
+                      </Button>
+                      <Button 
+                        size="sm" 
+                        variant="ghost" 
+                        className="h-8 text-xs"
+                        onClick={() => handleDismiss(primaryInsight.message)}
+                      >
+                        {t("subscriptions.remindLater")}
+                      </Button>
+                    </div>
+                  )}
+                </div>
               </div>
             </div>
           )}
@@ -67,13 +109,32 @@ export function InsightPanel({ subscriptions }: InsightPanelProps) {
           {secondaryInsights.length > 0 && (
             <div className="space-y-2">
               {secondaryInsights.map((insight, index) => (
-                <div key={index} className="flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors">
+                <div key={index} className="group relative flex items-start gap-3 p-3 rounded-md hover:bg-muted/50 transition-colors border border-transparent hover:border-border">
                   <div className="flex-shrink-0 mt-0.5 opacity-70">
                     {insight.icon}
                   </div>
-                  <p className="text-sm text-muted-foreground leading-relaxed">
-                    {insight.message}
-                  </p>
+                  <div className="flex-1">
+                    <p className="text-sm text-muted-foreground leading-relaxed">
+                      {insight.message}
+                    </p>
+                    
+                    {insight.action === "enable-reminder" && insight.subscriptionId && onToggleReminder && (
+                       <Button 
+                        size="sm" 
+                        variant="link" 
+                        className="h-auto p-0 text-xs mt-1 text-primary"
+                        onClick={() => onToggleReminder(insight.subscriptionId!, false)}
+                      >
+                        {t("subscriptions.turnOnReminder")}
+                      </Button>
+                    )}
+                  </div>
+                  <button 
+                    onClick={() => handleDismiss(insight.message)}
+                    className="opacity-0 group-hover:opacity-100 absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1 transition-opacity"
+                  >
+                    <X className="w-3 h-3" />
+                  </button>
                 </div>
               ))}
             </div>
@@ -107,11 +168,30 @@ function generateInsights(
   const previousMonth = totalMonthly * 0.88;
   const changePercent = ((totalMonthly - previousMonth) / previousMonth * 100).toFixed(0);
 
+  // Check for subscriptions without reminders
+  const noReminderSubs = subscriptions.filter(s => !s.reminder_enabled);
+  if (noReminderSubs.length > 0) {
+    // Pick the most expensive one without reminder
+    const expensiveNoReminder = [...noReminderSubs].sort((a, b) => b.amount - a.amount)[0];
+    
+    insights.push({
+      type: "reminder-suggestion",
+      priority: 1, // High priority to show the button
+      variant: "info",
+      icon: <Bell className="w-5 h-5 text-blue-500" />,
+      message: language === "th"
+        ? `คุณยังไม่ได้เปิดแจ้งเตือนสำหรับ ${expensiveNoReminder.name} ซึ่งมีค่าใช้จ่ายสูง`
+        : `You haven't enabled reminders for ${expensiveNoReminder.name}, which is a high cost item.`,
+      subscriptionId: expensiveNoReminder.id,
+      action: "enable-reminder"
+    });
+  }
+
   // Priority 1: High spending or trend
   if (totalMonthly > baseline * 1.15) {
     insights.push({
       type: "high-spending",
-      priority: 1,
+      priority: 2, // Moved to 2 to let reminder take precedence if exists, or keep as 1
       variant: "warning",
       icon: <TrendingUp className="w-5 h-5 text-yellow-600" />,
       message: language === "th"
@@ -212,5 +292,5 @@ function generateInsights(
   }
 
   // Sort by priority and return max 3
-  return insights.sort((a, b) => a.priority - b.priority).slice(0, 3);
+  return insights.sort((a, b) => a.priority - b.priority).slice(0, 5);
 }

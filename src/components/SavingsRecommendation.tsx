@@ -13,6 +13,7 @@ type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
 interface SavingsRecommendationProps {
   subscriptions: Subscription[];
+  onToggleReminder?: (id: string, currentEnabled: boolean) => Promise<void>;
 }
 
 type RecommendationType = "high-cost" | "duplicate-category" | "rarely-used";
@@ -25,7 +26,7 @@ interface Recommendation {
   reasonText: string;
 }
 
-export function SavingsRecommendation({ subscriptions }: SavingsRecommendationProps) {
+export function SavingsRecommendation({ subscriptions, onToggleReminder }: SavingsRecommendationProps) {
   const { language } = useLanguage();
   const { preferredCurrency } = useCurrency();
   const router = useRouter();
@@ -55,11 +56,14 @@ export function SavingsRecommendation({ subscriptions }: SavingsRecommendationPr
     .slice(0, 3); // Limit to top 3
 
   const handleEnableReminder = async (subId: string) => {
-    // This would call an API to enable reminders
-    toast({
-      title: t("reminderEnabled"),
-      description: language === "th" ? "คุณจะได้รับการแจ้งเตือนก่อนวันต่ออายุ" : "You'll receive a notification before renewal",
-    });
+    if (onToggleReminder) {
+      await onToggleReminder(subId, false);
+    } else {
+      toast({
+        title: t("reminderEnabled"),
+        description: language === "th" ? "คุณจะได้รับการแจ้งเตือนก่อนวันต่ออายุ" : "You'll receive a notification before renewal",
+      });
+    }
   };
 
   const handleRemindLater = (subId: string) => {
