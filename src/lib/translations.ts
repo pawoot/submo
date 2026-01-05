@@ -2054,40 +2054,6 @@ export const translations = {
     th: "กรอกคำอธิบาย",
     en: "Enter description"
   },
-
   // Intelligence Layer
   "intelligence.costBreakdown": {
-    th: "การคำนวณค่าใช้จ่าย",
-    en: "Cost Breakdown"
-  },
-  "intelligence.monthlyEquivalent": {
-    th: "รายเดือน",
-    en: "Monthly"
-  },
-  "intelligence.yearlyEquivalent": {
-    th: "รายปี",
-    en: "Yearly"
-  },
-  "intelligence.dailyCost": {
-    th: "รายวัน",
-    en: "Daily cost"
-  },
-  "intelligence.spendingContext": {
-    th: "บริบทการใช้จ่าย",
-    en: "Spending Context"
-  },
-  "intelligence.ofTotalSpending": {
-    th: "ของค่าใช้จ่ายรวมทั้งหมด",
-    en: "of total spending"
-  },
-  "intelligence.rankingOf": {
-    th: "อันดับที่ {rank} จาก {total}",
-    en: "Ranked {rank} of {total}"
-  }
-};
-
-export type TranslationKey = keyof typeof translations;
-
-export function getTranslation(key: TranslationKey, language: Language): string {
-  return translations[key]?.[language] || key;
-}
+   
