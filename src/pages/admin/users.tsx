@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
@@ -60,10 +60,22 @@ export default function AdminUsers() {
     try {
       const profile = await profileService.getCurrentProfile();
       if (!profile?.is_admin) {
+        toast({
+          title: "ไม่มีสิทธิ์เข้าถึง",
+          description: "คุณไม่มีสิทธิ์เข้าถึงหน้านี้",
+          variant: "destructive",
+        });
         router.push("/dashboard");
+      } else {
+        setIsAdmin(true);
       }
     } catch (error) {
       console.error("Error checking admin access:", error);
+      toast({
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถตรวจสอบสิทธิ์ได้",
+        variant: "destructive",
+      });
       router.push("/dashboard");
     }
   };
