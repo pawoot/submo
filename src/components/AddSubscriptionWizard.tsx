@@ -19,6 +19,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { SubscriptionTemplateBrowser } from "@/components/SubscriptionTemplateBrowser";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
 import { SubscriptionSummary } from "@/components/SubscriptionSummary";
+import { SubscriptionIntelligence } from "@/components/SubscriptionIntelligence";
 import type { Database } from "@/integrations/supabase/types";
 import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 
@@ -53,6 +54,7 @@ type FormValues = z.infer<typeof formSchema>;
 interface AddSubscriptionWizardProps {
   categories: Category[];
   paymentMethods: PaymentMethod[];
+  existingSubscriptions?: any[];
   onSubmit: (data: FormValues) => Promise<void>;
   isSubmitting: boolean;
 }
@@ -60,6 +62,7 @@ interface AddSubscriptionWizardProps {
 export function AddSubscriptionWizard({
   categories,
   paymentMethods,
+  existingSubscriptions = [],
   onSubmit,
   isSubmitting
 }: AddSubscriptionWizardProps) {
@@ -461,6 +464,16 @@ export function AddSubscriptionWizard({
                         />
                       </div>
                     </div>
+
+                    {/* Intelligence Layer */}
+                    <SubscriptionIntelligence
+                      amount={watchedValues.amount?.toString() || "0"}
+                      currency={watchedValues.currency}
+                      billingCycle={watchedValues.billing_cycle}
+                      categoryId={watchedValues.category_id}
+                      usageFrequency={watchedValues.usage_frequency}
+                      existingSubscriptions={existingSubscriptions}
+                    />
                   </div>
                 </div>
               )}
@@ -504,6 +517,16 @@ export function AddSubscriptionWizard({
                         {...register("notes")}
                       />
                     </div>
+
+                    {/* Intelligence Layer */}
+                    <SubscriptionIntelligence
+                      amount={watchedValues.amount?.toString() || "0"}
+                      currency={watchedValues.currency}
+                      billingCycle={watchedValues.billing_cycle}
+                      categoryId={watchedValues.category_id}
+                      usageFrequency={watchedValues.usage_frequency}
+                      existingSubscriptions={existingSubscriptions}
+                    />
                   </div>
                 </div>
               )}

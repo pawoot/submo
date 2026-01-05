@@ -622,6 +622,62 @@ export const translations = {
     th: "บริการอื่นๆ (กำหนดเอง)",
     en: "Custom Service"
   },
+  "addSub.quickToggles": {
+    th: "ตั้งค่าด่วน",
+    en: "Quick Settings"
+  },
+  "addSub.remind3Days": {
+    th: "เตือนก่อน 3 วัน",
+    en: "Remind 3 days before"
+  },
+  "addSub.remind7Days": {
+    th: "เตือนก่อน 7 วัน",
+    en: "Remind 7 days before"
+  },
+  "addSub.optionalContext": {
+    th: "บริบท (ไม่บังคับ)",
+    en: "Context (Optional)"
+  },
+  "addSub.costSummary": {
+    th: "สรุปค่าใช้จ่าย",
+    en: "Cost Summary"
+  },
+  "addSub.yearlyBillingInfo": {
+    th: "ข้อมูลการชำระรายปี",
+    en: "Yearly Billing Info"
+  },
+  "addSub.monthlyBillingInfo": {
+    th: "ข้อมูลการชำระรายเดือน",
+    en: "Monthly Billing Info"
+  },
+  "addSub.remindersEnabled": {
+    th: "เปิดการแจ้งเตือนแล้ว",
+    en: "Reminders enabled"
+  },
+  "addSub.beforeBilling": {
+    th: "ก่อนวันชำระเงิน",
+    en: "before billing date"
+  },
+  "subscription.monthly_cost": {
+    th: "ค่าใช้จ่ายรายเดือน",
+    en: "Monthly Cost"
+  },
+  "subscription.yearly_cost": {
+    th: "ค่าใช้จ่ายรายปี",
+    en: "Yearly Cost"
+  },
+  "subscriptions.browseAllTemplates": {
+    th: "ดูเทมเพลตทั้งหมด",
+    en: "Browse All Templates"
+  },
+  "subscriptions.noTemplatesFound": {
+    th: "ไม่พบเทมเพลต",
+    en: "No templates found"
+  },
+  "subscriptions.searchTemplates": {
+    th: "ค้นหาเทมเพลต...",
+    en: "Search templates..."
+  },
 
   // Edit Subscription Page
   "editSub.title": {
@@ -1584,6 +1640,22 @@ export const translations = {
     th: "ไม่พบผลลัพธ์",
     en: "No results found"
   },
+  "common.billingCycle.monthly": {
+    th: "รายเดือน",
+    en: "Monthly"
+  },
+  "common.billingCycle.yearly": {
+    th: "รายปี",
+    en: "Yearly"
+  },
+  "common.billingCycle.quarterly": {
+    th: "รายไตรมาส",
+    en: "Quarterly"
+  },
+  "common.billingCycle.half-yearly": {
+    th: "ราย 6 เดือน",
+    en: "Half-yearly"
+  },
 
   // Intelligence translations
   "intelligence.costBreakdown": {
@@ -2004,78 +2076,7 @@ export const translations = {
     th: "เฉพาะเทมเพลตที่เปิดใช้งานเท่านั้นที่ผู้ใช้จะเห็น",
     en: "Only active templates are visible to users"
   },
-  "common.billingCycle.monthly": {
-    th: "รายเดือน",
-    en: "Monthly"
-  },
-  "common.billingCycle.quarterly": {
-    th: "รายไตรมาส",
-    en: "Quarterly"
-  },
-  "common.billingCycle.half-yearly": {
-    th: "ราย 6 เดือน",
-    en: "Half-yearly"
-  },
-  "common.billingCycle.yearly": {
-    th: "รายปี",
-    en: "Yearly"
-  },
-  "admin.name": {
-    th: "ชื่อ",
-    en: "Name"
-  },
-  "admin.website": {
-    th: "เว็บไซต์",
-    en: "Website"
-  },
-  "admin.defaultAmount": {
-    th: "ราคาเริ่มต้น",
-    en: "Default Amount"
-  },
-  "admin.billingCycle": {
-    th: "รอบบิล",
-    en: "Billing Cycle"
-  },
+
+  // Admin Template Form (Missing Keys)
   "admin.templateName": {
-    th: "ชื่อ Template",
-    en: "Template Name"
-  },
-  "admin.enterTemplateName": {
-    th: "กรอกชื่อ Template",
-    en: "Enter template name"
-  },
-  "admin.websiteUrl": {
-    th: "URL เว็บไซต์",
-    en: "Website URL"
-  },
-  "admin.faviconAutomatic": {
-    th: "รูปไอคอนจะถูกดึงอัตโนมัติจากเว็บไซต์",
-    en: "Favicon will be automatically fetched from this URL"
-  },
-  "admin.selectCategory": {
-    th: "เลือกหมวดหมู่",
-    en: "Select Category"
-  },
-  "admin.currency": {
-    th: "สกุลเงิน",
-    en: "Currency"
-  },
-  "admin.description": {
-    th: "คำอธิบาย",
-    en: "Description"
-  },
-  "admin.enterDescription": {
-    th: "คำอธิบายเพิ่มเติม...",
-    en: "Enter description..."
-  },
-  "admin.category": {
-    th: "หมวดหมู่",
-    en: "Category"
-  }
-};
-
-export type TranslationKey = keyof typeof translations;
-
-export function getTranslation(key: TranslationKey, language: Language): string {
-  return translations[key]?.[language] || key;
-}
+    th: "ชื่อ

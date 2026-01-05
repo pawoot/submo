@@ -11,6 +11,10 @@ import { useLanguage } from "@/contexts/LanguageContext";
 import { subscriptionService } from "@/services/subscriptionService";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { useCurrency } from "@/contexts/CurrencyContext";
+import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
+import { adminCategoryService } from "@/services/adminCategoryService";
+import { adminPaymentMethodService } from "@/services/adminPaymentMethodService";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
@@ -22,6 +26,7 @@ export default function AddSubscription() {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [paymentMethods, setPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [existingSubscriptions, setExistingSubscriptions] = useState<any[]>([]); // State for existing subscriptions
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
@@ -143,6 +148,7 @@ export default function AddSubscription() {
           <AddSubscriptionWizard
             categories={categories}
             paymentMethods={paymentMethods}
+            existingSubscriptions={existingSubscriptions} // Pass to wizard
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
           />
