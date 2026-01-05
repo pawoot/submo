@@ -83,12 +83,6 @@ export default function EditSubscription() {
       })
       .refine((val) => Number(val) <= 999999.99, {
         message: t("validation.maxLength") + " 999,999.99"
-      })
-      .refine((val) => {
-        const num = Number(val);
-        return Number.isFinite(num) && num.toFixed(2) === num.toString() || val.split('.')[1]?.length <= 2;
-      }, {
-        message: "รองรับทศนิยมสูงสุด 2 ตำแหน่ง"
       }),
     currency: z.string()
       .min(1, t("validation.required"))

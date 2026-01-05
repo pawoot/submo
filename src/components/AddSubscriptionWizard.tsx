@@ -30,7 +30,14 @@ type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 const formSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   category_id: z.string().min(1, "Category is required"),
-  amount: z.number().min(0.01, "Amount must be greater than 0").max(999999.99),
+  amount: z.string()
+    .min(1, t("validation.required"))
+    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+      message: t("validation.positiveNumber")
+    })
+    .refine((val) => Number(val) <= 999999.99, {
+      message: t("validation.maxLength") + " 999,999.99"
+    }),
   currency: z.string().min(1, "Currency is required"),
   billing_cycle: z.enum(["monthly", "yearly", "quarterly", "half-yearly"]),
   payment_method_id: z.string().min(1, "Payment method is required"),
