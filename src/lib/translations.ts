@@ -1789,7 +1789,7 @@ export const translations = {
     en: "Item deleted successfully"
   },
   "toast.updateSuccess": {
-    th: "อัพเดตสำเร็จ!",
+    th: "อัปเดตสำเร็จ!",
     en: "Updated successfully!"
   },
   "toast.updateError": {
@@ -1834,7 +1834,7 @@ export const translations = {
   },
   "toast.accountDeleted": {
     th: "ลบบัญชีสำเร็จ",
-    en: "Account deleted successfully"
+    en: "Account deleted"
   },
   "toast.accountDeletedDesc": {
     th: "บัญชีของคุณถูกลบอย่างถาวร",
@@ -1994,7 +1994,7 @@ export const translations = {
   },
   "admin.templates.table.website": {
     th: "เว็บไซต์",
-    en: "Website"
+    en: "Website URL"
   },
   "admin.templates.table.category": {
     th: "หมวดหมู่",
@@ -2076,7 +2076,110 @@ export const translations = {
     th: "เฉพาะเทมเพลตที่เปิดใช้งานเท่านั้นที่ผู้ใช้จะเห็น",
     en: "Only active templates are visible to users"
   },
-
-  // Admin Template Form (Missing Keys)
   "admin.templateName": {
-    th: "ชื่อ
+    th: "ชื่อ",
+    en: "Name"
+  },
+  "admin.enterDescription": {
+    th: "กรอกคำอธิบาย",
+    en: "Enter description"
+  },
+  "common.days": {
+    th: "วัน",
+    en: "days"
+  },
+  "common.no_results": {
+    th: "ไม่พบผลลัพธ์",
+    en: "No results found"
+  },
+  "common.billingCycle.monthly": {
+    th: "รายเดือน",
+    en: "Monthly"
+  },
+  "common.billingCycle.yearly": {
+    th: "รายปี",
+    en: "Yearly"
+  },
+  "common.billingCycle.quarterly": {
+    th: "รายไตรมาส",
+    en: "Quarterly"
+  },
+  "common.billingCycle.half-yearly": {
+    th: "ราย 6 เดือน",
+    en: "Half-yearly"
+  },
+  "intelligence.costBreakdown": {
+    th: "การคำนวณค่าใช้จ่าย",
+    en: "Cost Breakdown"
+  },
+  "intelligence.monthlyEquivalent": {
+    th: "รายเดือน",
+    en: "Monthly"
+  },
+  "intelligence.yearlyEquivalent": {
+    th: "รายปี",
+    en: "Yearly"
+  },
+  "intelligence.dailyCost": {
+    th: "รายวัน",
+    en: "Daily cost"
+  },
+  "intelligence.spendingContext": {
+    th: "บริบทการใช้จ่าย",
+    en: "Spending Context"
+  },
+  "intelligence.ofTotalSpending": {
+    th: "ของค่าใช้จ่ายรวมทั้งหมด",
+    en: "of total monthly spending"
+  },
+  "intelligence.rank": {
+    th: "อันดับที่ {rank} จาก {total}",
+    en: "Rank {rank} of {total}"
+  },
+  "intelligence.highYearlyCost": {
+    th: "⚠️ บริการนี้มีค่าใช้จ่ายมากกว่า {amount} บาท/ปี",
+    en: "⚠️ This subscription costs more than {amount}/year"
+  },
+  "intelligence.multipleInCategory": {
+    th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ",
+    en: "🔁 You already have {count} subscriptions in this category"
+  },
+  "intelligence.rarelyUsed": {
+    th: "✂️ บริการที่ใช้ไม่บ่อยมักจะถูกยกเลิกโดยผู้ใช้",
+    en: "✂️ Subscriptions used rarely are often canceled by users"
+  },
+  "intelligence.yearlyBillingSuggestion": {
+    th: "💡 ลองพิจารณาจ่ายแบบรายปี อาจประหยัดได้ประมาณ {savings} บาท",
+    en: "💡 Consider yearly billing to potentially save around {savings}"
+  },
+  "intelligence.reminderSuggestion": {
+    th: "🔔 แนะนำให้เปิดการแจ้งเตือนเพื่อไม่ให้ลืมบริการนี้",
+    en: "🔔 We recommend enabling reminders for this subscription"
+  },
+  "intelligence.summary": {
+    th: "สรุปข้อมูลอัจฉริยะ",
+    en: "Submo Insight"
+  },
+  "intelligence.summaryYearlyCost": {
+    th: "บริการนี้มีค่าใช้จ่าย {amount} ต่อปี",
+    en: "This subscription costs {amount}/year"
+  },
+  "intelligence.summaryPercentage": {
+    th: "คิดเป็น {percentage}% ของค่าใช้จ่ายรายเดือนของคุณ",
+    en: "It accounts for {percentage}% of your monthly subscription spending"
+  },
+  "intelligence.summaryReminder": {
+    th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว",
+    en: "A reminder has been enabled to prevent forgetting"
+  },
+  "intelligence.noActionRequired": {
+    th: "ไม่ต้องทำอะไรเพิ่มเติม",
+    en: "No additional action required"
+  }
+};
+
+export type TranslationKey = keyof typeof translations;
+
+export function getTranslation(key: TranslationKey, language: Language): string {
+  return translations[key]?.[language] || key;
+}
