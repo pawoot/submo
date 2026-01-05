@@ -23,6 +23,8 @@ interface SubscriptionWithReminder extends Subscription {
   reminder_enabled: boolean;
   reminder_days: number;
   next_reminder_date: string | null;
+  nextRenewalDate: string;
+  daysUntilRenewal: number;
 }
 
 export default function NotificationsPage() {
