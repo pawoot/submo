@@ -8,6 +8,9 @@ import { Badge } from "@/components/ui/badge";
 import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { toast } from "@/hooks/use-toast";
+import { FixCategoryDialog } from "@/components/admin/FixCategoryDialog";
+import { FixPaymentMethodDialog } from "@/components/admin/FixPaymentMethodDialog";
+import { MarkResolvedDialog } from "@/components/admin/MarkResolvedDialog";
 import { 
   getMigrationReportById, 
   getUnmappedRecordsDetailed,
@@ -33,6 +36,22 @@ export default function MigrationReportDetailPage() {
   const [entityFilter, setEntityFilter] = useState<string>("all");
   const [issueTypeFilter, setIssueTypeFilter] = useState<string>("all");
   const [statusFilter, setStatusFilter] = useState<string>("unresolved");
+
+  // Fix dialogs state
+  const [fixCategoryDialog, setFixCategoryDialog] = useState<{
+    open: boolean;
+    record: UnmappedRecordDetailed | null;
+  }>({ open: false, record: null });
+
+  const [fixPaymentMethodDialog, setFixPaymentMethodDialog] = useState<{
+    open: boolean;
+    record: UnmappedRecordDetailed | null;
+  }>({ open: false, record: null });
+
+  const [markResolvedDialog, setMarkResolvedDialog] = useState<{
+    open: boolean;
+    record: UnmappedRecordDetailed | null;
+  }>({ open: false, record: null });
 
   useEffect(() => {
     if (reportId && typeof reportId === "string") {
@@ -66,6 +85,23 @@ export default function MigrationReportDetailPage() {
     } finally {
       setLoading(false);
     }
+  }
+
+  function handleFixCategory(record: UnmappedRecordDetailed) {
+    setFixCategoryDialog({ open: true, record });
+  }
+
+  function handleFixPaymentMethod(record: UnmappedRecordDetailed) {
+    setFixPaymentMethodDialog({ open: true, record });
+  }
+
+  function handleMarkResolved(record: UnmappedRecordDetailed) {
+    setMarkResolvedDialog({ open: true, record });
+  }
+
+  async function handleFixSuccess() {
+    // Reload data after successful fix
+    await loadReportData();
   }
 
   function applyFilters() {
@@ -390,17 +426,29 @@ export default function MigrationReportDetailPage() {
                         <TableCell>
                           <div className="flex gap-2">
                             {record.issue_type === "unmapped_category" && (
-                              <Button size="sm" variant="outline">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleFixCategory(record)}
+                              >
                                 Fix Category
                               </Button>
                             )}
                             {record.issue_type === "unmapped_payment_method" && (
-                              <Button size="sm" variant="outline">
+                              <Button 
+                                size="sm" 
+                                variant="outline"
+                                onClick={() => handleFixPaymentMethod(record)}
+                              >
                                 Fix Payment
                               </Button>
                             )}
                             {record.status === "unresolved" && (
-                              <Button size="sm" variant="ghost">
+                              <Button 
+                                size="sm" 
+                                variant="ghost"
+                                onClick={() => handleMarkResolved(record)}
+                              >
                                 Mark Resolved
                               </Button>
                             )}
@@ -414,6 +462,34 @@ export default function MigrationReportDetailPage() {
             </div>
           </CardContent>
         </Card>
+
+        {/* Fix Dialogs */}
+        <FixCategoryDialog
+          open={fixCategoryDialog.open}
+          onOpenChange={(open) => setFixCategoryDialog({ open, record: null })}
+          subscriptionId={fixCategoryDialog.record?.record_id || ""}
+          subscriptionName={fixCategoryDialog.record?.subscription_name || ""}
+          currentCategoryId={fixCategoryDialog.record?.current_mapped_value || null}
+          onSuccess={handleFixSuccess}
+        />
+
+        <FixPaymentMethodDialog
+          open={fixPaymentMethodDialog.open}
+          onOpenChange={(open) => setFixPaymentMethodDialog({ open, record: null })}
+          subscriptionId={fixPaymentMethodDialog.record?.record_id || ""}
+          subscriptionName={fixPaymentMethodDialog.record?.subscription_name || ""}
+          currentPaymentMethodId={fixPaymentMethodDialog.record?.current_mapped_value || null}
+          onSuccess={handleFixSuccess}
+        />
+
+        <MarkResolvedDialog
+          open={markResolvedDialog.open}
+          onOpenChange={(open) => setMarkResolvedDialog({ open, record: null })}
+          recordId={markResolvedDialog.record?.id || ""}
+          subscriptionName={markResolvedDialog.record?.subscription_name || ""}
+          issueType={markResolvedDialog.record?.issue_type || ""}
+          onSuccess={handleFixSuccess}
+        />
       </div>
     </AdminLayout>
   );
