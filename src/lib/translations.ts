@@ -408,7 +408,16 @@ export const translations = {
   "intelligence.summaryPercentage": { th: "คิดเป็น {percent}% ของค่าใช้จ่ายรายเดือนของคุณ", en: "Accounts for {percent}% of your monthly spending" },
   "intelligence.summaryReminder": { th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว", en: "Reminders enabled to prevent forgetting" },
   "intelligence.noActionRequired": { th: "ไม่ต้องทำอะไรเพิ่มเติม", en: "No additional action required" },
-  "intelligence.rankingOf": { th: "อันดับที่ {rank} จาก {total}", en: "Ranked {rank} of {total}" }
+  "intelligence.rankingOf": { th: "อันดับที่ {rank} จาก {total}", en: "Ranked {rank} of {total}" },
+
+  // New Notification Keys
+  "reminderOn": { th: "เปิดแจ้งเตือน", en: "Turn on reminders" },
+  "reminderOff": { th: "ปิดแจ้งเตือน", en: "Turn off reminders" },
+  "reminderSettings": { th: "ตั้งค่าการแจ้งเตือน", en: "Reminder settings" },
+  "turnOnReminder": { th: "เปิดการแจ้งเตือน", en: "Enable reminders" },
+  "turnOffReminder": { th: "ปิดการแจ้งเตือน", en: "Disable reminders" },
+  "reminderEnabled": { th: "🔔 เปิดการแจ้งเตือนแล้ว", en: "Reminders are enabled" },
+  "reminderDisabled": { th: "🔕 ปิดการแจ้งเตือนแล้ว", en: "Reminders are disabled" }
 };
 
 export type TranslationKey = keyof typeof translations;

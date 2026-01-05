@@ -325,10 +325,10 @@ export default function Home() {
       });
 
       toast({
-        title: currentEnabled ? "🔕 ปิดการแจ้งเตือน" : "🔔 เปิดการแจ้งเตือน",
+        title: currentEnabled ? t("subscriptions.reminderDisabled") : t("subscriptions.reminderEnabled"),
         description: currentEnabled 
-          ? `ปิดการแจ้งเตือนสำหรับ "${subscription.name}" แล้ว`
-          : `เปิดการแจ้งเตือนสำหรับ "${subscription.name}" แล้ว`,
+          ? `${t("subscriptions.turnOffReminder")} "${subscription.name}"`
+          : `${t("subscriptions.turnOnReminder")} "${subscription.name}"`,
         variant: "default",
       });
 
@@ -341,8 +341,8 @@ export default function Home() {
     } catch (error) {
       console.error("Error updating reminder:", error);
       toast({
-        title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถเปลี่ยนแปลงการตั้งค่าได้ กรุณาลองใหม่อีกครั้ง",
+        title: t("common.error"),
+        description: t("toast.updateError"),
         variant: "destructive",
       });
     }
@@ -695,6 +695,12 @@ export default function Home() {
                           <div className="flex items-center gap-2">
                              <h3 className="font-bold text-slate-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors">{sub.name}</h3>
                              {isUrgent && <Badge variant="outline" className="text-[10px] border-orange-200 text-orange-600 bg-orange-50">Renewing Soon</Badge>}
+                             {sub.reminder_enabled && (
+                               <Badge variant="outline" className="text-[10px] border-blue-200 text-blue-600 bg-blue-50 flex items-center gap-1">
+                                 <Bell className="w-3 h-3" />
+                                 {t("subscriptions.reminderOn")}
+                               </Badge>
+                             )}
                           </div>
                           
                           <div className="flex flex-wrap items-center gap-2 mt-1.5">
@@ -714,18 +720,42 @@ export default function Home() {
                           </div>
                         </div>
 
-                        <div className="text-right">
-                          <div className="text-lg font-bold text-slate-900 dark:text-white">
-                            {formatCurrency(Number(sub.amount), preferredCurrency)}
+                        <div className="flex items-center gap-3">
+                          <div className="text-right">
+                            <div className="text-lg font-bold text-slate-900 dark:text-white">
+                              {formatCurrency(Number(sub.amount), preferredCurrency)}
+                            </div>
+                            <div className="text-[10px] text-slate-500">
+                              {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
+                               sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
+                               billingCycleLabels[sub.billing_cycle]}
+                            </div>
+                            <div className="text-[10px] font-medium text-slate-400 mt-1">
+                               {new Date(sub.next_billing_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
+                            </div>
                           </div>
-                          <div className="text-[10px] text-slate-500">
-                            {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
-                             sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
-                             billingCycleLabels[sub.billing_cycle]}
-                          </div>
-                          <div className="text-[10px] font-medium text-slate-400 mt-1">
-                             {new Date(sub.next_billing_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
-                          </div>
+                          
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
+                              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                                <Bell className={`w-4 h-4 ${sub.reminder_enabled ? 'text-blue-600' : 'text-slate-400'}`} />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end" onClick={(e) => e.stopPropagation()}>
+                              <DropdownMenuLabel>{t("subscriptions.reminderSettings")}</DropdownMenuLabel>
+                              <DropdownMenuSeparator />
+                              <DropdownMenuItem 
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  handleToggleReminder(sub.id, sub.reminder_enabled || false);
+                                }}
+                              >
+                                <Bell className="w-4 h-4 mr-2" />
+                                {sub.reminder_enabled ? t("subscriptions.turnOffReminder") : t("subscriptions.turnOnReminder")}
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
                         </div>
                       </Link>
                     );
