@@ -678,9 +678,8 @@ export default function Home() {
                     const isYearly = sub.billing_cycle === "yearly";
                     
                     return (
-                      <Link
+                      <div
                         key={sub.id}
-                        href={`/edit-subscription/${sub.id}`}
                         className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-l-4 group"
                         style={{ borderLeftColor: getCategoryColor(sub.category) }}
                       >
@@ -764,7 +763,7 @@ export default function Home() {
                             </DropdownMenuContent>
                           </DropdownMenu>
                         </div>
-                      </Link>
+                      </div>
                     );
                   })}
                 </div>
