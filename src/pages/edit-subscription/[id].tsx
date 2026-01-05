@@ -62,7 +62,7 @@ export default function EditSubscription() {
   const [dbPaymentMethods, setDbPaymentMethods] = useState<PaymentMethod[]>([]);
   const [existingSubscriptions, setExistingSubscriptions] = useState<any[]>([]);
 
-  // Validation Schema - เพิ่ม fields ใหม่
+  // Validation Schema
   const subscriptionSchema = z.object({
     name: z.string()
       .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
@@ -76,14 +76,9 @@ export default function EditSubscription() {
       .max(500, t("validation.maxLength") + " 500 " + t("validation.characters"))
       .optional()
       .nullable(),
-    amount: z.string()
-      .min(1, t("validation.required"))
-      .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-        message: t("validation.positiveNumber")
-      })
-      .refine((val) => Number(val) <= 999999.99, {
-        message: t("validation.maxLength") + " 999,999.99"
-      }),
+    amount: z.coerce.number()
+      .min(0.01, t("validation.positiveNumber"))
+      .max(999999.99, t("validation.maxLength") + " 999,999.99"),
     currency: z.string()
       .min(1, t("validation.required"))
       .length(3, "รหัสสกุลเงินต้องมี 3 ตัวอักษร"),
@@ -180,7 +175,6 @@ export default function EditSubscription() {
   useEffect(() => {
     const loadSubscription = async () => {
       try {
-        // Load all data in parallel
         const [categoriesData, paymentMethodsData, subscriptionData, allSubscriptionsData] = await Promise.all([
           supabase.from("categories").select("*").order("name_en"),
           supabase.from("payment_methods").select("*").order("name_en"),
@@ -203,13 +197,12 @@ export default function EditSubscription() {
         if (subscriptionData.error) throw subscriptionData.error;
         setSubscription(subscriptionData.data);
 
-        // Pre-fill form with all fields
         if (subscriptionData.data) {
           reset({
             name: subscriptionData.data.name,
             category_id: subscriptionData.data.category_id,
             description: subscriptionData.data.description || "",
-            amount: subscriptionData.data.amount.toString(),
+            amount: subscriptionData.data.amount,
             currency: subscriptionData.data.currency,
             billing_cycle: subscriptionData.data.billing_cycle,
             payment_method_id: subscriptionData.data.payment_method_id,
@@ -251,13 +244,13 @@ export default function EditSubscription() {
       }
     }
     if (template.amount) {
-      setValue("amount", template.amount.toString(), { shouldValidate: true });
+      setValue("amount", template.amount, { shouldValidate: true });
     }
     if (template.currency) {
       setValue("currency", template.currency, { shouldValidate: true });
     }
     if (template.billing_cycle) {
-      setValue("billing_cycle", template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly", { shouldValidate: true });
+      setValue("billing_cycle", template.billing_cycle, { shouldValidate: true });
     }
     if (template.website_url) {
       setValue("website_url", template.website_url, { shouldValidate: true });
@@ -280,11 +273,10 @@ export default function EditSubscription() {
       return;
     }
 
-    // Check for changes
     if (subscription) {
       const hasChanges = 
         data.name !== subscription.name ||
-        parseFloat(data.amount) !== subscription.amount ||
+        data.amount !== subscription.amount ||
         data.currency !== subscription.currency ||
         data.billing_cycle !== subscription.billing_cycle ||
         data.category_id !== subscription.category_id ||
@@ -307,9 +299,8 @@ export default function EditSubscription() {
         return;
       }
 
-      // Check for significant amount decrease
       const oldAmount = subscription.amount;
-      const newAmount = parseFloat(data.amount);
+      const newAmount = data.amount;
       if (newAmount < oldAmount * 0.5) {
         setPendingFormData(data);
         setShowAmountChangeDialog(true);
@@ -329,7 +320,7 @@ export default function EditSubscription() {
 
       const updates = {
         name: data.name.trim(),
-        amount: parseFloat(data.amount),
+        amount: data.amount,
         currency: data.currency,
         billing_cycle: data.billing_cycle,
         next_billing_date: data.next_billing_date.toISOString(),
@@ -440,9 +431,7 @@ export default function EditSubscription() {
 
         <main className="container mx-auto px-4 py-8 max-w-7xl">
           <div className="grid gap-8 lg:grid-cols-3">
-            {/* Main Form Area - 2 columns */}
             <div className="lg:col-span-2">
-              {/* Current Subscription Summary */}
               <Card className="mb-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
                 <CardContent className="p-6">
                   <div className="flex items-start gap-4">
@@ -472,14 +461,12 @@ export default function EditSubscription() {
 
               <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
                 <div className="space-y-6">
-                  {/* Basic Information */}
                   <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader>
                       <CardTitle>{t("addSub.basicInfo")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
                       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                        {/* Name with Autocomplete */}
                         <div className="space-y-2">
                           <Label htmlFor="name">
                             {t("addSub.name")} <span className="text-red-500">*</span>
@@ -498,7 +485,6 @@ export default function EditSubscription() {
                           />
                         </div>
 
-                        {/* Category */}
                         <div className="space-y-2">
                           <Label htmlFor="category_id">
                             {t("addSub.category")} <span className="text-red-500">*</span>
@@ -527,7 +513,6 @@ export default function EditSubscription() {
                         </div>
                       </div>
 
-                      {/* Description */}
                       <div className="space-y-2">
                         <Label htmlFor="description">{t("addSub.description")}</Label>
                         <Textarea
@@ -544,7 +529,6 @@ export default function EditSubscription() {
                         )}
                       </div>
 
-                      {/* Website URL */}
                       <div className="space-y-2">
                         <Label htmlFor="website_url">
                           {t("addSub.websiteUrl")} ({t("common.optional")})
@@ -566,7 +550,6 @@ export default function EditSubscription() {
                     </CardContent>
                   </Card>
 
-                  {/* Pricing Information */}
                   <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader>
                       <CardTitle>{t("addSub.pricingInfo")}</CardTitle>
@@ -577,7 +560,7 @@ export default function EditSubscription() {
                           <Label htmlFor="amount">{t("addSub.cost")} *</Label>
                           <Input 
                             id="amount"
-                            {...register("amount")}
+                            {...register("amount", { valueAsNumber: true })}
                             type="number" 
                             step="0.01" 
                             placeholder={t("addSub.costPlaceholder")}
@@ -690,7 +673,6 @@ export default function EditSubscription() {
                     </CardContent>
                   </Card>
 
-                  {/* Payment & Dates */}
                   <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader>
                       <CardTitle>{t("addSub.paymentInfo")}</CardTitle>
@@ -778,7 +760,6 @@ export default function EditSubscription() {
                         </div>
                       </div>
 
-                      {/* Reminder Settings */}
                       <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
                         <Label className="text-base">{t("addSub.reminderSettings")}</Label>
                         
@@ -851,13 +832,11 @@ export default function EditSubscription() {
                     </CardContent>
                   </Card>
 
-                  {/* Optional Context */}
                   <Card className="border-slate-200 dark:border-slate-800">
                     <CardHeader>
                       <CardTitle>{t("addSub.additionalInfo")}</CardTitle>
                     </CardHeader>
                     <CardContent className="space-y-4">
-                      {/* Usage Frequency */}
                       <div className="space-y-2">
                         <Label htmlFor="usage_frequency">
                           {t("addSub.usageFrequency")} ({t("common.optional")})
@@ -880,7 +859,6 @@ export default function EditSubscription() {
                         />
                       </div>
 
-                      {/* Notes */}
                       <div className="space-y-2">
                         <Label htmlFor="notes">{t("addSub.notes")} ({t("common.optional")})</Label>
                         <Textarea 
@@ -897,7 +875,6 @@ export default function EditSubscription() {
                     </CardContent>
                   </Card>
 
-                  {/* Action Buttons */}
                   <div className="flex items-center justify-between pt-6">
                     <Button
                       type="button"
@@ -931,13 +908,11 @@ export default function EditSubscription() {
               </form>
             </div>
 
-            {/* Sidebar - 1 column */}
             <div className="lg:col-span-1">
               <div className="sticky top-24 space-y-6">
-                {/* Live Summary */}
                 <SubscriptionSummary
                   name={watchedValues.name}
-                  amount={parseFloat(watchedValues.amount) || 0}
+                  amount={watchedValues.amount || 0}
                   currency={watchedValues.currency}
                   billingCycle={watchedValues.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly"}
                   nextBillingDate={watchedValues.next_billing_date}
@@ -945,9 +920,8 @@ export default function EditSubscription() {
                   remind7Days={watchedValues.reminder_days === 7}
                 />
 
-                {/* Intelligence Recommendations */}
                 <SubscriptionIntelligence
-                  amount={watchedValues.amount}
+                  amount={(watchedValues.amount || 0).toString()}
                   currency={watchedValues.currency}
                   billingCycle={watchedValues.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly"}
                   categoryId={watchedValues.category_id}
@@ -958,7 +932,6 @@ export default function EditSubscription() {
             </div>
           </div>
 
-          {/* Delete Confirmation Dialog */}
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
@@ -979,7 +952,6 @@ export default function EditSubscription() {
             </AlertDialogContent>
           </AlertDialog>
 
-          {/* Amount Change Confirmation Dialog */}
           <AlertDialog open={showAmountChangeDialog} onOpenChange={setShowAmountChangeDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
