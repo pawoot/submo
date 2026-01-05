@@ -297,6 +297,33 @@ export const subscriptionService = {
       subscriptions,
     };
   },
+
+  /**
+   * Calculate next renewal date based on billing cycle
+   */
+  async getNextRenewalDate(billingCycle: string, currentBillingDate: string): Promise<string> {
+    const date = new Date(currentBillingDate);
+    const now = new Date();
+    
+    // If the date is in the future, that's the renewal date
+    if (date > now) {
+      return date.toISOString();
+    }
+
+    // Otherwise calculate next occurrence
+    while (date <= now) {
+      if (billingCycle === "monthly") {
+        date.setMonth(date.getMonth() + 1);
+      } else if (billingCycle === "yearly") {
+        date.setFullYear(date.getFullYear() + 1);
+      } else {
+        // Default to monthly if unknown
+        date.setMonth(date.getMonth() + 1);
+      }
+    }
+    
+    return date.toISOString();
+  },
 };
 
 /**
