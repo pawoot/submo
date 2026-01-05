@@ -54,7 +54,7 @@ export default function AuthCallback() {
         await new Promise(resolve => setTimeout(resolve, 1000));
         
         // Redirect to dashboard page
-        router.push("/");
+        router.push("/dashboard");
       } catch (error) {
         console.error("Callback error:", error);
         router.push("/auth/login");

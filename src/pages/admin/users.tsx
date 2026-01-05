@@ -59,19 +59,12 @@ export default function AdminUsers() {
   const checkAdminAccess = async () => {
     try {
       const profile = await profileService.getCurrentProfile();
-      if (profile?.role === "admin") {
-        setIsAdmin(true);
-      } else {
-        toast({
-          title: "ไม่มีสิทธิ์เข้าถึง",
-          description: "คุณไม่มีสิทธิ์เข้าถึงหน้านี้",
-          variant: "destructive",
-        });
-        router.push("/");
+      if (!profile?.is_admin) {
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Error checking admin access:", error);
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 

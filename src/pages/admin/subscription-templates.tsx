@@ -88,13 +88,11 @@ export default function AdminSubscriptionTemplates() {
   const checkAdminAccess = async () => {
     try {
       const profile = await profileService.getCurrentProfile();
-      if (profile?.role === "admin") {
-        setIsAdmin(true);
-      } else {
-        router.push("/");
+      if (!profile?.is_admin) {
+        router.push("/dashboard");
       }
     } catch (error) {
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 
