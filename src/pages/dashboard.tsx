@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -75,7 +75,7 @@ export default function Dashboard() {
 
   const handleToggleReminder = async (id: string, currentEnabled: boolean) => {
     try {
-      await subscriptionService.update(id, {
+      await subscriptionService.updateSubscription(id, {
         reminder_enabled: !currentEnabled
       });
       
@@ -100,7 +100,7 @@ export default function Dashboard() {
 
   const handleLogout = async () => {
     try {
-      await authService.logout();
+      await authService.signOut();
       router.push("/auth/login");
     } catch (error) {
       console.error("Error logging out:", error);
