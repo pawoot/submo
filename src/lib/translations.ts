@@ -2078,24 +2078,4 @@ export const translations = {
   },
   "intelligence.ofTotalSpending": {
     th: "ของค่าใช้จ่ายรวมทั้งหมด",
-    en: "of total monthly spending"
-  },
-  "intelligence.rank": {
-    th: "อันดับที่ {rank} จาก {total}",
-    en: "Rank {rank} of {total}"
-  },
-  "intelligence.highYearlyCost": {
-    th: "⚠️ บริการนี้มีค่าใช้จ่ายมากกว่า {amount} บาท/ปี",
-    en: "⚠️ This subscription costs more than {amount}/year"
-  },
-  "intelligence.multipleInCategory": {
-    th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ",
-    en: "🔁 You already have {count} item(s) in this category"
-  }
-};
-
-export type TranslationKey = keyof typeof translations;
-
-export function getTranslation(key: TranslationKey, language: Language): string {
-  return translations[key]?.[language] || key;
-}
+    en

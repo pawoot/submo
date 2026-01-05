@@ -211,8 +211,10 @@ export function AddSubscriptionSteps({
                     </CardTitle>
                   </CardHeader>
                   <CardContent>
-                    <SubscriptionTemplateBrowser 
-                      onSelectTemplate={handleTemplateSelect}
+                    <SubscriptionTemplateBrowser
+                      isOpen={showTemplateBrowser}
+                      onClose={() => setShowTemplateBrowser(false)}
+                      onSelect={handleTemplateSelect}
                     />
                   </CardContent>
                 </Card>

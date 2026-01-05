@@ -70,6 +70,7 @@ export function AddSubscriptionWizard({
   const { preferredCurrency } = useCurrency();
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
+  const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   const form = useForm<FormValues>({
     resolver: zodResolver(formSchema),
