@@ -14,8 +14,10 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import MobileHeader from "@/components/MobileHeader";
 import { subscriptionService } from "@/services/subscriptionService";
 import { authService } from "@/services/authService";
+import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslation } from "@/lib/translations";
@@ -26,7 +28,8 @@ import {
   Settings,
   User,
   LogOut,
-  Shield
+  Shield,
+  Home
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
@@ -48,9 +51,13 @@ export default function Dashboard() {
   const [user, setUser] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<ServiceSubscription[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [unreadCount, setUnreadCount] = useState(0);
 
   useEffect(() => {
     loadData();
+    loadUserData();
+    loadUnreadNotifications();
   }, []);
 
   const loadData = async () => {
@@ -72,6 +79,44 @@ export default function Dashboard() {
       });
     } finally {
       setLoading(false);
+    }
+  };
+
+  const loadUserData = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        setUser(currentUser);
+        
+        const { data: profileData } = await supabase
+          .from("profiles")
+          .select("role, is_admin")
+          .eq("id", currentUser.id)
+          .single();
+        
+        if (profileData?.role === 'admin' || profileData?.is_admin === true) {
+          setIsAdmin(true);
+        }
+      }
+    } catch (error) {
+      console.error("Error loading user data:", error);
+    }
+  };
+
+  const loadUnreadNotifications = async () => {
+    try {
+      const { data: { user: currentUser } } = await supabase.auth.getUser();
+      if (currentUser) {
+        const { count } = await supabase
+          .from("notifications")
+          .select("*", { count: "exact", head: true })
+          .eq("user_id", currentUser.id)
+          .eq("is_read", false);
+        
+        setUnreadCount(count || 0);
+      }
+    } catch (error) {
+      console.error("Error loading notifications:", error);
     }
   };
 
@@ -136,27 +181,32 @@ export default function Dashboard() {
         description={t("dashboard.subtitle")}
       />
       
-      <div className="min-h-screen bg-gray-50 dark:bg-gray-900">
-        {/* Header */}
-        <div className="border-b bg-white dark:bg-gray-800 sticky top-0 z-50 shadow-sm">
-          <div className="container mx-auto px-6 py-4">
+      {/* Mobile Header */}
+      <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
+      
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
+        {/* Desktop Header - Hidden on mobile */}
+        <header className="hidden lg:block bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                  <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
-                    <rect x="3" y="3" width="18" height="18" rx="3" fill="white"/>
-                    <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                  </svg>
-                </div>
-                <div>
-                  <h1 className="text-2xl font-bold">Submo</h1>
-                  <p className="text-sm text-muted-foreground">Subscription Monitoring</p>
+              <div className="flex items-center gap-4">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
+                    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
+                      <rect x="3" y="3" width="18" height="18" rx="3" fill="white"/>
+                      <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div>
+                    <h1 className="text-2xl font-bold text-gray-900">Submo</h1>
+                    <p className="text-sm text-gray-600">Subscription Monitoring</p>
+                  </div>
                 </div>
               </div>
-              
+
               <div className="flex items-center gap-3">
                 {/* Admin Button */}
-                {user?.is_admin && (
+                {isAdmin && (
                   <Button
                     variant="outline"
                     size="sm"
@@ -173,8 +223,14 @@ export default function Dashboard() {
                   variant="ghost" 
                   size="icon"
                   onClick={() => router.push("/notifications")}
+                  className="relative"
                 >
                   <Bell className="w-5 h-5" />
+                  {unreadCount > 0 && (
+                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
+                      {unreadCount}
+                    </span>
+                  )}
                 </Button>
                 
                 {/* Profile Dropdown */}
@@ -223,10 +279,10 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
+        </header>
 
         {/* Main Content */}
-        <div className="container mx-auto px-6 py-6">
+        <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
           <div className="space-y-6">
             {/* Main 2-Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -327,7 +383,7 @@ export default function Dashboard() {
               </CardContent>
             </Card>
           </div>
-        </div>
+        </main>
       </div>
     </AuthGuard>
   );
