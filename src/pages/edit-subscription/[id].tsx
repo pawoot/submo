@@ -437,7 +437,7 @@ export default function EditSubscription() {
                 </Button>
               </Link>
               <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("editSub.title")}</h1>
+                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("editSub.title")}</h1>
                 <p className="text-sm text-slate-600 dark:text-slate-400">{subscription?.name}</p>
               </div>
             </div>
@@ -945,7 +945,7 @@ export default function EditSubscription() {
                   name={watchedValues.name}
                   amount={parseFloat(watchedValues.amount) || 0}
                   currency={watchedValues.currency}
-                  billingCycle={watchedValues.billing_cycle}
+                  billingCycle={watchedValues.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly"}
                   nextBillingDate={watchedValues.next_billing_date}
                   remind3Days={watchedValues.reminder_days === 3}
                   remind7Days={watchedValues.reminder_days === 7}
@@ -955,7 +955,7 @@ export default function EditSubscription() {
                 <SubscriptionIntelligence
                   amount={watchedValues.amount}
                   currency={watchedValues.currency}
-                  billingCycle={watchedValues.billing_cycle}
+                  billingCycle={watchedValues.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly"}
                   categoryId={watchedValues.category_id}
                   usageFrequency={watchedValues.usage_frequency}
                   existingSubscriptions={existingSubscriptions}
