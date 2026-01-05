@@ -21,6 +21,7 @@ import {
   Calendar,
   TrendingUp,
   DollarSign,
+  CheckCircle,
   CheckCircle2
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
