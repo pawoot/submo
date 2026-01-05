@@ -12,9 +12,10 @@ export interface UserWithSubscriptions extends Profile {
 
 export const adminUserService = {
   async getAllUsers(): Promise<UserWithSubscriptions[]> {
+    // Fetch all profiles
     const { data: profiles, error: profilesError } = await supabase
       .from("profiles")
-      .select("*, subscriptions(*)")
+      .select("*")
       .order("created_at", { ascending: false });
 
     if (profilesError) {
@@ -22,11 +23,31 @@ export const adminUserService = {
       throw profilesError;
     }
 
+    if (!profiles || profiles.length === 0) {
+      return [];
+    }
+
+    // Fetch all subscriptions
+    const { data: allSubscriptions, error: subsError } = await supabase
+      .from("subscriptions")
+      .select("*");
+
+    if (subsError) {
+      console.error("Error fetching subscriptions:", subsError);
+      throw subsError;
+    }
+
+    const subscriptionsByUser = new Map<string, Subscription[]>();
+    (allSubscriptions || []).forEach((sub) => {
+      if (!subscriptionsByUser.has(sub.user_id)) {
+        subscriptionsByUser.set(sub.user_id, []);
+      }
+      subscriptionsByUser.get(sub.user_id)?.push(sub);
+    });
+
     const usersWithStats = await Promise.all(
       profiles.map(async (profile) => {
-        const subscriptions = Array.isArray(profile.subscriptions)
-          ? profile.subscriptions
-          : [];
+        const subscriptions = subscriptionsByUser.get(profile.id) || [];
 
         const activeSubscriptions = subscriptions.filter(
           (sub: Subscription) => sub.is_active !== false
