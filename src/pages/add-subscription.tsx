@@ -57,7 +57,7 @@ export default function AddSubscription() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      await subscriptionService.create({
+      const subscriptionData = {
         name: data.name,
         category_id: data.category_id,
         category: categories.find(c => c.id === data.category_id)?.slug || "other",
@@ -84,6 +84,14 @@ export default function AddSubscription() {
         website_url: null,
         updated_at: new Date().toISOString(),
         usage_count: 0
+      };
+
+      await subscriptionService.create({
+        ...subscriptionData,
+        amount: parseFloat(subscriptionData.amount),
+        usage_count: 0,
+        reminder_enabled: false,
+        reminder_days: 7,
       });
 
       toast({

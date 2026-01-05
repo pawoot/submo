@@ -162,7 +162,7 @@ export const subscriptionService = {
   /**
    * Update an existing subscription
    */
-  async update(id: string, subscription: Partial<Database["public"]["Tables"]["subscriptions"]["Row"]>): Promise<Subscription> {
+  async update(id: string, subscription: Partial<Database["public"]["Tables"]["subscriptions"]["Update"]>): Promise<Subscription> {
     const { data, error } = await supabase
       .from("subscriptions")
       .update(subscription)
@@ -175,7 +175,7 @@ export const subscriptionService = {
       throw error;
     }
 
-    return data;
+    return data as unknown as Subscription;
   },
 
   /**

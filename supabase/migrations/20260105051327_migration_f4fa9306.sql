@@ -1,0 +1,3 @@
+ALTER TABLE subscriptions 
+ADD COLUMN IF NOT EXISTS reminder_enabled BOOLEAN DEFAULT false,
+ADD COLUMN IF NOT EXISTS reminder_days INTEGER DEFAULT 7;

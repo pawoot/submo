@@ -295,6 +295,8 @@ export type Database = {
           popularity_score: number | null
           remind_3_days_before: boolean | null
           remind_7_days_before: boolean | null
+          reminder_days: number | null
+          reminder_enabled: boolean | null
           shared_with: string[] | null
           start_date: string | null
           template_id: string | null
@@ -326,6 +328,8 @@ export type Database = {
           popularity_score?: number | null
           remind_3_days_before?: boolean | null
           remind_7_days_before?: boolean | null
+          reminder_days?: number | null
+          reminder_enabled?: boolean | null
           shared_with?: string[] | null
           start_date?: string | null
           template_id?: string | null
@@ -357,6 +361,8 @@ export type Database = {
           popularity_score?: number | null
           remind_3_days_before?: boolean | null
           remind_7_days_before?: boolean | null
+          reminder_days?: number | null
+          reminder_enabled?: boolean | null
           shared_with?: string[] | null
           start_date?: string | null
           template_id?: string | null

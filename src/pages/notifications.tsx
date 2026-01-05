@@ -38,59 +38,57 @@ export default function NotificationsPage() {
   const [user, setUser] = useState<any>(null);
 
   useEffect(() => {
-    loadData();
-  }, []);
+    const fetchData = async () => {
+      try {
+        const user = await authService.getCurrentUser();
+        setUser(user);
 
-  const loadData = async () => {
-    try {
-      setLoading(true);
-      const currentUser = await authService.getCurrentUser();
-      setUser(currentUser);
+        const [notifData, subsData] = await Promise.all([
+          notificationService.getNotifications(),
+          getUserSubscriptions()
+        ]);
 
-      const [notifData, subsData] = await Promise.all([
-        notificationService.getNotifications(),
-        getUserSubscriptions()
-      ]);
-
-      setNotifications(notifData || []);
-      
-      // Process subscriptions with reminder info
-      const subsWithReminders: SubscriptionWithReminder[] = (subsData || []).map(sub => {
-        const reminderDays = sub.reminder_days || 7;
-        const nextBilling = new Date(sub.next_billing_date);
-        const reminderDate = new Date(nextBilling);
-        reminderDate.setDate(reminderDate.getDate() - reminderDays);
+        setNotifications(notifData || []);
         
-        return {
-          ...sub,
-          reminder_enabled: sub.reminder_enabled || false,
-          reminder_days: reminderDays,
-          next_reminder_date: reminderDate.toISOString()
-        };
-      });
+        // Process subscriptions with reminder info
+        const subsWithReminders: SubscriptionWithReminder[] = (subsData || []).map(sub => {
+          const reminderDays = sub.reminder_days || 7;
+          const nextBilling = new Date(sub.next_billing_date);
+          const reminderDate = new Date(nextBilling);
+          reminderDate.setDate(reminderDate.getDate() - reminderDays);
+          
+          return {
+            ...sub,
+            reminder_enabled: sub.reminder_enabled || false,
+            reminder_days: reminderDays,
+            next_reminder_date: reminderDate.toISOString()
+          };
+        });
 
-      // Sort by next reminder date (closest first)
-      subsWithReminders.sort((a, b) => {
-        if (!a.reminder_enabled && b.reminder_enabled) return 1;
-        if (a.reminder_enabled && !b.reminder_enabled) return -1;
-        if (a.next_reminder_date && b.next_reminder_date) {
-          return new Date(a.next_reminder_date).getTime() - new Date(b.next_reminder_date).getTime();
-        }
-        return 0;
-      });
+        // Sort by next reminder date (closest first)
+        subsWithReminders.sort((a, b) => {
+          if (!a.reminder_enabled && b.reminder_enabled) return 1;
+          if (a.reminder_enabled && !b.reminder_enabled) return -1;
+          if (a.next_reminder_date && b.next_reminder_date) {
+            return new Date(a.next_reminder_date).getTime() - new Date(b.next_reminder_date).getTime();
+          }
+          return 0;
+        });
 
-      setSubscriptions(subsWithReminders);
-    } catch (error) {
-      console.error("Error loading notifications:", error);
-      toast({
-        title: "Error",
-        description: "Failed to load notifications",
-        variant: "destructive"
-      });
-    } finally {
-      setLoading(false);
-    }
-  };
+        setSubscriptions(subsWithReminders);
+      } catch (error) {
+        console.error("Error loading notifications:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load notifications",
+          variant: "destructive"
+        });
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchData();
+  }, []);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -168,7 +166,7 @@ export default function NotificationsPage() {
       // Since I can't see subscriptionService fully right now, I'll assume updateSubscription exists
       // If not, I'll fallback to a generic update or logging
       
-      // await subscriptionService.updateSubscription(subscriptionId, { reminder_enabled: !currentState });
+      await subscriptionService.update(subscriptionId, { reminder_enabled: !currentState });
 
       toast({
         title: currentState ? "Reminder Disabled" : "Reminder Enabled",
@@ -206,7 +204,7 @@ export default function NotificationsPage() {
         )
       );
 
-      // await subscriptionService.updateSubscription(subscriptionId, { reminder_enabled: false });
+      await subscriptionService.update(subscriptionId, { reminder_enabled: false });
 
       toast({
         title: "Reminder Removed",
@@ -423,7 +421,7 @@ export default function NotificationsPage() {
                                   <div className="flex items-center gap-2">
                                     <Calendar className="h-3 w-3" />
                                     <span>
-                                      Renewal: {new Date(sub.next_billing_date).toLocaleDateString("en-US", {
+                                      Renewal: {new Date(sub.nextRenewalDate).toLocaleDateString("en-US", {
                                         month: "short",
                                         day: "numeric",
                                         year: "numeric"
