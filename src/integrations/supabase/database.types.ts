@@ -101,6 +101,151 @@ export type Database = {
         }
         Relationships: []
       }
+      feature_flags: {
+        Row: {
+          description: string | null
+          enabled: boolean | null
+          id: string
+          key: string
+          updated_at: string | null
+          updated_by: string | null
+        }
+        Insert: {
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          key: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Update: {
+          description?: string | null
+          enabled?: boolean | null
+          id?: string
+          key?: string
+          updated_at?: string | null
+          updated_by?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "feature_flags_updated_by_fkey"
+            columns: ["updated_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      migration_report_rows: {
+        Row: {
+          created_at: string | null
+          details: Json | null
+          entity: string
+          id: string
+          issue_type: string
+          record_id: string
+          report_id: string | null
+          resolved_at: string | null
+          resolved_by: string | null
+          status: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          details?: Json | null
+          entity: string
+          id?: string
+          issue_type: string
+          record_id: string
+          report_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          details?: Json | null
+          entity?: string
+          id?: string
+          issue_type?: string
+          record_id?: string
+          report_id?: string | null
+          resolved_at?: string | null
+          resolved_by?: string | null
+          status?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_report_rows_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "migration_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "migration_report_rows_resolved_by_fkey"
+            columns: ["resolved_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      migration_reports: {
+        Row: {
+          completed_at: string | null
+          created_by: string | null
+          details: Json | null
+          failed_records: number | null
+          id: string
+          invalid_shared_with: number | null
+          migration_name: string
+          started_at: string | null
+          status: string | null
+          successful_records: number | null
+          total_records: number | null
+          unmapped_categories: number | null
+          unmapped_payment_methods: number | null
+        }
+        Insert: {
+          completed_at?: string | null
+          created_by?: string | null
+          details?: Json | null
+          failed_records?: number | null
+          id?: string
+          invalid_shared_with?: number | null
+          migration_name: string
+          started_at?: string | null
+          status?: string | null
+          successful_records?: number | null
+          total_records?: number | null
+          unmapped_categories?: number | null
+          unmapped_payment_methods?: number | null
+        }
+        Update: {
+          completed_at?: string | null
+          created_by?: string | null
+          details?: Json | null
+          failed_records?: number | null
+          id?: string
+          invalid_shared_with?: number | null
+          migration_name?: string
+          started_at?: string | null
+          status?: string | null
+          successful_records?: number | null
+          total_records?: number | null
+          unmapped_categories?: number | null
+          unmapped_payment_methods?: number | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "migration_reports_created_by_fkey"
+            columns: ["created_by"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       notification_settings: {
         Row: {
           created_at: string | null
