@@ -1,3 +1,5 @@
+export type Language = "th" | "en";
+
 export const translations = {
   // Header & Navigation
   "nav.home": {
@@ -70,7 +72,10 @@ export const translations = {
     th: "Submo - Subscription Monitoring",
     en: "Submo - Subscription Monitoring"
   },
-  "home.seo.description": "ติดตามค่าใช้จ่ายสมาชิก แจ้งเตือนก่อนชำระเงิน และดูภาพรวมการใช้จ่ายของคุณ",
+  "home.seo.description": {
+    th: "ติดตามค่าใช้จ่ายสมาชิก แจ้งเตือนก่อนชำระเงิน และดูภาพรวมการใช้จ่ายของคุณ",
+    en: "Track subscription costs, get payment reminders, and view your spending overview"
+  },
   "home.welcome": {
     th: "ยินดีต้อนรับสู่ Submo.ai",
     en: "Welcome to Submo.ai"
@@ -258,7 +263,7 @@ export const translations = {
     en: "Time Period"
   },
   "filter.priceRange": {
-    th: "รวมช่วงระเงิน",
+    th: "ช่วงราคา",
     en: "Price Range"
   },
   "filter.all": {
@@ -365,8 +370,14 @@ export const translations = {
   },
 
   // Add Subscription Page
-  "addSub.title": "เพิ่มรายการสมาชิก",
-  "addSub.desc": "เพิ่มรายการสมาชิกใหม่เพื่อติดตามค่าใช้จ่ายของคุณ",
+  "addSub.title": {
+    th: "เพิ่มรายการสมาชิก",
+    en: "Add Subscription"
+  },
+  "addSub.desc": {
+    th: "เพิ่มรายการสมาชิกใหม่เพื่อติดตามค่าใช้จ่ายของคุณ",
+    en: "Add a new subscription to track your expenses"
+  },
   "addSub.name": {
     th: "ชื่อ Subscription",
     en: "Subscription Name"
@@ -590,6 +601,26 @@ export const translations = {
   "addSub.autoCalculated": {
     th: "คำนวณอัตโนมัติจากรอบบิล",
     en: "Auto-calculated from Invoice"
+  },
+  "addSub.subtitle": {
+    th: "เพิ่ม Subscription ใหม่",
+    en: "Add a new subscription"
+  },
+  "addSub.select_template": {
+    th: "เลือกบริการ",
+    en: "Select Service"
+  },
+  "addSub.fill_details": {
+    th: "กรอกรายละเอียด",
+    en: "Fill Details"
+  },
+  "addSub.review": {
+    th: "ตรวจสอบ",
+    en: "Review"
+  },
+  "addSub.custom_service": {
+    th: "บริการอื่นๆ (กำหนดเอง)",
+    en: "Custom Service"
   },
 
   // Edit Subscription Page
@@ -828,7 +859,7 @@ export const translations = {
     en: "Currency updated successfully"
   },
   "profile.accountDeleted": {
-    th: "บัญชีถูกลบแล้ว",
+    th: "ลบบัญชีสำเร็จ",
     en: "Account deleted"
   },
   "profile.thankYou": {
@@ -842,6 +873,14 @@ export const translations = {
   "profile.country": {
     th: "ประเทศ",
     en: "Country"
+  },
+  "profile.logout": {
+    th: "ออกจากระบบ",
+    en: "Logout"
+  },
+  "profile.logoutDesc": {
+    th: "ออกจากระบบบนอุปกรณ์นี้",
+    en: "Sign out from your account on this device"
   },
 
   // Notifications Page
@@ -1227,6 +1266,94 @@ export const translations = {
     th: "รหัสผ่านไม่ตรงกัน",
     en: "Passwords do not match"
   },
+  "auth.forgotPasswordDesc": {
+    th: "ใส่อีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
+    en: "Enter your email to receive a password reset link"
+  },
+  "auth.sendingEmail": {
+    th: "กำลังส่งอีเมล...",
+    en: "Sending email..."
+  },
+  "auth.emailSent": {
+    th: "ส่งอีเมลสำเร็จ!",
+    en: "Email Sent!"
+  },
+  "auth.checkEmailDesc": {
+    th: "กรุณาตรวจสอบอีเมลเพื่อรีเซ็ตรหัสผ่าน",
+    en: "Please check your email to reset password"
+  },
+  "auth.sendEmailError": {
+    th: "ส่งอีเมลไม่สำเร็จ",
+    en: "Failed to send email"
+  },
+  "auth.linkSentTo": {
+    th: "เราได้ส่งลิงก์รีเซ็ตไปยัง",
+    en: "We sent a password reset link to"
+  },
+  "auth.checkSpamFolder": {
+    th: "ไม่เห็นอีเมล? ตรวจสอบในโฟลเดอร์ Spam",
+    en: "Don't see the email? Check your Spam folder"
+  },
+  "auth.rememberPassword": {
+    th: "จำรหัสผ่านได้แล้ว?",
+    en: "Remember your password?"
+  },
+  "auth.enterNewPassword": {
+    th: "กรุณากรอกรหัสผ่านใหม่ของคุณ",
+    en: "Please enter your new password"
+  },
+  "auth.passwordChangedDesc": {
+    th: "รหัสผ่านของคุณถูกเปลี่ยนเรียบร้อยแล้ว",
+    en: "Your password has been changed successfully"
+  },
+  "auth.redirectingLogin": {
+    th: "กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...",
+    en: "Redirecting to login..."
+  },
+  "auth.weakPasswordDesc": {
+    th: "รหัสผ่านไม่ปลอดภัยเพียงพอ กรุณาใช้รหัสผ่านที่แข็งแกร่งกว่านี้",
+    en: "Password is too weak. Please use a stronger password."
+  },
+  "auth.passwordMatch": {
+    th: "รหัสผ่านตรงกัน",
+    en: "Passwords match"
+  },
+  "auth.passwordMismatchDesc": {
+    th: "รหัสผ่านไม่ตรงกัน",
+    en: "Passwords do not match"
+  },
+  "auth.passwordRequirements": {
+    th: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร และควรประกอบด้วยตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษ",
+    en: "Password must be at least 8 characters long and should contain uppercase, lowercase, numbers, and special characters"
+  },
+  "auth.strength.weak": {
+    th: "รหัสผ่านอย่างอ่อน",
+    en: "Weak password"
+  },
+  "auth.strength.medium": {
+    th: "รหัสผ่านปานกลาง",
+    en: "Medium password"
+  },
+  "auth.strength.strong": {
+    th: "รหัสผ่านแข็งแกร่ง",
+    en: "Strong password"
+  },
+  "auth.invalidLink": {
+    th: "ลิงก์ไม่ถูกต้องหรือหมดอายุ",
+    en: "Invalid or expired link"
+  },
+  "auth.requestNewLink": {
+    th: "กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่",
+    en: "Please request a new password reset link"
+  },
+  "auth.changePasswordError": {
+    th: "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน",
+    en: "Error changing password"
+  },
+  "auth.changePasswordFailed": {
+    th: "เปลี่ยนรหัสผ่านไม่สำเร็จ",
+    en: "Failed to change password"
+  },
 
   // Categories
   "category.streaming": {
@@ -1311,6 +1438,22 @@ export const translations = {
     th: "อื่นๆ",
     en: "Other"
   },
+  "subscription.add_success": {
+    th: "เพิ่มรายการสมัครสมาชิกเรียบร้อยแล้ว",
+    en: "Subscription added successfully"
+  },
+  "subscription.update_success": {
+    th: "อัปเดตรายการสมัครสมาชิกเรียบร้อยแล้ว",
+    en: "Subscription updated successfully"
+  },
+  "subscription.payment_method": {
+    th: "วิธีการชำระเงิน",
+    en: "Payment Method"
+  },
+  "payment.select_method": {
+    th: "เลือกวิธีการชำระเงิน",
+    en: "Select payment method"
+  },
 
   // Common
   "common.loading": {
@@ -1320,6 +1463,10 @@ export const translations = {
   "common.error": {
     th: "เกิดข้อผิดพลาด",
     en: "Error occurred"
+  },
+  "common.error_occurred": {
+    th: "เกิดข้อผิดพลาดขึ้น",
+    en: "An error occurred"
   },
   "common.success": {
     th: "สำเร็จ",
@@ -1416,6 +1563,96 @@ export const translations = {
   "common.recommended": {
     th: "แนะนำ",
     en: "Recommended"
+  },
+  "common.step": {
+    th: "ขั้นตอน",
+    en: "Step"
+  },
+  "common.of": {
+    th: "จาก",
+    en: "of"
+  },
+  "common.continue": {
+    th: "ถัดไป",
+    en: "Continue"
+  },
+  "common.days": {
+    th: "วัน",
+    en: "days"
+  },
+  "common.no_results": {
+    th: "ไม่พบผลลัพธ์",
+    en: "No results found"
+  },
+
+  // Intelligence translations
+  "intelligence.costBreakdown": {
+    th: "การคำนวณค่าใช้จ่าย",
+    en: "Cost Breakdown"
+  },
+  "intelligence.monthlyEquivalent": {
+    th: "รายเดือน",
+    en: "Monthly"
+  },
+  "intelligence.yearlyEquivalent": {
+    th: "รายปี",
+    en: "Yearly"
+  },
+  "intelligence.dailyCost": {
+    th: "รายวัน",
+    en: "Daily cost"
+  },
+  "intelligence.spendingContext": {
+    th: "บริบทการใช้จ่าย",
+    en: "Spending Context"
+  },
+  "intelligence.ofTotalSpending": {
+    th: "ของค่าใช้จ่ายรวมทั้งหมด",
+    en: "of total monthly spending"
+  },
+  "intelligence.rank": {
+    th: "อันดับที่ {rank} จาก {total}",
+    en: "Rank {rank} of {total}"
+  },
+  "intelligence.highYearlyCost": {
+    th: "⚠️ บริการนี้มีค่าใช้จ่ายมากกว่า {amount} บาท/ปี",
+    en: "⚠️ This subscription costs more than {amount}/year"
+  },
+  "intelligence.multipleInCategory": {
+    th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ",
+    en: "🔁 You already have {count} subscriptions in this category"
+  },
+  "intelligence.rarelyUsed": {
+    th: "✂️ บริการที่ใช้ไม่บ่อยมักจะถูกยกเลิกโดยผู้ใช้",
+    en: "✂️ Subscriptions used rarely are often canceled by users"
+  },
+  "intelligence.yearlyBillingSuggestion": {
+    th: "💡 ลองพิจารณาจ่ายแบบรายปี อาจประหยัดได้ประมาณ {savings} บาท",
+    en: "💡 Consider yearly billing to potentially save around {savings}"
+  },
+  "intelligence.reminderSuggestion": {
+    th: "🔔 แนะนำให้เปิดการแจ้งเตือนเพื่อไม่ให้ลืมบริการนี้",
+    en: "🔔 We recommend enabling reminders for this subscription"
+  },
+  "intelligence.summary": {
+    th: "สรุปข้อมูลอัจฉริยะ",
+    en: "Submo Insight"
+  },
+  "intelligence.summaryYearlyCost": {
+    th: "บริการนี้มีค่าใช้จ่าย {amount} ต่อปี",
+    en: "This subscription costs {amount}/year"
+  },
+  "intelligence.summaryPercentage": {
+    th: "คิดเป็น {percentage}% ของค่าใช้จ่ายรายเดือนของคุณ",
+    en: "It accounts for {percentage}% of your monthly subscription spending"
+  },
+  "intelligence.summaryReminder": {
+    th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว",
+    en: "A reminder has been enabled to prevent forgetting"
+  },
+  "intelligence.noActionRequired": {
+    th: "ไม่ต้องทำอะไรเพิ่มเติม",
+    en: "No additional action required"
   },
 
   // Notifications & Reminders
@@ -1515,6 +1752,26 @@ export const translations = {
     th: "เกิดข้อผิดพลาดที่ไม่ทราบสาเหตุ",
     en: "An unknown error occurred"
   },
+  "toast.logoutSuccess": {
+    th: "ออกจากระบบสำเร็จ",
+    en: "Logged out successfully"
+  },
+  "toast.logoutError": {
+    th: "ไม่สามารถออกจากระบบได้",
+    en: "Failed to logout"
+  },
+  "toast.accountDeleted": {
+    th: "ลบบัญชีสำเร็จ",
+    en: "Account deleted successfully"
+  },
+  "toast.accountDeletedDesc": {
+    th: "บัญชีของคุณถูกลบอย่างถาวร",
+    en: "Your account has been permanently deleted"
+  },
+  "toast.accountDeleteError": {
+    th: "ไม่สามารถลบบัญชีได้",
+    en: "Failed to delete account"
+  },
 
   // Date & Time
   "time.today": {
@@ -1546,119 +1803,7 @@ export const translations = {
     en: "Just now"
   },
 
-  // Auth - Forgot Password
-  "auth.forgotPasswordDesc": {
-    th: "ใส่อีเมลของคุณเพื่อรับลิงก์รีเซ็ตรหัสผ่าน",
-    en: "Enter your email to receive a password reset link"
-  },
-  "auth.sendingEmail": {
-    th: "กำลังส่งอีเมล...",
-    en: "Sending email..."
-  },
-  "auth.emailSent": {
-    th: "ส่งอีเมลสำเร็จ!",
-    en: "Email Sent!"
-  },
-  "auth.checkEmailDesc": {
-    th: "กรุณาตรวจสอบอีเมลเพื่อรีเซ็ตรหัสผ่าน",
-    en: "Please check your email to reset password"
-  },
-  "auth.sendEmailError": {
-    th: "ส่งอีเมลไม่สำเร็จ",
-    en: "Failed to send email"
-  },
-  "auth.linkSentTo": {
-    th: "เราได้ส่งลิงก์รีเซ็ตไปยัง",
-    en: "We sent a password reset link to"
-  },
-  "auth.checkSpamFolder": {
-    th: "ไม่เห็นอีเมล? ตรวจสอบในโฟลเดอร์ Spam",
-    en: "Don't see the email? Check your Spam folder"
-  },
-  "auth.rememberPassword": {
-    th: "จำรหัสผ่านได้แล้ว?",
-    en: "Remember your password?"
-  },
-
-  // Auth - Reset Password
-  "auth.enterNewPassword": {
-    th: "กรุณากรอกรหัสผ่านใหม่ของคุณ",
-    en: "Please enter your new password"
-  },
-  "auth.passwordChangedDesc": {
-    th: "รหัสผ่านของคุณถูกเปลี่ยนเรียบร้อยแล้ว",
-    en: "Your password has been changed successfully"
-  },
-  "auth.redirectingLogin": {
-    th: "กำลังนำคุณไปยังหน้าเข้าสู่ระบบ...",
-    en: "Redirecting to login..."
-  },
-  "auth.weakPasswordDesc": {
-    th: "รหัสผ่านไม่ปลอดภัยเพียงพอ กรุณาใช้รหัสผ่านที่แข็งแกร่งกว่านี้",
-    en: "Password is too weak. Please use a stronger password."
-  },
-  "auth.passwordMatch": {
-    th: "รหัสผ่านตรงกัน",
-    en: "Passwords match"
-  },
-  "auth.passwordMismatchDesc": {
-    th: "รหัสผ่านไม่ตรงกัน",
-    en: "Passwords do not match"
-  },
-  "auth.passwordRequirements": {
-    th: "รหัสผ่านต้องมีอย่างน้อย 8 ตัวอักษร และควรประกอบด้วยตัวพิมพ์ใหญ่ ตัวพิมพ์เล็ก ตัวเลข และอักขระพิเศษ",
-    en: "Password must be at least 8 characters long and should contain uppercase, lowercase, numbers, and special characters"
-  },
-  "auth.strength.weak": {
-    th: "รหัสผ่านอย่างอ่อน",
-    en: "Weak password"
-  },
-  "auth.strength.medium": {
-    th: "รหัสผ่านปานกลาง",
-    en: "Medium password"
-  },
-  "auth.strength.strong": {
-    th: "รหัสผ่านแข็งแกร่ง",
-    en: "Strong password"
-  },
-  "auth.invalidLink": {
-    th: "ลิงก์ไม่ถูกต้องหรือหมดอายุ",
-    en: "Invalid or expired link"
-  },
-  "auth.requestNewLink": {
-    th: "กรุณาขอลิงก์รีเซ็ตรหัสผ่านใหม่",
-    en: "Please request a new password reset link"
-  },
-  "auth.changePasswordError": {
-    th: "เกิดข้อผิดพลาดในการเปลี่ยนรหัสผ่าน",
-    en: "Error changing password"
-  },
-  "auth.changePasswordFailed": {
-    th: "เปลี่ยนรหัสผ่านไม่สำเร็จ",
-    en: "Failed to change password"
-  },
-  "subscription.add_success": {
-    th: "เพิ่มรายการสมัครสมาชิกเรียบร้อยแล้ว",
-    en: "Subscription added successfully"
-  },
-  "subscription.update_success": {
-    th: "อัปเดตรายการสมัครสมาชิกเรียบร้อยแล้ว",
-    en: "Subscription updated successfully"
-  },
-  "subscription.payment_method": {
-    th: "วิธีการชำระเงิน",
-    en: "Payment Method"
-  },
-  "payment.select_method": {
-    th: "เลือกวิธีการชำระเงิน",
-    en: "Select payment method"
-  },
-  "common.error_occurred": {
-    th: "เกิดข้อผิดพลาดขึ้น",
-    en: "An error occurred"
-  },
-
-  // Admin Panel (Keep only one instance)
+  // Admin Panel
   "admin.title": {
     th: "แอดมิน",
     en: "Admin Panel"
@@ -1767,8 +1912,6 @@ export const translations = {
     th: "การกระทำนี้ไม่สามารถย้อนกลับได้",
     en: "This action cannot be undone"
   },
-
-  // Admin Templates Table
   "admin.templates.table.icon": {
     th: "ไอคอน",
     en: "Icon"
@@ -1801,8 +1944,6 @@ export const translations = {
     th: "จัดการ",
     en: "Actions"
   },
-
-  // Admin Templates Form
   "admin.templates.form.name": {
     th: "ชื่อเทมเพลต",
     en: "Template Name"
@@ -1863,8 +2004,6 @@ export const translations = {
     th: "เฉพาะเทมเพลตที่เปิดใช้งานเท่านั้นที่ผู้ใช้จะเห็น",
     en: "Only active templates are visible to users"
   },
-
-  // Billing Cycles (Common)
   "common.billingCycle.monthly": {
     th: "รายเดือน",
     en: "Monthly"
@@ -1881,8 +2020,6 @@ export const translations = {
     th: "รายปี",
     en: "Yearly"
   },
-
-  // Admin Template Management
   "admin.name": {
     th: "ชื่อ",
     en: "Name"
@@ -1934,149 +2071,11 @@ export const translations = {
   "admin.category": {
     th: "หมวดหมู่",
     en: "Category"
-  },
-
-  // Toast Messages - Logout & Account
-  "toast.logoutSuccess": {
-    th: "ออกจากระบบสำเร็จ",
-    en: "Logged out successfully"
-  },
-  "toast.logoutError": {
-    th: "ไม่สามารถออกจากระบบได้",
-    en: "Failed to logout"
-  },
-  "toast.accountDeleted": {
-    th: "ลบบัญชีสำเร็จ",
-    en: "Account deleted successfully"
-  },
-  "toast.accountDeletedDesc": {
-    th: "บัญชีของคุณถูกลบอย่างถาวร",
-    en: "Your account has been permanently deleted"
-  },
-  "toast.accountDeleteError": {
-    th: "ไม่สามารถลบบัญชีได้",
-    en: "Failed to delete account"
-  },
-
-  // Profile - Logout Section
-  "profile.logout": {
-    th: "ออกจากระบบ",
-    en: "Logout"
-  },
-  "profile.logoutDesc": {
-    th: "ออกจากระบบบนอุปกรณ์นี้",
-    en: "Sign out from your account on this device"
-  },
-
-  "common.step": {
-    th: "ขั้นตอน",
-    en: "Step"
-  },
-  "common.of": {
-    th: "จาก",
-    en: "of"
-  },
-  "common.continue": {
-    th: "ถัดไป",
-    en: "Continue"
-  },
-  "common.days": {
-    th: "วัน",
-    en: "days"
-  },
-  "common.no_results": {
-    th: "ไม่พบผลลัพธ์",
-    en: "No results found"
-  },
-
-  // Add Subscription - Wizard specific
-  "addSub.subtitle": {
-    th: "เพิ่มรายการใหม่เพื่อติดตามค่าใช้จ่าย",
-    en: "Add a new subscription to track expenses"
-  },
-  "addSub.customSubscription": {
-    th: "Custom Subscription",
-    en: "Custom Subscription"
-  },
-  "addSub.billingPayment": {
-    th: "การเรียกเก็บเงินและการชำระเงิน",
-    en: "Billing & Payment"
-  },
-  "addSub.quickToggles": {
-    th: "การแจ้งเตือนอัตโนมัติ",
-    en: "Quick Reminders"
-  },
-  "addSub.remind3Days": {
-    th: "แจ้งเตือนก่อน 3 วัน",
-    en: "Remind me 3 days before"
-  },
-  "addSub.remind7Days": {
-    th: "แจ้งเตือนก่อน 7 วัน (แนะนำสำหรับรายปี)",
-    en: "Remind me 7 days before (recommended for yearly)"
-  },
-  "addSub.optionalContext": {
-    th: "ข้อมูลเพิ่มเติม (ไม่บังคับ)",
-    en: "Optional Context"
-  },
-  "addSub.costSummary": {
-    th: "สรุปค่าใช้จ่าย",
-    en: "Cost Summary"
-  },
-  "addSub.remindersEnabled": {
-    th: "เปิดการแจ้งเตือน",
-    en: "Reminders Enabled"
-  },
-  "addSub.beforeBilling": {
-    th: "ก่อนวันเรียกเก็บเงิน",
-    en: "before billing"
-  },
-  "addSub.yearlyBillingInfo": {
-    th: "การเรียกเก็บเงินรายปีเกิดขึ้นหนึ่งครั้งต่อปี",
-    en: "Yearly billing occurs once per year"
-  },
-  "addSub.monthlyBillingInfo": {
-    th: "การเรียกเก็บเงินรายเดือนเกิดขึ้นทุกเดือน",
-    en: "Monthly billing occurs every month"
-  },
-
-  // Subscription fields
-  "subscription.monthly_cost": {
-    th: "ค่าใช้จ่ายต่อเดือน",
-    en: "Monthly Cost"
-  },
-  "subscription.yearly_cost": {
-    th: "ค่าใช้จ่ายต่อปี",
-    en: "Yearly Cost"
-  },
-  "websiteUrl": "Website URL",
-  "faviconAutomatic": "Favicon will be automatically fetched from this URL",
-  "website": "Website",
-
-  "subscriptions.popularTemplates": {
-    th: "เทมเพลตยอดนิยม",
-    en: "Popular Templates"
-  },
-  "subscriptions.browseAllTemplates": {
-    th: "ดูบริการอื่นๆ",
-    en: "Browse All Services"
-  },
-  "subscriptions.allTemplates": {
-    th: "บริการทั้งหมด",
-    en: "All Services"
-  },
-  "subscriptions.searchTemplates": {
-    th: "ค้นหาบริการ...",
-    en: "Search services..."
-  },
-  "subscriptions.noTemplatesFound": {
-    th: "ไม่พบบริการที่คุณค้นหา",
-    en: "No services found"
   }
 };
 
 export type TranslationKey = keyof typeof translations;
-export type Language = "th" | "en";
 
-export function getTranslation(key: TranslationKey, lang: Language): string {
-  return translations[key]?.[lang] || key;
+export function getTranslation(key: TranslationKey, language: Language): string {
+  return translations[key]?.[language] || key;
 }
