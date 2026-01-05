@@ -62,7 +62,7 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
 
   async function checkAdminStatus(userId?: string) {
     if (!userId) {
-      router.push("/");
+      router.push("/dashboard");
       return;
     }
 
@@ -76,11 +76,11 @@ export function AuthGuard({ children, requireAdmin = false }: AuthGuardProps) {
       if (profile?.role === "admin") {
         setAuthenticated(true);
       } else {
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Admin check error:", error);
-      router.push("/");
+      router.push("/dashboard");
     }
   }
 

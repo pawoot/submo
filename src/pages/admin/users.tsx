@@ -67,11 +67,11 @@ export default function AdminUsers() {
           description: "คุณไม่มีสิทธิ์เข้าถึงหน้านี้",
           variant: "destructive",
         });
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Error checking admin access:", error);
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 
@@ -159,7 +159,7 @@ export default function AdminUsers() {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Link href="/">
+                <Link href="/admin">
                   <Button variant="ghost" size="sm">
                     <ArrowLeft className="w-4 h-4 mr-2" />
                     กลับหน้าแรก

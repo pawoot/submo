@@ -101,11 +101,11 @@ export default function UserDetailPage() {
           description: "คุณไม่มีสิทธิ์เข้าถึงหน้านี้",
           variant: "destructive",
         });
-        router.push("/");
+        router.push("/dashboard");
       }
     } catch (error) {
       console.error("Error checking admin access:", error);
-      router.push("/");
+      router.push("/dashboard");
     }
   };
 

@@ -139,7 +139,7 @@ export default function NotificationsPage() {
               <Button
                 variant="ghost"
                 size="icon"
-                onClick={() => router.push("/")}
+                onClick={() => router.push("/dashboard")}
                 className="rounded-full"
               >
                 <ArrowLeft className="h-5 w-5" />
