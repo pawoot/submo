@@ -164,10 +164,10 @@ export default function AdminUsers() {
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
-                <Link href="/admin">
+                <Link href="/dashboard">
                   <Button variant="ghost" size="sm">
-                    <ArrowLeft className="w-4 h-4 mr-2" />
-                    กลับหน้าแรก
+                    <ArrowLeft className="h-4 w-4 mr-2" />
+                    กลับ
                   </Button>
                 </Link>
                 <div>

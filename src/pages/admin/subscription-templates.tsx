@@ -313,8 +313,11 @@ export default function AdminSubscriptionTemplates() {
         <header className="border-b bg-white dark:bg-slate-900 sticky top-0 z-50">
           <div className="container mx-auto px-4 py-4 flex justify-between items-center">
             <div className="flex items-center gap-4">
-              <Link href="/admin">
-                <Button variant="ghost" size="icon"><ArrowLeft className="w-5 h-5" /></Button>
+              <Link href="/dashboard">
+                <Button variant="ghost" size="sm" className="gap-2">
+                  <ArrowLeft className="h-4 w-4" />
+                  กลับ
+                </Button>
               </Link>
               <h1 className="text-xl font-bold">Subscription Templates</h1>
             </div>

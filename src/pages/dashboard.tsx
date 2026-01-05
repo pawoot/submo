@@ -29,7 +29,8 @@ import {
   User,
   LogOut,
   Shield,
-  Home
+  Home,
+  UserCircle
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
@@ -39,6 +40,7 @@ import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { UpcomingRenewals } from "@/components/UpcomingRenewals";
 import { TotalSpending } from "@/components/TotalSpending";
 import type { Database } from "@/integrations/supabase/types";
+import Link from "next/link";
 
 type ServiceSubscription = Awaited<ReturnType<typeof subscriptionService.getUserSubscriptions>>[number];
 
@@ -178,108 +180,117 @@ export default function Dashboard() {
     <AuthGuard>
       <SEO
         title={t("nav.dashboard")}
-        description={t("dashboard.subtitle")}
+        description="จัดการ Subscriptions ของคุณ"
       />
-      
-      {/* Mobile Header */}
-      <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
-      
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-        {/* Desktop Header - Hidden on mobile */}
-        <header className="hidden lg:block bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                    <svg viewBox="0 0 24 24" fill="none" className="w-6 h-6">
-                      <rect x="3" y="3" width="18" height="18" rx="3" fill="white"/>
-                      <path d="M8 12h8M12 8v8" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                    </svg>
-                  </div>
-                  <div>
-                    <h1 className="text-2xl font-bold text-gray-900">Submo</h1>
-                    <p className="text-sm text-gray-600">Subscription Monitoring</p>
-                  </div>
-                </div>
-              </div>
+      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
+        {/* Mobile Header */}
+        <MobileHeader
+          user={user}
+          isAdmin={isAdmin}
+          unreadCount={unreadCount}
+        />
 
-              <div className="flex items-center gap-3">
-                {/* Admin Button */}
-                {isAdmin && (
-                  <Button
-                    variant="outline"
-                    size="sm"
-                    onClick={() => router.push("/admin")}
-                    className="gap-2"
-                  >
-                    <Shield className="w-4 h-4" />
-                    Admin
-                  </Button>
-                )}
-                
-                {/* Notification Bell */}
-                <Button 
-                  variant="ghost" 
-                  size="icon"
-                  onClick={() => router.push("/notifications")}
-                  className="relative"
-                >
-                  <Bell className="w-5 h-5" />
-                  {unreadCount > 0 && (
-                    <span className="absolute -top-1 -right-1 bg-red-500 text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
-                      {unreadCount}
-                    </span>
-                  )}
-                </Button>
-                
-                {/* Profile Dropdown */}
-                <DropdownMenu>
-                  <DropdownMenuTrigger asChild>
-                    <Button variant="ghost" size="icon" className="rounded-full">
-                      <Avatar className="w-8 h-8">
-                        <AvatarImage src={user?.avatar_url} />
-                        <AvatarFallback>{getUserInitials()}</AvatarFallback>
-                      </Avatar>
-                    </Button>
-                  </DropdownMenuTrigger>
-                  <DropdownMenuContent align="end" className="w-56">
-                    <DropdownMenuLabel>
-                      <div className="flex flex-col space-y-1">
-                        <p className="text-sm font-medium leading-none">
-                          {user?.full_name || t("common.user")}
-                        </p>
-                        <p className="text-xs leading-none text-muted-foreground">
-                          {user?.email}
-                        </p>
-                      </div>
-                    </DropdownMenuLabel>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => router.push("/profile")}>
-                      <User className="mr-2 h-4 w-4" />
-                      <span>{t("nav.profile")}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuItem onClick={() => router.push("/profile")}>
-                      <Settings className="mr-2 h-4 w-4" />
-                      <span>{t("common.settings")}</span>
-                    </DropdownMenuItem>
-                    <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout}>
-                      <LogOut className="mr-2 h-4 w-4" />
-                      <span>{t("auth.logout")}</span>
-                    </DropdownMenuItem>
-                  </DropdownMenuContent>
-                </DropdownMenu>
-                
-                {/* Add Subscription Button */}
-                <Button onClick={() => router.push("/add-subscription")}>
-                  <Plus className="w-4 h-4 mr-2" />
-                  {t("subscription.add")}
-                </Button>
-              </div>
+        {/* Desktop Header */}
+        <div className="hidden lg:flex items-center justify-between mb-8 bg-white/80 backdrop-blur-sm rounded-2xl p-6 shadow-sm border border-gray-100">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 bg-gradient-to-br from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+              <Home className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Submo
+              </h1>
+              <p className="text-sm text-gray-500">
+                Subscription Monitoring
+              </p>
             </div>
           </div>
-        </header>
+
+          <div className="flex items-center gap-4">
+            {/* Admin Button */}
+            {isAdmin && (
+              <Link href="/admin">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  className="gap-2 border-purple-200 hover:bg-purple-50 hover:border-purple-300"
+                >
+                  <Shield className="h-4 w-4 text-purple-600" />
+                  <span className="text-purple-600 font-medium">Admin</span>
+                </Button>
+              </Link>
+            )}
+
+            {/* Notifications */}
+            <Link href="/notifications">
+              <Button variant="ghost" size="icon" className="relative">
+                <Bell className="h-5 w-5" />
+                {unreadCount > 0 && (
+                  <span className="absolute -top-1 -right-1 h-5 w-5 bg-red-500 rounded-full flex items-center justify-center text-xs text-white font-bold">
+                    {unreadCount}
+                  </span>
+                )}
+              </Button>
+            </Link>
+
+            {/* Profile Dropdown */}
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button variant="ghost" size="icon" className="rounded-full">
+                  <Avatar className="h-8 w-8">
+                    <AvatarImage
+                      src={user?.avatar_url || undefined}
+                      alt={user?.full_name || user?.email}
+                    />
+                    <AvatarFallback>
+                      {user?.full_name?.charAt(0) ||
+                        user?.email?.charAt(0) ||
+                        "U"}
+                    </AvatarFallback>
+                  </Avatar>
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>
+                  <div className="flex flex-col space-y-1">
+                    <p className="text-sm font-medium leading-none">
+                      {user?.full_name || t("common.user")}
+                    </p>
+                    <p className="text-xs leading-none text-muted-foreground">
+                      {user?.email}
+                    </p>
+                  </div>
+                </DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem asChild>
+                  <Link
+                    href="/profile"
+                    className="flex items-center cursor-pointer"
+                  >
+                    <UserCircle className="mr-2 h-4 w-4" />
+                    <span>{t("nav.profile")}</span>
+                  </Link>
+                </DropdownMenuItem>
+                <DropdownMenuSeparator />
+                <DropdownMenuItem
+                  onClick={handleLogout}
+                  className="text-red-600 focus:text-red-600 cursor-pointer"
+                >
+                  <LogOut className="mr-2 h-4 w-4" />
+                  <span>{t("auth.logout")}</span>
+                </DropdownMenuItem>
+              </DropdownMenuContent>
+            </DropdownMenu>
+
+            {/* Add Subscription Button */}
+            <Link href="/add-subscription">
+              <Button className="gap-2 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg">
+                <Plus className="h-4 w-4" />
+                {t("subscription.add")}
+              </Button>
+            </Link>
+          </div>
+        </div>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">

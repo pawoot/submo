@@ -10,8 +10,9 @@ import { useToast } from "@/hooks/use-toast";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { adminUserService } from "@/services/adminUserService";
 import { profileService } from "@/services/profileService";
-import { getCountryDisplay, getCountryFlag, formatFullName, getUserDisplayName } from "@/lib/countryUtils";
+import { getCountryDisplay, formatFullName, getUserDisplayName } from "@/lib/countryUtils";
 import type { Database } from "@/integrations/supabase/types";
+import { useLanguage } from "@/contexts/LanguageContext";
 import {
   ArrowLeft,
   Mail,
@@ -79,6 +80,7 @@ export default function UserDetailPage() {
   const { convertAmount } = useCurrency();
   const router = useRouter();
   const { id } = router.query;
+  const { t } = useLanguage();
 
   useEffect(() => {
     checkAdminAccess();
@@ -275,8 +277,8 @@ export default function UserDetailPage() {
             <div className="flex items-center gap-4">
               <Link href="/admin/users">
                 <Button variant="ghost" size="sm">
-                  <ArrowLeft className="w-4 h-4 mr-2" />
-                  กลับ
+                  <ArrowLeft className="h-4 w-4 mr-2" />
+                  {t("common.back")}
                 </Button>
               </Link>
               <div>
@@ -299,8 +301,7 @@ export default function UserDetailPage() {
               <div className="flex items-start justify-between">
                 <div className="flex items-center gap-4">
                   <div className="w-16 h-16 rounded-full bg-gradient-to-br from-purple-500 to-pink-500 flex items-center justify-center text-white text-2xl font-bold">
-                    {getCountryFlag(userDetail.profile.country) || 
-                     userDetail.profile.full_name?.charAt(0).toUpperCase() || 
+                    {userDetail.profile.full_name?.charAt(0).toUpperCase() || 
                      userDetail.profile.first_name?.charAt(0).toUpperCase() || "U"}
                   </div>
                   <div>
@@ -312,12 +313,6 @@ export default function UserDetailPage() {
                         userDetail.profile.email
                       )}
                     </h2>
-                    {userDetail.profile.country && (
-                      <div className="flex items-center gap-2 mt-1 text-sm text-slate-600 dark:text-slate-400">
-                        <Globe className="w-4 h-4" />
-                        <span>{getCountryDisplay(userDetail.profile.country)}</span>
-                      </div>
-                    )}
                   </div>
                 </div>
                 <div>
