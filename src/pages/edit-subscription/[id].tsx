@@ -15,10 +15,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { Switch } from "@/components/ui/switch";
 import { Badge } from "@/components/ui/badge";
 import { Calendar } from "@/components/ui/calendar";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
-import { ArrowLeft, Save, Trash2, Users, CalendarIcon } from "lucide-react";
+import { ArrowLeft, Save, Trash2, CalendarIcon, AlertCircle } from "lucide-react";
 import Link from "next/link";
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -26,6 +27,9 @@ import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
 import { AuthGuard } from "@/components/AuthGuard";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
+import { SubscriptionSummary } from "@/components/SubscriptionSummary";
+import { SubscriptionIntelligence } from "@/components/SubscriptionIntelligence";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
 import { format } from "date-fns";
@@ -36,7 +40,6 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
-import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -53,14 +56,13 @@ export default function EditSubscription() {
   const [showAmountChangeDialog, setShowAmountChangeDialog] = useState(false);
   const [pendingFormData, setPendingFormData] = useState<SubscriptionFormData | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
-  const [newUserEmail, setNewUserEmail] = useState("");
-  const [emailError, setEmailError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dbCategories, setDbCategories] = useState<Category[]>([]);
   const [dbPaymentMethods, setDbPaymentMethods] = useState<PaymentMethod[]>([]);
+  const [existingSubscriptions, setExistingSubscriptions] = useState<any[]>([]);
 
-  // Validation Schema - Aligned with DB columns
+  // Validation Schema - เพิ่ม fields ใหม่
   const subscriptionSchema = z.object({
     name: z.string()
       .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
@@ -141,11 +143,11 @@ export default function EditSubscription() {
       .max(30, "แจ้งเตือนล่วงหน้าได้สูงสุด 30 วัน")
       .optional(),
     auto_renew: z.boolean().optional(),
+    usage_frequency: z.enum(["often", "sometimes", "rarely"]).optional(),
   }).refine((data) => data.next_billing_date > data.start_date, {
     message: "วันต่ออายุต้องหลังจากวันเริ่มต้น",
     path: ["next_billing_date"],
   }).refine((data) => {
-    // ตรวจสอบว่าถ้าเปิดการแจ้งเตือน ต้องมีจำนวนวัน
     if (data.reminder_enabled && !data.reminder_days) {
       return false;
     }
@@ -169,9 +171,7 @@ export default function EditSubscription() {
     resolver: zodResolver(subscriptionSchema),
   });
 
-  const subscriptionName = watch("name");
-  const startDate = watch("start_date");
-  const nextBillingDate = watch("next_billing_date");
+  const watchedValues = watch();
 
   const currencies = [
     { code: "USD", symbol: "$", name: "US Dollar" },
@@ -186,8 +186,8 @@ export default function EditSubscription() {
   useEffect(() => {
     const loadSubscription = async () => {
       try {
-        // Load categories and payment methods first
-        const [categoriesData, paymentMethodsData, subscriptionData] = await Promise.all([
+        // Load all data in parallel
+        const [categoriesData, paymentMethodsData, subscriptionData, allSubscriptionsData] = await Promise.all([
           supabase.from("categories").select("*").order("name_en"),
           supabase.from("payment_methods").select("*").order("name_en"),
           supabase
@@ -198,16 +198,18 @@ export default function EditSubscription() {
               payment_methods (*)
             `)
             .eq("id", id)
-            .single()
+            .single(),
+          subscriptionService.getUserSubscriptions()
         ]);
 
         if (categoriesData.data) setDbCategories(categoriesData.data);
         if (paymentMethodsData.data) setDbPaymentMethods(paymentMethodsData.data);
+        if (allSubscriptionsData) setExistingSubscriptions(allSubscriptionsData);
 
         if (subscriptionData.error) throw subscriptionData.error;
         setSubscription(subscriptionData.data);
 
-        // Pre-fill form immediately after data is loaded
+        // Pre-fill form with all fields
         if (subscriptionData.data) {
           reset({
             name: subscriptionData.data.name,
@@ -225,6 +227,7 @@ export default function EditSubscription() {
             reminder_enabled: subscriptionData.data.reminder_enabled || false,
             reminder_days: subscriptionData.data.reminder_days || 7,
             auto_renew: subscriptionData.data.auto_renew ?? true,
+            usage_frequency: subscriptionData.data.usage_frequency as "often" | "sometimes" | "rarely" | undefined,
           });
         }
       } catch (error) {
@@ -247,7 +250,6 @@ export default function EditSubscription() {
   const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
     setValue("name", template.name, { shouldValidate: true });
     
-    // Auto-fill form with template data using setValue
     if (template.categories?.slug) {
       const matchingCat = dbCategories.find(c => c.slug === template.categories?.slug);
       if (matchingCat) {
@@ -275,7 +277,6 @@ export default function EditSubscription() {
   };
 
   const handleSubmit = async (data: SubscriptionFormData) => {
-    // Pre-submission validation
     if (!id) {
       toast({
         title: "❌ เกิดข้อผิดพลาด",
@@ -285,7 +286,7 @@ export default function EditSubscription() {
       return;
     }
 
-    // ตรวจสอบว่ามีการเปลี่ยนแปลงข้อมูลหรือไม่
+    // Check for changes
     if (subscription) {
       const hasChanges = 
         data.name !== subscription.name ||
@@ -298,6 +299,9 @@ export default function EditSubscription() {
         data.reminder_enabled !== subscription.reminder_enabled ||
         data.reminder_days !== subscription.reminder_days ||
         data.auto_renew !== subscription.auto_renew ||
+        (data.website_url || "") !== (subscription.website_url || "") ||
+        (data.description || "") !== (subscription.description || "") ||
+        (data.usage_frequency || "") !== (subscription.usage_frequency || "") ||
         (data.notes || "") !== (subscription.notes || "");
 
       if (!hasChanges) {
@@ -309,7 +313,7 @@ export default function EditSubscription() {
         return;
       }
 
-      // ตรวจสอบการลดราคา - ให้ confirm
+      // Check for significant amount decrease
       const oldAmount = subscription.amount;
       const newAmount = parseFloat(data.amount);
       if (newAmount < oldAmount * 0.5) {
@@ -325,20 +329,8 @@ export default function EditSubscription() {
   const submitForm = async (data: SubscriptionFormData) => {
     setIsSubmitting(true);
     try {
-      // Validate required fields one more time
       if (!data.category_id || !data.payment_method_id) {
         throw new Error("กรุณากรอกข้อมูลให้ครบถ้วน");
-      }
-
-      const selectedCategory = dbCategories.find(c => c.id === data.category_id);
-      const selectedPaymentMethod = dbPaymentMethods.find(p => p.id === data.payment_method_id);
-
-      if (!selectedCategory) {
-        throw new Error("ไม่พบหมวดหมู่ที่เลือก");
-      }
-
-      if (!selectedPaymentMethod) {
-        throw new Error("ไม่พบช่องทางชำระเงินที่เลือก");
       }
 
       const updates = {
@@ -352,9 +344,11 @@ export default function EditSubscription() {
         reminder_enabled: data.reminder_enabled || false,
         reminder_days: data.reminder_days || 7,
         auto_renew: data.auto_renew ?? true,
+        description: data.description?.trim() || null,
+        website_url: data.website_url?.trim() || null,
+        usage_frequency: data.usage_frequency || null,
         notes: data.notes?.trim() || null,
         card_last_4: data.card_last_4 || null,
-        website_url: data.website_url || null,
       };
 
       await subscriptionService.updateSubscription(id as string, updates);
@@ -365,7 +359,6 @@ export default function EditSubscription() {
         variant: "default",
       });
 
-      // Redirect after short delay
       setTimeout(() => {
         router.push("/");
       }, 1500);
@@ -395,7 +388,6 @@ export default function EditSubscription() {
         variant: "default",
       });
 
-      // Redirect after short delay
       setTimeout(() => {
         router.push("/");
       }, 1500);
@@ -452,388 +444,527 @@ export default function EditSubscription() {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
-          {/* Current Subscription Summary */}
-          {subscription && (
-            <Card className="mb-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
-              <CardContent className="p-6">
-                <div className="flex items-start gap-4">
-                  <SubscriptionIcon
-                    name={subscription.name}
-                    websiteUrl={subscription.website_url}
-                    size="lg"
-                  />
-                  <div className="flex-1">
-                    <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
-                      {subscription.name}
-                    </h2>
-                    <div className="flex flex-wrap gap-2 mt-2">
-                      <Badge variant="secondary">
-                        {language === 'th' 
-                          ? dbCategories.find(c => c.id === subscription.category_id)?.name_th 
-                          : dbCategories.find(c => c.id === subscription.category_id)?.name_en}
-                      </Badge>
-                      <Badge variant="outline">
-                        {subscription.amount} {subscription.currency} / {subscription.billing_cycle === 'monthly' ? t("addSub.billingMonthly") : subscription.billing_cycle === 'yearly' ? t("addSub.billingYearly") : subscription.billing_cycle}
-                      </Badge>
+        <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="grid gap-8 lg:grid-cols-3">
+            {/* Main Form Area - 2 columns */}
+            <div className="lg:col-span-2">
+              {/* Current Subscription Summary */}
+              <Card className="mb-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
+                <CardContent className="p-6">
+                  <div className="flex items-start gap-4">
+                    <SubscriptionIcon
+                      name={subscription.name}
+                      websiteUrl={subscription.website_url}
+                      size="lg"
+                    />
+                    <div className="flex-1">
+                      <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                        {subscription.name}
+                      </h2>
+                      <div className="flex flex-wrap gap-2 mt-2">
+                        <Badge variant="secondary">
+                          {language === 'th' 
+                            ? dbCategories.find(c => c.id === subscription.category_id)?.name_th 
+                            : dbCategories.find(c => c.id === subscription.category_id)?.name_en}
+                        </Badge>
+                        <Badge variant="outline">
+                          {subscription.amount} {subscription.currency} / {subscription.billing_cycle === 'monthly' ? t("addSub.billingMonthly") : subscription.billing_cycle === 'yearly' ? t("addSub.billingYearly") : subscription.billing_cycle}
+                        </Badge>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          )}
+                </CardContent>
+              </Card>
 
-          <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
-            <div className="space-y-6">
-              {/* Basic Information */}
-              <Card className="border-slate-200 dark:border-slate-800">
-                <CardHeader>
-                  <CardTitle>{t("addSub.basicInfo")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    {/* Name - Now with Dropdown */}
-                    <div className="space-y-2">
-                      <Label htmlFor="name">
-                        {t("addSub.name")} <span className="text-red-500">*</span>
-                      </Label>
-                      <Controller
-                        name="name"
-                        control={control}
-                        render={({ field }) => (
-                          <SubscriptionNameAutocomplete
-                            value={field.value}
-                            onChange={field.onChange}
-                            onSelectTemplate={(template) => {
-                              field.onChange(template.name);
-                              if (template.category_id) {
-                                setValue("category_id", template.category_id);
-                              }
-                              if (template.amount) {
-                                setValue("amount", template.amount.toString());
-                              }
-                              if (template.currency) {
-                                setValue("currency", template.currency);
-                              }
-                              if (template.billing_cycle) {
-                                setValue("billing_cycle", template.billing_cycle);
-                              }
-                            }}
-                            error={errors.name?.message}
+              <form onSubmit={handleFormSubmit(handleSubmit)} id="subscription-form">
+                <div className="space-y-6">
+                  {/* Basic Information */}
+                  <Card className="border-slate-200 dark:border-slate-800">
+                    <CardHeader>
+                      <CardTitle>{t("addSub.basicInfo")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        {/* Name with Autocomplete */}
+                        <div className="space-y-2">
+                          <Label htmlFor="name">
+                            {t("addSub.name")} <span className="text-red-500">*</span>
+                          </Label>
+                          <Controller
+                            name="name"
+                            control={control}
+                            render={({ field }) => (
+                              <SubscriptionNameAutocomplete
+                                value={field.value}
+                                onChange={field.onChange}
+                                onSelectTemplate={handleAutocompleteTemplateSelect}
+                                error={errors.name?.message}
+                              />
+                            )}
                           />
+                        </div>
+
+                        {/* Category */}
+                        <div className="space-y-2">
+                          <Label htmlFor="category_id">
+                            {t("addSub.category")} <span className="text-red-500">*</span>
+                          </Label>
+                          <Controller
+                            name="category_id"
+                            control={control}
+                            render={({ field }) => (
+                              <Select value={field.value} onValueChange={field.onChange}>
+                                <SelectTrigger>
+                                  <SelectValue placeholder={t("addSub.selectCategory")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {dbCategories.map((cat) => (
+                                    <SelectItem key={cat.id} value={cat.id}>
+                                      {language === 'th' ? cat.name_th : cat.name_en}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {errors.category_id && (
+                            <p className="text-sm text-red-500">{errors.category_id.message}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Description */}
+                      <div className="space-y-2">
+                        <Label htmlFor="description">{t("addSub.description")}</Label>
+                        <Textarea
+                          id="description"
+                          {...register("description")}
+                          placeholder={t("addSub.descriptionPlaceholder")}
+                          className={cn("min-h-[100px]", errors.description && "border-red-500")}
+                        />
+                        {errors.description && (
+                          <p className="text-sm text-red-500 flex items-center gap-1">
+                            <span>⚠️</span>
+                            {errors.description.message}
+                          </p>
                         )}
-                      />
-                    </div>
+                      </div>
 
-                    {/* Category */}
-                    <div className="space-y-2">
-                      <Label htmlFor="category_id">
-                        {t("addSub.category")} <span className="text-red-500">*</span>
-                      </Label>
-                      <Controller
-                        name="category_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Select value={field.value} onValueChange={field.onChange}>
-                            <SelectTrigger>
-                              <SelectValue placeholder={t("addSub.selectCategory")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {dbCategories.map((cat) => (
-                                <SelectItem key={cat.id} value={cat.id}>
-                                  {language === 'th' ? cat.name_th : cat.name_en}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
+                      {/* Website URL */}
+                      <div className="space-y-2">
+                        <Label htmlFor="website_url">
+                          {t("addSub.websiteUrl")} ({t("common.optional")})
+                        </Label>
+                        <Input
+                          id="website_url"
+                          {...register("website_url")}
+                          type="url"
+                          placeholder="https://example.com"
+                          className={cn(errors.website_url && "border-red-500")}
+                        />
+                        <p className="text-xs text-slate-500">
+                          💡 {language === 'th' ? 'ใช้สำหรับแสดงไอคอนเว็บไซต์' : 'Used to display website icon'}
+                        </p>
+                        {errors.website_url && (
+                          <p className="text-sm text-red-500">{errors.website_url.message}</p>
                         )}
-                      />
-                      {errors.category_id && (
-                        <p className="text-sm text-red-500">{errors.category_id.message}</p>
-                      )}
-                    </div>
-                  </div>
+                      </div>
+                    </CardContent>
+                  </Card>
 
-                  {/* Description */}
-                  <div className="space-y-2">
-                    <Label htmlFor="description">{t("addSub.description")}</Label>
-                    <Textarea
-                      id="description"
-                      {...register("description")}
-                      placeholder={t("addSub.descriptionPlaceholder")}
-                      className={cn("min-h-[100px]", errors.description && "border-red-500")}
-                    />
-                    {errors.description && (
-                      <p className="text-sm text-red-500 flex items-center gap-1">
-                        <span>⚠️</span>
-                        {errors.description.message}
-                      </p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
+                  {/* Pricing Information */}
+                  <Card className="border-slate-200 dark:border-slate-800">
+                    <CardHeader>
+                      <CardTitle>{t("addSub.pricingInfo")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="amount">{t("addSub.cost")} *</Label>
+                          <Input 
+                            id="amount"
+                            {...register("amount")}
+                            type="number" 
+                            step="0.01" 
+                            placeholder={t("addSub.costPlaceholder")}
+                            className={cn(errors.amount && "border-red-500")}
+                          />
+                          {errors.amount && (
+                            <p className="text-sm text-red-500">{errors.amount.message}</p>
+                          )}
+                        </div>
 
-              {/* Pricing Information */}
-              <Card className="border-slate-200 dark:border-slate-800">
-                <CardHeader>
-                  <CardTitle>{t("addSub.pricingInfo")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="amount">{t("addSub.cost")} *</Label>
-                      <Input 
-                        id="amount"
-                        {...register("amount")}
-                        type="number" 
-                        step="0.01" 
-                        placeholder={t("addSub.costPlaceholder")}
-                        className={cn(errors.amount && "border-red-500")}
-                      />
-                      {errors.amount && (
-                        <p className="text-sm text-red-500">{errors.amount.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="currency">{t("addSub.currency")} *</Label>
-                      <Controller
-                        name="currency"
-                        control={control}
-                        render={({ field }) => (
-                          <Select 
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
-                              <SelectValue placeholder={t("addSub.selectCurrency")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {currencies.map((curr) => (
-                                <SelectItem key={curr.code} value={curr.code}>
-                                  {curr.symbol} {curr.code} - {curr.name}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.currency && (
-                        <p className="text-sm text-red-500">{errors.currency.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="billing_cycle">{t("addSub.billing")} *</Label>
-                      <Controller
-                        name="billing_cycle"
-                        control={control}
-                        render={({ field }) => (
-                          <Select 
-                            onValueChange={field.onChange}
-                            value={field.value}
-                          >
-                            <SelectTrigger id="billing_cycle" className={cn(errors.billing_cycle && "border-red-500")}>
-                              <SelectValue placeholder={t("addSub.selectBilling")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
-                              <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
-                              <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
-                              <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.billing_cycle && (
-                        <p className="text-sm text-red-500">{errors.billing_cycle.message}</p>
-                      )}
-                    </div>
-                  </div>
-
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="payment_method_id">{t("subscription.payment_method")} *</Label>
-                      <Controller
-                        name="payment_method_id"
-                        control={control}
-                        render={({ field }) => (
-                          <Select onValueChange={field.onChange} value={field.value}>
-                            <SelectTrigger id="payment_method_id">
-                              <SelectValue placeholder={t("payment.select_method")} />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {dbPaymentMethods.map((method) => (
-                                <SelectItem key={method.id} value={method.id}>
-                                  <span className="flex items-center gap-2">
-                                    <span>{method.icon}</span>
-                                    <span>{language === 'th' ? method.name_th : method.name_en}</span>
-                                  </span>
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        )}
-                      />
-                      {errors.payment_method_id && (
-                        <p className="text-sm text-red-500">{errors.payment_method_id.message}</p>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="card_last_4">{t("addSub.cardNumber")} ({t("common.optional")})</Label>
-                      <Input 
-                        id="card_last_4"
-                        {...register("card_last_4")}
-                        placeholder={t("addSub.cardPlaceholder")}
-                        maxLength={4}
-                        className={cn(errors.card_last_4 && "border-red-500")}
-                      />
-                      {errors.card_last_4 && (
-                        <p className="text-sm text-red-500">{errors.card_last_4.message}</p>
-                      )}
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Payment Information */}
-              <Card className="border-slate-200 dark:border-slate-800">
-                <CardHeader>
-                  <CardTitle>{t("addSub.paymentInfo")}</CardTitle>
-                </CardHeader>
-                <CardContent className="space-y-4">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>{t("addSub.startDate")} *</Label>
-                      <Controller
-                        name="start_date"
-                        control={control}
-                        render={({ field }) => (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                  errors.start_date && "border-red-500"
-                                )}
+                        <div className="space-y-2">
+                          <Label htmlFor="currency">{t("addSub.currency")} *</Label>
+                          <Controller
+                            name="currency"
+                            control={control}
+                            render={({ field }) => (
+                              <Select 
+                                onValueChange={field.onChange}
+                                value={field.value}
                               >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? (
-                                  format(field.value, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
-                                ) : (
-                                  <span>{t("common.select")}</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
-                              />
-                            </PopoverContent>
-                          </Popover>
-                        )}
-                      />
-                      {errors.start_date && (
-                        <p className="text-sm text-red-500">{errors.start_date.message}</p>
-                      )}
-                    </div>
+                                <SelectTrigger id="currency" className={cn(errors.currency && "border-red-500")}>
+                                  <SelectValue placeholder={t("addSub.selectCurrency")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {currencies.map((curr) => (
+                                    <SelectItem key={curr.code} value={curr.code}>
+                                      {curr.symbol} {curr.code} - {curr.name}
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {errors.currency && (
+                            <p className="text-sm text-red-500">{errors.currency.message}</p>
+                          )}
+                        </div>
 
-                    <div className="space-y-2">
-                      <Label>{t("addSub.nextBillingDate")} *</Label>
-                      <Controller
-                        name="next_billing_date"
-                        control={control}
-                        render={({ field }) => (
-                          <Popover>
-                            <PopoverTrigger asChild>
-                              <Button
-                                variant="outline"
-                                className={cn(
-                                  "w-full justify-start text-left font-normal",
-                                  !field.value && "text-muted-foreground",
-                                  errors.next_billing_date && "border-red-500"
-                                )}
+                        <div className="space-y-2">
+                          <Label htmlFor="billing_cycle">{t("addSub.billing")} *</Label>
+                          <Controller
+                            name="billing_cycle"
+                            control={control}
+                            render={({ field }) => (
+                              <Select 
+                                onValueChange={field.onChange}
+                                value={field.value}
                               >
-                                <CalendarIcon className="mr-2 h-4 w-4" />
-                                {field.value ? (
-                                  format(field.value, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
-                                ) : (
-                                  <span>{t("common.select")}</span>
-                                )}
-                              </Button>
-                            </PopoverTrigger>
-                            <PopoverContent className="w-auto p-0" align="start">
-                              <Calendar
-                                mode="single"
-                                selected={field.value}
-                                onSelect={field.onChange}
-                                initialFocus
+                                <SelectTrigger id="billing_cycle" className={cn(errors.billing_cycle && "border-red-500")}>
+                                  <SelectValue placeholder={t("addSub.selectBilling")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  <SelectItem value="monthly">{t("addSub.billingMonthly")}</SelectItem>
+                                  <SelectItem value="yearly">{t("addSub.billingYearly")}</SelectItem>
+                                  <SelectItem value="quarterly">{t("subscriptions.quarterly")}</SelectItem>
+                                  <SelectItem value="half-yearly">{t("subscriptions.halfYearly")}</SelectItem>
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {errors.billing_cycle && (
+                            <p className="text-sm text-red-500">{errors.billing_cycle.message}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label htmlFor="payment_method_id">{t("subscription.payment_method")} *</Label>
+                          <Controller
+                            name="payment_method_id"
+                            control={control}
+                            render={({ field }) => (
+                              <Select onValueChange={field.onChange} value={field.value}>
+                                <SelectTrigger id="payment_method_id">
+                                  <SelectValue placeholder={t("payment.select_method")} />
+                                </SelectTrigger>
+                                <SelectContent>
+                                  {dbPaymentMethods.map((method) => (
+                                    <SelectItem key={method.id} value={method.id}>
+                                      <span className="flex items-center gap-2">
+                                        <span>{method.icon}</span>
+                                        <span>{language === 'th' ? method.name_th : method.name_en}</span>
+                                      </span>
+                                    </SelectItem>
+                                  ))}
+                                </SelectContent>
+                              </Select>
+                            )}
+                          />
+                          {errors.payment_method_id && (
+                            <p className="text-sm text-red-500">{errors.payment_method_id.message}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label htmlFor="card_last_4">{t("addSub.cardNumber")} ({t("common.optional")})</Label>
+                          <Input 
+                            id="card_last_4"
+                            {...register("card_last_4")}
+                            placeholder={t("addSub.cardPlaceholder")}
+                            maxLength={4}
+                            className={cn(errors.card_last_4 && "border-red-500")}
+                          />
+                          {errors.card_last_4 && (
+                            <p className="text-sm text-red-500">{errors.card_last_4.message}</p>
+                          )}
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Payment & Dates */}
+                  <Card className="border-slate-200 dark:border-slate-800">
+                    <CardHeader>
+                      <CardTitle>{t("addSub.paymentInfo")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div className="space-y-2">
+                          <Label>{t("addSub.startDate")} *</Label>
+                          <Controller
+                            name="start_date"
+                            control={control}
+                            render={({ field }) => (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !field.value && "text-muted-foreground",
+                                      errors.start_date && "border-red-500"
+                                    )}
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? (
+                                      format(field.value, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
+                                    ) : (
+                                      <span>{t("common.select")}</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            )}
+                          />
+                          {errors.start_date && (
+                            <p className="text-sm text-red-500">{errors.start_date.message}</p>
+                          )}
+                        </div>
+
+                        <div className="space-y-2">
+                          <Label>{t("addSub.nextBillingDate")} *</Label>
+                          <Controller
+                            name="next_billing_date"
+                            control={control}
+                            render={({ field }) => (
+                              <Popover>
+                                <PopoverTrigger asChild>
+                                  <Button
+                                    variant="outline"
+                                    className={cn(
+                                      "w-full justify-start text-left font-normal",
+                                      !field.value && "text-muted-foreground",
+                                      errors.next_billing_date && "border-red-500"
+                                    )}
+                                  >
+                                    <CalendarIcon className="mr-2 h-4 w-4" />
+                                    {field.value ? (
+                                      format(field.value, "d MMMM yyyy", { locale: language === 'th' ? th : enUS })
+                                    ) : (
+                                      <span>{t("common.select")}</span>
+                                    )}
+                                  </Button>
+                                </PopoverTrigger>
+                                <PopoverContent className="w-auto p-0" align="start">
+                                  <Calendar
+                                    mode="single"
+                                    selected={field.value}
+                                    onSelect={field.onChange}
+                                    initialFocus
+                                  />
+                                </PopoverContent>
+                              </Popover>
+                            )}
+                          />
+                          {errors.next_billing_date && (
+                            <p className="text-sm text-red-500">{errors.next_billing_date.message}</p>
+                          )}
+                        </div>
+                      </div>
+
+                      {/* Reminder Settings */}
+                      <div className="space-y-4 p-4 bg-slate-50 dark:bg-slate-900 rounded-lg">
+                        <Label className="text-base">{t("addSub.reminderSettings")}</Label>
+                        
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="reminder_enabled" className="cursor-pointer">
+                              {t("addSub.enableReminder")}
+                            </Label>
+                            <p className="text-xs text-slate-500">
+                              {language === 'th' ? 'เปิดการแจ้งเตือนก่อนวันต่ออายุ' : 'Enable notifications before renewal'}
+                            </p>
+                          </div>
+                          <Controller
+                            name="reminder_enabled"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                id="reminder_enabled"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
                               />
-                            </PopoverContent>
-                          </Popover>
+                            )}
+                          />
+                        </div>
+
+                        {watchedValues.reminder_enabled && (
+                          <div className="space-y-2">
+                            <Label htmlFor="reminder_days">
+                              {t("addSub.reminderDays")} *
+                            </Label>
+                            <Input
+                              id="reminder_days"
+                              type="number"
+                              min="1"
+                              max="30"
+                              {...register("reminder_days", { valueAsNumber: true })}
+                              className={cn(errors.reminder_days && "border-red-500")}
+                            />
+                            <p className="text-xs text-slate-500">
+                              {language === 'th' ? 'แจ้งเตือนล่วงหน้ากี่วัน (1-30 วัน)' : 'Days in advance (1-30 days)'}
+                            </p>
+                            {errors.reminder_days && (
+                              <p className="text-sm text-red-500">{errors.reminder_days.message}</p>
+                            )}
+                          </div>
                         )}
-                      />
-                      {errors.next_billing_date && (
-                        <p className="text-sm text-red-500">{errors.next_billing_date.message}</p>
-                      )}
+
+                        <div className="flex items-center justify-between">
+                          <div>
+                            <Label htmlFor="auto_renew" className="cursor-pointer">
+                              {t("addSub.autoRenew")}
+                            </Label>
+                            <p className="text-xs text-slate-500">
+                              {language === 'th' ? 'ต่ออายุอัตโนมัติหรือไม่' : 'Auto-renew subscription'}
+                            </p>
+                          </div>
+                          <Controller
+                            name="auto_renew"
+                            control={control}
+                            render={({ field }) => (
+                              <Switch
+                                id="auto_renew"
+                                checked={field.value}
+                                onCheckedChange={field.onChange}
+                              />
+                            )}
+                          />
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Optional Context */}
+                  <Card className="border-slate-200 dark:border-slate-800">
+                    <CardHeader>
+                      <CardTitle>{t("addSub.additionalInfo")}</CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      {/* Usage Frequency */}
+                      <div className="space-y-2">
+                        <Label htmlFor="usage_frequency">
+                          {t("addSub.usageFrequency")} ({t("common.optional")})
+                        </Label>
+                        <Controller
+                          name="usage_frequency"
+                          control={control}
+                          render={({ field }) => (
+                            <Select onValueChange={field.onChange} value={field.value}>
+                              <SelectTrigger>
+                                <SelectValue placeholder={t("common.select")} />
+                              </SelectTrigger>
+                              <SelectContent>
+                                <SelectItem value="often">{t("addSub.often")}</SelectItem>
+                                <SelectItem value="sometimes">{t("addSub.sometimes")}</SelectItem>
+                                <SelectItem value="rarely">{t("addSub.rarely")}</SelectItem>
+                              </SelectContent>
+                            </Select>
+                          )}
+                        />
+                      </div>
+
+                      {/* Notes */}
+                      <div className="space-y-2">
+                        <Label htmlFor="notes">{t("addSub.notes")} ({t("common.optional")})</Label>
+                        <Textarea 
+                          id="notes"
+                          {...register("notes")}
+                          placeholder={t("addSub.notesPlaceholder")}
+                          rows={3}
+                          className={cn(errors.notes && "border-red-500")}
+                        />
+                        {errors.notes && (
+                          <p className="text-sm text-red-500">{errors.notes.message}</p>
+                        )}
+                      </div>
+                    </CardContent>
+                  </Card>
+
+                  {/* Action Buttons */}
+                  <div className="flex items-center justify-between pt-6">
+                    <Button
+                      type="button"
+                      variant="destructive"
+                      onClick={() => setShowDeleteDialog(true)}
+                      className="gap-2"
+                    >
+                      <Trash2 className="w-4 h-4" />
+                      {t("subscriptions.delete")}
+                    </Button>
+
+                    <div className="flex gap-4">
+                      <Button
+                        type="button"
+                        variant="outline"
+                        onClick={() => router.push("/")}
+                        className="min-w-[120px]"
+                      >
+                        {t("common.cancel")}
+                      </Button>
+                      <Button
+                        type="submit"
+                        disabled={isSubmitting}
+                        className="min-w-[120px] bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
+                      >
+                        {isSubmitting ? t("common.saving") : t("common.save")}
+                      </Button>
                     </div>
                   </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="notes">{t("addSub.notes")}</Label>
-                    <Textarea 
-                      id="notes"
-                      {...register("notes")}
-                      placeholder={t("addSub.notesPlaceholder")}
-                      rows={3}
-                      className={cn(errors.notes && "border-red-500")}
-                    />
-                    {errors.notes && (
-                      <p className="text-sm text-red-500">{errors.notes.message}</p>
-                    )}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Action Buttons */}
-              <div className="flex items-center justify-between pt-6">
-                <Button
-                  type="button"
-                  variant="destructive"
-                  onClick={() => setShowDeleteDialog(true)}
-                  className="gap-2"
-                >
-                  <Trash2 className="w-4 h-4" />
-                  {t("subscriptions.delete")}
-                </Button>
-
-                <div className="flex gap-4">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    onClick={() => router.push("/")}
-                    className="min-w-[120px]"
-                  >
-                    {t("common.cancel")}
-                  </Button>
-                  <Button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="min-w-[120px] bg-gradient-to-r from-indigo-500 to-purple-600 hover:from-indigo-600 hover:to-purple-700 text-white"
-                  >
-                    {isSubmitting ? t("common.saving") : t("common.save")}
-                  </Button>
                 </div>
+              </form>
+            </div>
+
+            {/* Sidebar - 1 column */}
+            <div className="lg:col-span-1">
+              <div className="sticky top-24 space-y-6">
+                {/* Live Summary */}
+                <SubscriptionSummary
+                  name={watchedValues.name}
+                  amount={parseFloat(watchedValues.amount) || 0}
+                  currency={watchedValues.currency}
+                  billingCycle={watchedValues.billing_cycle}
+                  nextBillingDate={watchedValues.next_billing_date}
+                  remind3Days={watchedValues.reminder_days === 3}
+                  remind7Days={watchedValues.reminder_days === 7}
+                />
+
+                {/* Intelligence Recommendations */}
+                <SubscriptionIntelligence
+                  amount={watchedValues.amount}
+                  currency={watchedValues.currency}
+                  billingCycle={watchedValues.billing_cycle}
+                  categoryId={watchedValues.category_id}
+                  usageFrequency={watchedValues.usage_frequency}
+                  existingSubscriptions={existingSubscriptions}
+                />
               </div>
             </div>
-          </form>
+          </div>
 
+          {/* Delete Confirmation Dialog */}
           <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>
             <AlertDialogContent>
               <AlertDialogHeader>
