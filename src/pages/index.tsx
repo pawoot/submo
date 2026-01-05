@@ -14,9 +14,20 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
+import { useState, useEffect } from "react";
 
 export default function LandingPage() {
   const router = useRouter();
+  const [scrollY, setScrollY] = useState(0);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      setScrollY(window.scrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll, { passive: true });
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, []);
 
   const features = [
     {
@@ -141,13 +152,31 @@ export default function LandingPage() {
 
         {/* Hero Section */}
         <section className="relative overflow-hidden pt-20 pb-32 px-4 sm:px-6 lg:px-8">
-          {/* Animated Background Elements */}
+          {/* Animated Background Elements with Parallax */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
-            <div className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse" />
-            <div className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000" />
+            <div 
+              className="absolute top-1/4 left-1/4 w-96 h-96 bg-blue-500/20 rounded-full blur-3xl animate-pulse"
+              style={{
+                transform: `translateY(${scrollY * 0.5}px)`,
+                transition: "transform 0.1s ease-out"
+              }}
+            />
+            <div 
+              className="absolute bottom-1/4 right-1/4 w-96 h-96 bg-purple-500/20 rounded-full blur-3xl animate-pulse delay-1000"
+              style={{
+                transform: `translateY(${scrollY * 0.3}px)`,
+                transition: "transform 0.1s ease-out"
+              }}
+            />
           </div>
 
-          <div className="max-w-7xl mx-auto relative z-10">
+          <div 
+            className="max-w-7xl mx-auto relative z-10"
+            style={{
+              transform: `translateY(${scrollY * 0.15}px)`,
+              transition: "transform 0.1s ease-out"
+            }}
+          >
             <div className="text-center max-w-4xl mx-auto">
               <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-8 border border-white/20">
                 <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
