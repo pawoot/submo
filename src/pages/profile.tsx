@@ -296,23 +296,29 @@ export default function ProfilePage() {
 
   const handleDeleteAccount = async () => {
     try {
-      const { error } = await supabase.auth.admin.deleteUser(user?.id || "");
+      // Note: Deleting auth user requires server-side operation
+      // For now, we'll delete the profile and associated data
+      // The auth user will need to be deleted via Supabase Dashboard or Edge Function
       
-      if (error) throw error;
-      
-      await authService.signOut();
-      router.push("/auth/login");
+      await profileService.deleteAccount();
       
       toast({
         title: t("toast.accountDeleted"),
         description: t("toast.accountDeletedDesc"),
       });
+      
+      // Sign out and redirect
+      await authService.signOut();
+      router.push("/auth/login");
     } catch (error) {
       console.error("Error deleting account:", error);
       toast({
         title: t("common.error"),
-        description: t("toast.accountDeleteError"),
+        description: language === "th" 
+          ? "ไม่สามารถลบบัญชีได้ กรุณาติดต่อทีมสนับสนุนเพื่อขอลบบัญชี" 
+          : "Unable to delete account. Please contact support to request account deletion.",
         variant: "destructive",
+        duration: 5000,
       });
     }
   };

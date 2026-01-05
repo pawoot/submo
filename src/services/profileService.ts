@@ -124,6 +124,8 @@ export const profileService = {
 
   /**
    * Delete user account
+   * Note: This deletes profile data but cannot delete the auth user from client-side
+   * Auth user deletion requires admin privileges or server-side function
    */
   async deleteAccount(): Promise<void> {
     const { data: { user } } = await supabase.auth.getUser();
@@ -132,7 +134,25 @@ export const profileService = {
       throw new Error("User not authenticated");
     }
 
-    // Delete profile (will cascade delete subscriptions due to foreign key)
+    // Delete notification settings
+    await supabase
+      .from("notification_settings")
+      .delete()
+      .eq("user_id", user.id);
+
+    // Delete notifications
+    await supabase
+      .from("notifications")
+      .delete()
+      .eq("user_id", user.id);
+
+    // Delete subscriptions (will cascade to related data)
+    await supabase
+      .from("subscriptions")
+      .delete()
+      .eq("user_id", user.id);
+
+    // Delete profile (last)
     const { error: profileError } = await supabase
       .from("profiles")
       .delete()
@@ -140,10 +160,11 @@ export const profileService = {
 
     if (profileError) throw profileError;
 
-    // Note: Deleting auth user requires admin privileges
-    // This should be done via a server-side function or Supabase Admin API
-    // For now, we'll just sign out
+    // Sign out user
     await supabase.auth.signOut();
+    
+    // Note: Auth user still exists in auth.users table
+    // User should contact support or use admin dashboard to complete deletion
   },
 
   /**

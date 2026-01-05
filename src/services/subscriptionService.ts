@@ -258,8 +258,11 @@ export const subscriptionService = {
         date.setMonth(date.getMonth() + 3);
       } else if (billingCycle === "weekly") {
         date.setDate(date.getDate() + 7);
+      } else if (billingCycle === "half-yearly") {
+        date.setMonth(date.getMonth() + 6);
       } else {
-        // Default fallback
+        // Unknown billing cycle - default to monthly with warning
+        console.warn(`Unknown billing cycle: ${billingCycle}, defaulting to monthly`);
         date.setMonth(date.getMonth() + 1);
       }
     }

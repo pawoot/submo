@@ -132,7 +132,7 @@ export default function Home() {
   const loadSubscriptions = async () => {
     try {
       setLoading(true);
-      const data = await subscriptionService.getAll();
+      const data = await subscriptionService.getUserSubscriptions();
       setSubscriptions(data || []);
     } catch (error) {
       console.error("Error loading subscriptions:", error);
