@@ -129,6 +129,9 @@ export function SubscriptionCharts() {
   // Filter Subscriptions
   const filteredSubscriptions = useMemo(() => {
     return subscriptions.filter((sub) => {
+      // Only show active subscriptions
+      if (!sub.is_active) return false;
+      
       if (searchQuery && !sub.name.toLowerCase().includes(searchQuery.toLowerCase())) return false;
       if (selectedCategory !== "all" && sub.category_id !== selectedCategory) return false;
       if (selectedBilling !== "all" && sub.billing_cycle !== selectedBilling) return false;
