@@ -261,7 +261,7 @@ export default function LandingPage() {
                   <span className="text-blue-400">Submo</span> ช่วยคุณคืนค่าและหยุดรายจ่ายแผงเหล่านี้... ในคลิกเดียว
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center lg:items-start lg:justify-start justify-center gap-4 mb-12">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
                   <Link href="/auth/signup">
                     <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
                       เริ่มใช้งานฟรี
