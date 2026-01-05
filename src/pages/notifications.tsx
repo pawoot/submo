@@ -42,8 +42,8 @@ export default function NotificationsPage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        const user = await authService.getCurrentUser();
-        setUser(user);
+        const currentUser = await authService.getCurrentUser();
+        setUser(currentUser);
 
         const [notifData, subsData] = await Promise.all([
           notificationService.getNotifications(),
@@ -52,47 +52,48 @@ export default function NotificationsPage() {
 
         setNotifications(notifData || []);
         
-        // 1. First pass: add basic reminder info
-        const initialMap = (subsData || []).map(sub => {
-          const reminderDays = sub.reminder_days || 7;
-          const nextBilling = new Date(sub.next_billing_date);
-          const reminderDate = new Date(nextBilling);
-          reminderDate.setDate(reminderDate.getDate() - reminderDays);
-          
-          return {
-            ...sub,
-            reminder_enabled: sub.reminder_enabled || false,
-            reminder_days: reminderDays,
-            next_reminder_date: reminderDate.toISOString()
-          };
-        });
+        if (!subsData || subsData.length === 0) {
+          setSubscriptions([]);
+          return;
+        }
 
-        // 2. Second pass: calculate renewal dates asynchronously
+        // Calculate all values asynchronously
         const now = new Date();
-        const processed = await Promise.all(
-          initialMap.map(async (sub) => {
+        const processed: SubscriptionWithReminder[] = await Promise.all(
+          subsData.map(async (sub) => {
+            // Calculate next renewal date
             const nextRenewal = await subscriptionService.getNextRenewalDate(
               sub.billing_cycle,
               sub.next_billing_date
             );
             
-            const daysUntil = Math.ceil(
-              (new Date(nextRenewal).getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+            // Calculate days until renewal
+            const nextRenewalDate = new Date(nextRenewal);
+            const daysUntilRenewal = Math.ceil(
+              (nextRenewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
             );
+            
+            // Calculate reminder date
+            const reminderDays = sub.reminder_days || 7;
+            const reminderDate = new Date(nextRenewalDate);
+            reminderDate.setDate(reminderDate.getDate() - reminderDays);
             
             return {
               ...sub,
+              reminder_enabled: sub.reminder_enabled || false,
+              reminder_days: reminderDays,
+              next_reminder_date: reminderDate.toISOString(),
               nextRenewalDate: nextRenewal,
-              daysUntilRenewal: daysUntil
+              daysUntilRenewal: daysUntilRenewal
             };
           })
         );
 
-        // 3. Sort: Enabled first, then by days remaining
+        // Sort: Enabled first, then by days remaining
         processed.sort((a, b) => {
           // Priority 1: Enabled reminders first
-          if (!a.reminder_enabled && b.reminder_enabled) return 1;
           if (a.reminder_enabled && !b.reminder_enabled) return -1;
+          if (!a.reminder_enabled && b.reminder_enabled) return 1;
           
           // Priority 2: Closest renewal date first
           return a.daysUntilRenewal - b.daysUntilRenewal;
@@ -111,7 +112,7 @@ export default function NotificationsPage() {
       }
     };
     fetchData();
-  }, []);
+  }, [toast]);
 
   const handleMarkAsRead = async (notificationId: string) => {
     try {
@@ -177,18 +178,13 @@ export default function NotificationsPage() {
           sub.id === subscriptionId
             ? { ...sub, reminder_enabled: !currentState }
             : sub
-        )
+        ).sort((a, b) => {
+          if (a.reminder_enabled && !b.reminder_enabled) return -1;
+          if (!a.reminder_enabled && b.reminder_enabled) return 1;
+          return a.daysUntilRenewal - b.daysUntilRenewal;
+        })
       );
 
-      // Call API
-      // Note: We need to implement updateSubscription in subscriptionService to support partial updates
-      // For now assuming we can update just the reminder flag
-      // If service method doesn't exist, we might need to add it or use raw supabase query if service is limited
-      // Checking subscriptionService... assuming updateSubscription exists or similar
-      
-      // Since I can't see subscriptionService fully right now, I'll assume updateSubscription exists
-      // If not, I'll fallback to a generic update or logging
-      
       await subscriptionService.update(subscriptionId, { reminder_enabled: !currentState });
 
       toast({
@@ -224,7 +220,11 @@ export default function NotificationsPage() {
           sub.id === subscriptionId
             ? { ...sub, reminder_enabled: false }
             : sub
-        )
+        ).sort((a, b) => {
+          if (a.reminder_enabled && !b.reminder_enabled) return -1;
+          if (!a.reminder_enabled && b.reminder_enabled) return 1;
+          return a.daysUntilRenewal - b.daysUntilRenewal;
+        })
       );
 
       await subscriptionService.update(subscriptionId, { reminder_enabled: false });
@@ -236,23 +236,12 @@ export default function NotificationsPage() {
       
     } catch (error) {
       console.error("Error removing reminder:", error);
-      // Revert
-      setSubscriptions(prev => prev); // Simplified, would need actual revert logic
       toast({
         title: "Error",
         description: "Failed to remove reminder",
         variant: "destructive"
       });
     }
-  };
-
-  const getDaysUntilReminder = (reminderDate: string | null) => {
-    if (!reminderDate) return null;
-    const now = new Date();
-    const reminder = new Date(reminderDate);
-    const diffTime = reminder.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
   };
 
   const unreadCount = notifications.filter(n => !n.is_read).length;
@@ -322,14 +311,14 @@ export default function NotificationsPage() {
 
             {/* Active Reminders Tab */}
             <TabsContent value="reminders" className="space-y-4">
-              {activeRemindersCount === 0 && subscriptions.length === 0 ? (
+              {subscriptions.length === 0 ? (
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center py-8">
                       <BellOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No Reminders Set</h3>
+                      <h3 className="text-lg font-semibold mb-2">No Subscriptions Found</h3>
                       <p className="text-muted-foreground mb-4">
-                        You haven't set up any renewal reminders yet
+                        You haven't added any subscriptions yet
                       </p>
                       <Button onClick={() => router.push("/")}>
                         Go to Dashboard
@@ -348,8 +337,7 @@ export default function NotificationsPage() {
                         </h3>
                       </div>
                       {subscriptions.filter(s => s.reminder_enabled).map((sub) => {
-                        const daysUntil = getDaysUntilReminder(sub.next_reminder_date);
-                        const isUrgent = daysUntil !== null && daysUntil <= 3;
+                        const isUrgent = sub.daysUntilRenewal <= 3;
                         
                         return (
                           <Card key={sub.id} className={isUrgent ? "border-orange-200 bg-orange-50/50" : ""}>
@@ -368,16 +356,14 @@ export default function NotificationsPage() {
                                     <div className="flex items-center gap-2">
                                       <Calendar className="h-3 w-3" />
                                       <span>
-                                        Renewal: {new Date(sub.next_billing_date).toLocaleDateString("en-US", {
+                                        Renewal: {new Date(sub.nextRenewalDate).toLocaleDateString("en-US", {
                                           month: "short",
                                           day: "numeric",
                                           year: "numeric"
                                         })}
-                                        {daysUntil !== null && (
-                                          <span className={isUrgent ? "text-orange-600 font-medium" : ""}>
-                                            {" "}({daysUntil > 0 ? `in ${daysUntil} days` : "today"})
-                                          </span>
-                                        )}
+                                        <span className={isUrgent ? "text-orange-600 font-medium" : ""}>
+                                          {" "}({sub.daysUntilRenewal > 0 ? `in ${sub.daysUntilRenewal} day${sub.daysUntilRenewal !== 1 ? "s" : ""}` : "today"})
+                                        </span>
                                       </span>
                                     </div>
                                     <div className="flex items-center gap-2">
