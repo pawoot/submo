@@ -83,21 +83,6 @@ export default function LandingPage() {
       ],
       cta: "เริ่มใช้งานฟรี",
       popular: false
-    },
-    {
-      name: "Pro",
-      price: "99",
-      period: "ต่อเดือน",
-      features: [
-        "ทุกอย่างในแพลน ฟรี",
-        "แจ้งเตือนล่วงหน้าแบบกำหนดเอง",
-        "รายงานวิเคราะห์ขั้นสูง",
-        "แชร์กับครอบครัวได้ 5 คน",
-        "สนับสนุนลำดับความสำคัญ",
-        "ส่งออกข้อมูล Excel/PDF"
-      ],
-      cta: "เริ่มทดลองใช้ฟรี 14 วัน",
-      popular: true
     }
   ];
 
@@ -495,9 +480,9 @@ export default function LandingPage() {
               <p className="text-xl text-blue-200">เริ่มต้นฟรี ไม่ต้องผูกบัตรเครดิต</p>
             </div>
 
-            <div className="grid md:grid-cols-2 gap-8 max-w-5xl mx-auto">
+            <div className="grid md:grid-cols-1 gap-8 max-w-md mx-auto">
               {plans.map((plan, index) => (
-                <Card key={index} className={`relative overflow-hidden ${plan.popular ? 'bg-gradient-to-br from-blue-500/20 to-purple-600/20 border-2 border-purple-500/50' : 'bg-white/5 border-white/10'} backdrop-blur-sm hover:scale-105 transition-all duration-300`}>
+                <Card key={index} className={`relative overflow-hidden bg-white/5 border-white/10 backdrop-blur-sm hover:scale-105 transition-all duration-300`}>
                   {plan.popular && (
                     <div className="absolute top-0 right-0 bg-gradient-to-r from-blue-500 to-purple-600 text-white px-6 py-1 text-sm font-bold rounded-bl-xl">
                       ยอดนิยม
@@ -584,7 +569,7 @@ export default function LandingPage() {
         {/* Footer */}
         <footer className="border-t border-white/10 py-12 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
-            <div className="grid md:grid-cols-4 gap-8 mb-8">
+            <div className="grid md:grid-cols-3 gap-8 mb-8">
               <div>
                 <div className="flex items-center space-x-3 mb-4">
                   <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-blue-500 to-purple-600 flex items-center justify-center font-bold text-lg">
@@ -603,18 +588,10 @@ export default function LandingPage() {
                 </ul>
               </div>
               <div>
-                <h3 className="font-bold mb-4">บริษัท</h3>
-                <ul className="space-y-2 text-blue-200 text-sm">
-                  <li><a href="#" className="hover:text-white transition-colors">เกี่ยวกับเรา</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">ติดต่อเรา</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">Blog</a></li>
-                </ul>
-              </div>
-              <div>
                 <h3 className="font-bold mb-4">กฎหมาย</h3>
                 <ul className="space-y-2 text-blue-200 text-sm">
-                  <li><a href="#" className="hover:text-white transition-colors">นโยบายความเป็นส่วนตัว</a></li>
-                  <li><a href="#" className="hover:text-white transition-colors">ข้อกำหนดการใช้งาน</a></li>
+                  <li><Link href="/privacy-policy" className="hover:text-white transition-colors">นโยบายความเป็นส่วนตัว</Link></li>
+                  <li><Link href="/terms-of-service" className="hover:text-white transition-colors">ข้อกำหนดการใช้งาน</Link></li>
                 </ul>
               </div>
             </div>
