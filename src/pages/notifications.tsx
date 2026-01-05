@@ -1,72 +1,34 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import SEO from "@/components/SEO";
-import MobileHeader from "@/components/MobileHeader";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
+import { Bell, ArrowLeft, Loader2 } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { Badge } from "@/components/ui/badge";
-import { Switch } from "@/components/ui/switch";
-import { Bell, BellOff, Calendar, AlertCircle, Trash2, Edit, Check } from "lucide-react";
-import { notificationService } from "@/services/notificationService";
-import { getUserSubscriptions } from "@/services/subscriptionService";
 import { authService } from "@/services/authService";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { useCurrency } from "@/contexts/CurrencyContext";
+import { notificationService } from "@/services/notificationService";
+import { subscriptionService } from "@/services/subscriptionService";
 import { useToast } from "@/hooks/use-toast";
-import { Database } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
-type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
+type Notification = Database["public"]["Tables"]["notifications"]["Row"];
 
 interface SubscriptionWithReminder extends Subscription {
   reminder_enabled: boolean;
   reminder_days: number;
-  next_reminder_date: string | null;
+  next_reminder_date: string;
   nextRenewalDate: string;
   daysUntilRenewal: number;
 }
 
-// Helper function to calculate next renewal date
-function calculateNextRenewal(billingCycle: string, currentBillingDate: string): string {
-  const date = new Date(currentBillingDate);
-  const now = new Date();
-  
-  // If date is in future, return as-is
-  if (date > now) {
-    return date.toISOString();
-  }
-
-  // Move date forward based on billing cycle
-  while (date <= now) {
-    if (billingCycle === "monthly") {
-      date.setMonth(date.getMonth() + 1);
-    } else if (billingCycle === "yearly") {
-      date.setFullYear(date.getFullYear() + 1);
-    } else if (billingCycle === "quarterly") {
-      date.setMonth(date.getMonth() + 3);
-    } else if (billingCycle === "weekly") {
-      date.setDate(date.getDate() + 7);
-    } else {
-      // Default to monthly
-      date.setMonth(date.getMonth() + 1);
-    }
-  }
-  
-  return date.toISOString();
-}
-
 export default function NotificationsPage() {
   const router = useRouter();
-  const { t } = useLanguage();
-  const { formatAmount } = useCurrency();
   const { toast } = useToast();
-  
-  const [notifications, setNotifications] = useState<Notification[]>([]);
-  const [subscriptions, setSubscriptions] = useState<SubscriptionWithReminder[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeTab, setActiveTab] = useState<"reminders" | "history">("reminders");
   const [user, setUser] = useState<any>(null);
+  const [subscriptions, setSubscriptions] = useState<SubscriptionWithReminder[]>([]);
+  const [notifications, setNotifications] = useState<Notification[]>([]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -76,7 +38,7 @@ export default function NotificationsPage() {
 
         const [notifData, subsData] = await Promise.all([
           notificationService.getNotifications(),
-          getUserSubscriptions()
+          subscriptionService.getUserSubscriptions()
         ]);
 
         setNotifications(notifData || []);
@@ -87,526 +49,204 @@ export default function NotificationsPage() {
           return;
         }
 
-        // Process subscriptions with manual inline calculation
-        const now = new Date();
+        // MINIMAL PROCESSING - Use safe values
         const processed = subsData.map(sub => {
-          // Calculate next renewal date inline
-          const billingDate = new Date(sub.next_billing_date);
-          const nextRenewal = new Date(billingDate);
-          
-          // If date is in future, use as-is
-          if (billingDate <= now) {
-            // Move forward based on cycle
-            while (nextRenewal <= now) {
-              if (sub.billing_cycle === "monthly") {
-                nextRenewal.setMonth(nextRenewal.getMonth() + 1);
-              } else if (sub.billing_cycle === "yearly") {
-                nextRenewal.setFullYear(nextRenewal.getFullYear() + 1);
-              } else if (sub.billing_cycle === "quarterly") {
-                nextRenewal.setMonth(nextRenewal.getMonth() + 3);
-              } else if (sub.billing_cycle === "weekly") {
-                nextRenewal.setDate(nextRenewal.getDate() + 7);
-              } else {
-                nextRenewal.setMonth(nextRenewal.getMonth() + 1);
-              }
-            }
-          }
-          
-          const nextRenewalISO = nextRenewal.toISOString();
-          const daysUntil = Math.ceil(
-            (nextRenewal.getTime() - now.getTime()) / (1000 * 60 * 60 * 24)
+          // Safe synchronous calculation
+          const nextRenewal = subscriptionService.getNextRenewalDate(
+             sub.billing_cycle || "monthly", 
+             sub.next_billing_date
           );
           
-          // Calculate reminder info
-          const reminderDays = sub.reminder_days || 7;
-          const reminderDate = new Date(billingDate);
-          reminderDate.setDate(reminderDate.getDate() - reminderDays);
-          
+          const now = new Date();
+          const renewalDate = new Date(nextRenewal);
+          const daysUntil = Math.ceil((renewalDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+
           return {
             ...sub,
             reminder_enabled: sub.reminder_enabled || false,
-            reminder_days: reminderDays,
-            next_reminder_date: reminderDate.toISOString(),
-            nextRenewalDate: nextRenewalISO,
+            reminder_days: sub.reminder_days || 7,
+            next_reminder_date: sub.next_billing_date,
+            nextRenewalDate: nextRenewal,
             daysUntilRenewal: daysUntil
           };
-        });
-
-        // Sort by priority
-        processed.sort((a, b) => {
-          if (a.reminder_enabled && !b.reminder_enabled) return -1;
-          if (!a.reminder_enabled && b.reminder_enabled) return 1;
-          return a.daysUntilRenewal - b.daysUntilRenewal;
         });
 
         setSubscriptions(processed);
       } catch (error) {
         console.error("Error loading notifications:", error);
         toast({
-          title: "Error",
-          description: "Failed to load notifications",
+          title: "เกิดข้อผิดพลาด",
+          description: "ไม่สามารถโหลดข้อมูลการแจ้งเตือนได้",
           variant: "destructive"
         });
       } finally {
         setLoading(false);
       }
     };
+
     fetchData();
   }, [toast]);
 
-  const handleMarkAsRead = async (notificationId: string) => {
+  const toggleReminder = async (subscriptionId: string, currentState: boolean) => {
     try {
-      await notificationService.markAsRead(notificationId);
-      setNotifications(prev =>
-        prev.map(n => n.id === notificationId ? { ...n, is_read: true } : n)
-      );
-      toast({
-        title: "Marked as read",
-        description: "Notification marked as read"
+      await subscriptionService.updateSubscription(subscriptionId, {
+        reminder_enabled: !currentState
       });
-    } catch (error) {
-      console.error("Error marking notification as read:", error);
-      toast({
-        title: "Error",
-        description: "Failed to mark notification as read",
-        variant: "destructive"
-      });
-    }
-  };
 
-  const handleMarkAllAsRead = async () => {
-    try {
-      await notificationService.markAllAsRead();
-      setNotifications(prev => prev.map(n => ({ ...n, is_read: true })));
-      toast({
-        title: "All marked as read",
-        description: "All notifications have been marked as read"
-      });
-    } catch (error) {
-      console.error("Error marking all as read:", error);
-      toast({
-        title: "Error",
-        description: "Failed to mark all as read",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleDeleteNotification = async (notificationId: string) => {
-    try {
-      await notificationService.deleteNotification(notificationId);
-      setNotifications(prev => prev.filter(n => n.id !== notificationId));
-      toast({
-        title: "Deleted",
-        description: "Notification deleted successfully"
-      });
-    } catch (error) {
-      console.error("Error deleting notification:", error);
-      toast({
-        title: "Error",
-        description: "Failed to delete notification",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleToggleReminder = async (subscriptionId: string, currentState: boolean) => {
-    try {
-      const updatedSubs = subscriptions.map(sub =>
-        sub.id === subscriptionId
-          ? { ...sub, reminder_enabled: !currentState }
-          : sub
-      );
-      
-      updatedSubs.sort((a, b) => {
-        if (a.reminder_enabled && !b.reminder_enabled) return -1;
-        if (!a.reminder_enabled && b.reminder_enabled) return 1;
-        return a.daysUntilRenewal - b.daysUntilRenewal;
-      });
-      
-      setSubscriptions(updatedSubs);
-
-      const { subscriptionService } = await import("@/services/subscriptionService");
-      await subscriptionService.update(subscriptionId, { reminder_enabled: !currentState });
-
-      toast({
-        title: currentState ? "Reminder Disabled" : "Reminder Enabled",
-        description: currentState 
-          ? "You will no longer receive reminders for this subscription"
-          : "You will receive reminders before renewal"
-      });
-      
-    } catch (error) {
-      console.error("Error toggling reminder:", error);
       setSubscriptions(prev =>
         prev.map(sub =>
           sub.id === subscriptionId
-            ? { ...sub, reminder_enabled: currentState }
+            ? { ...sub, reminder_enabled: !currentState }
             : sub
         )
       );
-      toast({
-        title: "Error",
-        description: "Failed to update reminder settings",
-        variant: "destructive"
-      });
-    }
-  };
-
-  const handleRemoveReminder = async (subscriptionId: string) => {
-    try {
-      const updatedSubs = subscriptions.map(sub =>
-        sub.id === subscriptionId
-          ? { ...sub, reminder_enabled: false }
-          : sub
-      );
-      
-      updatedSubs.sort((a, b) => {
-        if (a.reminder_enabled && !b.reminder_enabled) return -1;
-        if (!a.reminder_enabled && b.reminder_enabled) return 1;
-        return a.daysUntilRenewal - b.daysUntilRenewal;
-      });
-      
-      setSubscriptions(updatedSubs);
-
-      const { subscriptionService } = await import("@/services/subscriptionService");
-      await subscriptionService.update(subscriptionId, { reminder_enabled: false });
 
       toast({
-        title: "Reminder Removed",
-        description: "Reminder has been removed for this subscription"
+        title: "สำเร็จ",
+        description: !currentState ? "เปิดการแจ้งเตือนแล้ว" : "ปิดการแจ้งเตือนแล้ว"
       });
-      
     } catch (error) {
-      console.error("Error removing reminder:", error);
+      console.error("Error toggling reminder:", error);
       toast({
-        title: "Error",
-        description: "Failed to remove reminder",
+        title: "เกิดข้อผิดพลาด",
+        description: "ไม่สามารถอัปเดตการแจ้งเตือนได้",
         variant: "destructive"
       });
     }
   };
-
-  const unreadCount = notifications.filter(n => !n.is_read).length;
-  const activeRemindersCount = subscriptions.filter(s => s.reminder_enabled).length;
 
   if (loading) {
     return (
-      <>
-        <SEO 
-          title="Notifications | Submo.ai"
-          description="Manage your subscription notifications and reminders"
-        />
-        <div className="min-h-screen bg-background">
-          <MobileHeader user={user} />
-          <main className="container mx-auto px-4 py-8">
-            <div className="flex items-center justify-center min-h-[400px]">
-              <div className="text-center">
-                <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-                <p className="text-muted-foreground">Loading notifications...</p>
-              </div>
-            </div>
-          </main>
-        </div>
-      </>
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+        <Loader2 className="h-8 w-8 animate-spin text-blue-600" />
+      </div>
     );
   }
+
+  const activeReminders = subscriptions.filter(sub => sub.reminder_enabled);
 
   return (
     <>
       <SEO 
-        title="Notifications | Submo.ai"
-        description="Manage your subscription notifications and reminders"
+        title="การแจ้งเตือน - Submo.ai"
+        description="จัดการการแจ้งเตือนของคุณ"
       />
-      <div className="min-h-screen bg-background">
-        <MobileHeader user={user} />
-        <main className="container mx-auto px-4 py-8 max-w-4xl">
-          {/* Header */}
-          <div className="mb-8">
-            <h1 className="text-3xl font-bold mb-2">🔔 Notifications</h1>
-            <p className="text-muted-foreground">
-              Manage your subscription notifications and reminders
-            </p>
+      <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+        <main className="container mx-auto px-4 py-8 max-w-5xl">
+          <div className="flex items-center justify-between mb-8">
+            <div className="flex items-center gap-4">
+              <Button
+                variant="ghost"
+                size="icon"
+                onClick={() => router.push("/")}
+                className="rounded-full"
+              >
+                <ArrowLeft className="h-5 w-5" />
+              </Button>
+              <div>
+                <h1 className="text-3xl font-bold text-slate-900 dark:text-slate-50 flex items-center gap-2">
+                  <Bell className="h-8 w-8 text-blue-600" />
+                  การแจ้งเตือน
+                </h1>
+                <p className="text-slate-600 dark:text-slate-400 mt-1">
+                  จัดการการแจ้งเตือนการต่ออายุของคุณ
+                </p>
+              </div>
+            </div>
           </div>
 
-          {/* Tabs */}
-          <Tabs value={activeTab} onValueChange={(v) => setActiveTab(v as "reminders" | "history")} className="w-full">
-            <TabsList className="grid w-full grid-cols-2 mb-6">
-              <TabsTrigger value="reminders" className="flex items-center gap-2">
-                <Bell className="h-4 w-4" />
-                Active Reminders
-                {activeRemindersCount > 0 && (
-                  <Badge variant="secondary" className="ml-1 h-5 px-1.5 text-[10px]">
-                    {activeRemindersCount}
-                  </Badge>
-                )}
+          <Tabs defaultValue="active" className="space-y-6">
+            <TabsList className="grid w-full max-w-md mx-auto grid-cols-2">
+              <TabsTrigger value="active">
+                การแจ้งเตือนที่เปิดใช้งาน ({activeReminders.length})
               </TabsTrigger>
-              <TabsTrigger value="history" className="flex items-center gap-2">
-                <AlertCircle className="h-4 w-4" />
-                History
-                {unreadCount > 0 && (
-                  <Badge variant="destructive" className="ml-1 h-5 px-1.5 text-[10px]">
-                    {unreadCount}
-                  </Badge>
-                )}
+              <TabsTrigger value="history">
+                ประวัติการแจ้งเตือน ({notifications.length})
               </TabsTrigger>
             </TabsList>
 
-            {/* Active Reminders Tab */}
-            <TabsContent value="reminders" className="space-y-4">
-              {subscriptions.length === 0 ? (
+            <TabsContent value="active" className="space-y-4">
+              {activeReminders.length === 0 ? (
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center py-8">
-                      <BellOff className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No Subscriptions Found</h3>
-                      <p className="text-muted-foreground mb-4">
-                        You haven&apos;t added any subscriptions yet
-                      </p>
-                      <Button onClick={() => router.push("/")}>
-                        Go to Dashboard
-                      </Button>
-                    </div>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Bell className="h-16 w-16 text-slate-300 dark:text-slate-700 mb-4" />
+                    <p className="text-slate-600 dark:text-slate-400 text-center">
+                      ไม่มีการแจ้งเตือนที่เปิดใช้งาน
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
-                <>
-                  {/* Active Reminders */}
-                  {activeRemindersCount > 0 && (
-                    <div className="space-y-3">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          ENABLED ({activeRemindersCount})
-                        </h3>
+                activeReminders.map((sub) => (
+                  <Card key={sub.id} className="hover:shadow-lg transition-shadow">
+                    <CardHeader>
+                      <CardTitle className="flex items-center justify-between">
+                        <span>{sub.name}</span>
+                        <span className="text-sm font-normal text-slate-600 dark:text-slate-400">
+                          ใน {sub.daysUntilRenewal} วัน
+                        </span>
+                      </CardTitle>
+                    </CardHeader>
+                    <CardContent className="space-y-4">
+                      <div className="flex items-center justify-between">
+                        <div>
+                          <p className="text-sm text-slate-600 dark:text-slate-400">
+                            วันต่ออายุถัดไป
+                          </p>
+                          <p className="font-medium">
+                            {new Date(sub.nextRenewalDate).toLocaleDateString("th-TH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric"
+                            })}
+                          </p>
+                        </div>
+                        <Button
+                          variant="outline"
+                          onClick={() => toggleReminder(sub.id, sub.reminder_enabled)}
+                        >
+                          ปิดการแจ้งเตือน
+                        </Button>
                       </div>
-                      {subscriptions.filter(s => s.reminder_enabled).map((sub) => {
-                        const isUrgent = sub.daysUntilRenewal <= 3;
-                        const renewalDate = new Date(sub.nextRenewalDate);
-                        const renewalText = renewalDate.toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric"
-                        });
-                        const daysText = sub.daysUntilRenewal > 0 
-                          ? `in ${sub.daysUntilRenewal} day${sub.daysUntilRenewal !== 1 ? "s" : ""}`
-                          : "today";
-                        
-                        return (
-                          <Card key={sub.id} className={isUrgent ? "border-orange-200 bg-orange-50/50" : ""}>
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <div className="flex items-center gap-2 mb-1">
-                                    <h4 className="font-semibold">{sub.name}</h4>
-                                    {isUrgent && (
-                                      <Badge variant="outline" className="border-orange-300 text-orange-600 bg-orange-100 text-[10px] px-1.5 h-5">
-                                        Urgent
-                                      </Badge>
-                                    )}
-                                  </div>
-                                  <div className="space-y-1 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>
-                                        Renewal: {renewalText}
-                                        <span className={isUrgent ? "text-orange-600 font-medium" : ""}>
-                                          {" "}({daysText})
-                                        </span>
-                                      </span>
-                                    </div>
-                                    <div className="flex items-center gap-2">
-                                      <Bell className="h-3 w-3" />
-                                      <span>Notify: {sub.reminder_days} days before</span>
-                                    </div>
-                                    <div className="text-xs">
-                                      Amount: {formatAmount(sub.amount, sub.currency)}
-                                      {sub.billing_cycle === "yearly" && " / year"}
-                                      {sub.billing_cycle === "monthly" && " / month"}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground">Enabled</span>
-                                    <Switch
-                                      checked={sub.reminder_enabled}
-                                      onCheckedChange={() => handleToggleReminder(sub.id, sub.reminder_enabled)}
-                                    />
-                                  </div>
-                                  <div className="flex gap-1">
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => router.push(`/edit-subscription/${sub.id}`)}
-                                      className="h-8 px-2"
-                                    >
-                                      <Edit className="h-3 w-3" />
-                                    </Button>
-                                    <Button
-                                      variant="ghost"
-                                      size="sm"
-                                      onClick={() => handleRemoveReminder(sub.id)}
-                                      className="h-8 px-2 text-destructive hover:text-destructive"
-                                    >
-                                      <Trash2 className="h-3 w-3" />
-                                    </Button>
-                                  </div>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
-
-                  {/* Disabled Reminders */}
-                  {subscriptions.filter(s => !s.reminder_enabled).length > 0 && (
-                    <div className="space-y-3 mt-6">
-                      <div className="flex items-center justify-between mb-2">
-                        <h3 className="text-sm font-medium text-muted-foreground">
-                          DISABLED ({subscriptions.filter(s => !s.reminder_enabled).length})
-                        </h3>
-                      </div>
-                      {subscriptions.filter(s => !s.reminder_enabled).map((sub) => {
-                        const renewalDate = new Date(sub.nextRenewalDate);
-                        const renewalText = renewalDate.toLocaleDateString("en-US", {
-                          month: "short",
-                          day: "numeric",
-                          year: "numeric"
-                        });
-                        
-                        return (
-                          <Card key={sub.id} className="opacity-60">
-                            <CardContent className="p-4">
-                              <div className="flex items-start justify-between gap-4">
-                                <div className="flex-1">
-                                  <h4 className="font-semibold mb-1">{sub.name}</h4>
-                                  <div className="space-y-1 text-sm text-muted-foreground">
-                                    <div className="flex items-center gap-2">
-                                      <Calendar className="h-3 w-3" />
-                                      <span>Renewal: {renewalText}</span>
-                                    </div>
-                                    <div className="text-xs">
-                                      Amount: {formatAmount(sub.amount, sub.currency)}
-                                      {sub.billing_cycle === "yearly" && " / year"}
-                                      {sub.billing_cycle === "monthly" && " / month"}
-                                    </div>
-                                  </div>
-                                </div>
-                                <div className="flex flex-col items-end gap-2">
-                                  <div className="flex items-center gap-2">
-                                    <span className="text-xs text-muted-foreground">Disabled</span>
-                                    <Switch
-                                      checked={sub.reminder_enabled}
-                                      onCheckedChange={() => handleToggleReminder(sub.id, sub.reminder_enabled)}
-                                    />
-                                  </div>
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => router.push(`/edit-subscription/${sub.id}`)}
-                                    className="h-8 px-2"
-                                  >
-                                    <Edit className="h-3 w-3" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </CardContent>
-                          </Card>
-                        );
-                      })}
-                    </div>
-                  )}
-                </>
+                    </CardContent>
+                  </Card>
+                ))
               )}
             </TabsContent>
 
-            {/* Notification History Tab */}
             <TabsContent value="history" className="space-y-4">
               {notifications.length === 0 ? (
                 <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center py-8">
-                      <AlertCircle className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
-                      <h3 className="text-lg font-semibold mb-2">No Notifications</h3>
-                      <p className="text-muted-foreground">
-                        You don&apos;t have any notifications yet
-                      </p>
-                    </div>
+                  <CardContent className="flex flex-col items-center justify-center py-12">
+                    <Bell className="h-16 w-16 text-slate-300 dark:text-slate-700 mb-4" />
+                    <p className="text-slate-600 dark:text-slate-400 text-center">
+                      ยังไม่มีประวัติการแจ้งเตือน
+                    </p>
                   </CardContent>
                 </Card>
               ) : (
-                <>
-                  {unreadCount > 0 && (
-                    <div className="flex justify-end mb-4">
-                      <Button variant="outline" size="sm" onClick={handleMarkAllAsRead}>
-                        <Check className="h-4 w-4 mr-2" />
-                        Mark all as read
-                      </Button>
-                    </div>
-                  )}
-                  <div className="space-y-3">
-                    {notifications.map((notification) => {
-                      const notifDate = new Date(notification.created_at);
-                      const notifText = notifDate.toLocaleDateString("en-US", {
-                        month: "short",
-                        day: "numeric",
-                        year: "numeric",
-                        hour: "2-digit",
-                        minute: "2-digit"
-                      });
-                      
-                      return (
-                        <Card
-                          key={notification.id}
-                          className={!notification.is_read ? "border-primary/50 bg-primary/5" : ""}
-                        >
-                          <CardContent className="p-4">
-                            <div className="flex items-start justify-between gap-4">
-                              <div className="flex-1">
-                                <div className="flex items-center gap-2 mb-1">
-                                  <h4 className="font-semibold">{notification.title}</h4>
-                                  {!notification.is_read && (
-                                    <Badge variant="default" className="h-5 px-1.5 text-[10px]">
-                                      New
-                                    </Badge>
-                                  )}
-                                </div>
-                                <p className="text-sm text-muted-foreground mb-2">
-                                  {notification.message}
-                                </p>
-                                <p className="text-xs text-muted-foreground">
-                                  {notifText}
-                                </p>
-                              </div>
-                              <div className="flex gap-1">
-                                {!notification.is_read && (
-                                  <Button
-                                    variant="ghost"
-                                    size="sm"
-                                    onClick={() => handleMarkAsRead(notification.id)}
-                                    className="h-8 px-2"
-                                  >
-                                    <Check className="h-3 w-3" />
-                                  </Button>
-                                )}
-                                <Button
-                                  variant="ghost"
-                                  size="sm"
-                                  onClick={() => handleDeleteNotification(notification.id)}
-                                  className="h-8 px-2 text-destructive hover:text-destructive"
-                                >
-                                  <Trash2 className="h-3 w-3" />
-                                </Button>
-                              </div>
-                            </div>
-                          </CardContent>
-                        </Card>
-                      );
-                    })}
-                  </div>
-                </>
+                notifications.map((notif) => (
+                  <Card key={notif.id}>
+                    <CardContent className="py-4">
+                      <div className="flex items-start justify-between">
+                        <div>
+                          <p className="font-medium">{notif.title}</p>
+                          <p className="text-sm text-slate-600 dark:text-slate-400 mt-1">
+                            {notif.message}
+                          </p>
+                          <p className="text-xs text-slate-500 mt-2">
+                            {new Date(notif.created_at).toLocaleDateString("th-TH", {
+                              year: "numeric",
+                              month: "long",
+                              day: "numeric",
+                              hour: "2-digit",
+                              minute: "2-digit"
+                            })}
+                          </p>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))
               )}
             </TabsContent>
           </Tabs>
