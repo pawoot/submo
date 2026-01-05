@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { SEO } from "@/components/SEO";
+import SEO from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import MobileNav from "@/components/MobileNav";
 import MobileHeader from "@/components/MobileHeader";
