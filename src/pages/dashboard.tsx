@@ -106,7 +106,7 @@ export default function Dashboard() {
   };
 
   const calculateStats = async () => {
-    const activeSubscriptions = subscriptions.filter(s => s.status === "active");
+    const activeSubscriptions = subscriptions.filter(s => s.is_active);
     
     let monthlyTotal = 0;
     
@@ -141,9 +141,8 @@ export default function Dashboard() {
     }
     
     // Status filter
-    if (filterStatus !== "all" && sub.status !== filterStatus) {
-      return false;
-    }
+    if (filterStatus === "active" && !sub.is_active) return false;
+    if (filterStatus === "inactive" && sub.is_active) return false;
     
     // Category filter
     if (filterCategory !== "all" && sub.category_id !== filterCategory) {
@@ -168,8 +167,8 @@ export default function Dashboard() {
     }
   });
 
-  const activeCount = subscriptions.filter(s => s.status === "active").length;
-  const inactiveCount = subscriptions.filter(s => s.status === "inactive").length;
+  const activeCount = subscriptions.filter(s => s.is_active).length;
+  const inactiveCount = subscriptions.filter(s => !s.is_active).length;
 
   const toggleReminder = async (subscriptionId: string, currentState: boolean) => {
     try {
@@ -403,7 +402,7 @@ export default function Dashboard() {
                               <SubscriptionIcon
                                 name={sub.name}
                                 iconUrl={sub.icon_url}
-                                faviconUrl={sub.favicon_url}
+                                websiteUrl={sub.website_url}
                                 size="md"
                               />
                               
@@ -411,8 +410,8 @@ export default function Dashboard() {
                                 <h3 className="font-semibold text-lg mb-1">{sub.name}</h3>
                                 
                                 <div className="flex flex-wrap gap-2 mb-2">
-                                  <Badge variant={sub.status === "active" ? "default" : "secondary"}>
-                                    {t(`subscription.${sub.status}`)}
+                                  <Badge variant={sub.is_active ? "default" : "secondary"}>
+                                    {sub.is_active ? t("subscription.active") : t("subscription.inactive")}
                                   </Badge>
                                   
                                   {category && (
