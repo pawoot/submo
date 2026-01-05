@@ -1,9 +1,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import SEO from "@/components/SEO";
-import AuthGuard from "@/components/AuthGuard";
-import MobileNav from "@/components/MobileNav";
-import MobileHeader from "@/components/MobileHeader";
+import { SEO } from "@/components/SEO";
+import { AuthGuard } from "@/components/AuthGuard";
+import { MobileNav } from "@/components/MobileNav";
+import { MobileHeader } from "@/components/MobileHeader";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -11,7 +11,8 @@ import { Input } from "@/components/ui/input";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { subscriptionService } from "@/services/subscriptionService";
-import { adminCategoryService } from "@/components/admin/FixCategoryDialog";
+import { getAllCategories } from "@/services/adminCategoryService";
+import { authService } from "@/services/authService";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslation } from "@/lib/translations";
@@ -37,10 +38,10 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { toast } from "@/hooks/use-toast";
-import SubscriptionCharts from "@/components/SubscriptionCharts";
-import InsightPanel from "@/components/InsightPanel";
-import SavingsRecommendation from "@/components/SavingsRecommendation";
-import SubscriptionIcon from "@/components/SubscriptionIcon";
+import { SubscriptionCharts } from "@/components/SubscriptionCharts";
+import { InsightPanel } from "@/components/InsightPanel";
+import { SavingsRecommendation } from "@/components/SavingsRecommendation";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 interface Subscription {
   id: string;
@@ -72,6 +73,7 @@ export default function Dashboard() {
   const { language } = useLanguage();
   const t = (key: string) => getTranslation(key as any, language);
 
+  const [user, setUser] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<Subscription[]>([]);
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
@@ -95,11 +97,13 @@ export default function Dashboard() {
   const loadData = async () => {
     try {
       setLoading(true);
-      const [subsData, catsData] = await Promise.all([
+      const [currentUser, subsData, catsData] = await Promise.all([
+        authService.getCurrentUser(),
         subscriptionService.getUserSubscriptions(),
-        adminCategoryService.getAllCategories()
+        getAllCategories()
       ]);
       
+      setUser(currentUser);
       setSubscriptions(subsData || []);
       setCategories(catsData || []);
     } catch (error) {
@@ -215,7 +219,7 @@ export default function Dashboard() {
     }
     
     try {
-      await subscriptionService.deleteSubscription(subscriptionId);
+      await subscriptionService.delete(subscriptionId);
       setSubscriptions(prev => prev.filter(sub => sub.id !== subscriptionId));
       
       toast({
@@ -254,7 +258,7 @@ export default function Dashboard() {
       <div className="min-h-screen bg-background pb-20 md:pb-0">
         {/* Mobile Header */}
         <div className="md:hidden">
-          <MobileHeader />
+          <MobileHeader user={user} />
         </div>
 
         {/* Desktop Navigation */}
@@ -524,7 +528,7 @@ export default function Dashboard() {
 
         {/* Mobile Navigation */}
         <div className="md:hidden">
-          <MobileNav />
+          <MobileNav user={user} />
         </div>
       </div>
     </AuthGuard>
