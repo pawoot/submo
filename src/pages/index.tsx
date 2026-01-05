@@ -258,7 +258,7 @@ export default function LandingPage() {
           >
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               {/* Left Column - Text Content */}
-              <div className="text-center lg:text-left">
+              <div className="text-center">
                 <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-8 border border-white/20">
                   <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                   <span className="text-sm">ใช้งานฟรี ไม่ต้องผูกบัตรเครดิต</span>
@@ -276,7 +276,7 @@ export default function LandingPage() {
                   <span className="text-blue-400">Submo</span> ช่วยคุณคืนค่าและหยุดรายจ่ายแผงเหล่านี้... ในคลิกเดียว
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center lg:justify-start gap-4 mb-12">
+                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
                   <Link href="/auth/signup">
                     <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
                       เริ่มใช้งานฟรี
@@ -291,20 +291,20 @@ export default function LandingPage() {
                 </div>
 
                 {/* Stats */}
-                <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto lg:mx-0">
-                  <div className="text-center lg:text-left">
+                <div className="grid grid-cols-3 gap-6 max-w-lg mx-auto">
+                  <div className="text-center">
                     <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
                       10K+
                     </div>
                     <div className="text-blue-200 text-sm">ผู้ใช้งาน</div>
                   </div>
-                  <div className="text-center lg:text-left">
+                  <div className="text-center">
                     <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
                       50K+
                     </div>
                     <div className="text-blue-200 text-sm">Subscription</div>
                   </div>
-                  <div className="text-center lg:text-left">
+                  <div className="text-center">
                     <div className="text-3xl font-bold bg-gradient-to-r from-blue-400 to-purple-400 bg-clip-text text-transparent mb-1">
                       ฿2M+
                     </div>
@@ -331,7 +331,7 @@ export default function LandingPage() {
                       </div>
 
                       {/* Content */}
-                      <div className="px-5 py-4">
+                      <div className="px-5 py-4 h-full flex flex-col">
                         {/* Total Amount */}
                         <div className="bg-gray-800/50 backdrop-blur-sm rounded-2xl p-5 mb-4 border border-gray-700/50">
                           <div className="text-gray-400 text-xs mb-2">ยอดรายจ่ายปีนี้ (Yearly)</div>
@@ -353,7 +353,7 @@ export default function LandingPage() {
                         </div>
 
                         {/* Subscription List */}
-                        <div className="space-y-3">
+                        <div className="space-y-3 flex-1 overflow-y-auto">
                           {/* Netflix */}
                           <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
                             <div className="flex items-center space-x-3">
@@ -362,7 +362,7 @@ export default function LandingPage() {
                               </div>
                               <div>
                                 <div className="text-white font-semibold text-sm">Netflix Premium</div>
-                                <div className="text-gray-400 text-xs">ต่อบัตรอีก 2 วัน</div>
+                                <div className="text-gray-400 text-xs">ติดบัตรอีก 2 วัน</div>
                               </div>
                             </div>
                             <div className="text-right">
@@ -371,19 +371,19 @@ export default function LandingPage() {
                             </div>
                           </div>
 
-                          {/* Adobe */}
+                          {/* LINE */}
                           <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
                             <div className="flex items-center space-x-3">
-                              <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center">
-                                <span className="text-white font-bold text-xl">A</span>
+                              <div className="w-12 h-12 bg-green-500 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">L</span>
                               </div>
                               <div>
-                                <div className="text-white font-semibold text-sm">Adobe Creative</div>
-                                <div className="text-gray-400 text-xs">ไม่ได้ใช้งาน 3 เดือน</div>
+                                <div className="text-white font-semibold text-sm">LINE Premium</div>
+                                <div className="text-gray-400 text-xs">ไม่ได้ใช้งาน 2 เดือน</div>
                               </div>
                             </div>
                             <div className="text-right">
-                              <div className="text-white font-bold">-฿1,800</div>
+                              <div className="text-white font-bold">-฿150</div>
                               <div className="text-red-400 text-xs">ยกเลิกด่วน</div>
                             </div>
                           </div>
@@ -404,6 +404,47 @@ export default function LandingPage() {
                               <div className="text-green-400 text-xs">ปกติ</div>
                             </div>
                           </div>
+
+                          {/* Apple Music */}
+                          <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-pink-500 to-red-500 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">A</span>
+                              </div>
+                              <div>
+                                <div className="text-white font-semibold text-sm">Apple Music</div>
+                                <div className="text-gray-400 text-xs">ไม่ได้ใช้งาน 1 เดือน</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-bold">-฿119</div>
+                              <div className="text-red-400 text-xs">ควรยกเลิก</div>
+                            </div>
+                          </div>
+
+                          {/* Google One */}
+                          <div className="bg-gray-800/70 backdrop-blur-sm rounded-xl p-4 border border-gray-700/50 flex items-center justify-between">
+                            <div className="flex items-center space-x-3">
+                              <div className="w-12 h-12 bg-gradient-to-br from-blue-500 via-green-500 to-yellow-500 rounded-lg flex items-center justify-center">
+                                <span className="text-white font-bold text-xl">G</span>
+                              </div>
+                              <div>
+                                <div className="text-white font-semibold text-sm">Google One</div>
+                                <div className="text-gray-400 text-xs">ใช้งาน: 3 วันที่แล้ว</div>
+                              </div>
+                            </div>
+                            <div className="text-right">
+                              <div className="text-white font-bold">-฿65</div>
+                              <div className="text-green-400 text-xs">ปกติ</div>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Analysis Button */}
+                        <div className="mt-4 pt-4">
+                          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300">
+                            วิเคราะห์รายจ่ายของฉัน
+                          </button>
                         </div>
                       </div>
                     </div>
