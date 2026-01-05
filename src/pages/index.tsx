@@ -243,7 +243,7 @@ export default function LandingPage() {
           >
             <div className="grid lg:grid-cols-2 gap-6 items-center">
               {/* Left Column - Text Content */}
-              <div className="text-center lg:text-left lg:pr-8">
+              <div className="text-center">
                 <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-8 border border-white/20">
                   <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                   <span className="text-sm">ใช้งานฟรี ไม่ต้องผูกบัตรเครดิต</span>
