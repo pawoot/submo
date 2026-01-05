@@ -427,9 +427,11 @@ export default function LandingPage() {
 
                         {/* Analysis Button */}
                         <div className="mt-4 pt-4">
-                          <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300">
-                            วิเคราะห์รายจ่ายของฉัน
-                          </button>
+                          <Link href="/auth/login">
+                            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300">
+                              วิเคราะห์รายจ่ายของฉัน
+                            </button>
+                          </Link>
                         </div>
                       </div>
                     </div>
