@@ -143,18 +143,47 @@ export default function EditSubscription() {
   useEffect(() => {
     const loadSubscription = async () => {
       try {
-        const { data, error } = await supabase
-          .from("subscriptions")
-          .select(`
-            *,
-            categories (*),
-            payment_methods (*)
-          `)
-          .eq("id", id)
-          .single();
+        // Load categories and payment methods first
+        const [categoriesData, paymentMethodsData, subscriptionData] = await Promise.all([
+          supabase.from("categories").select("*").order("name_en"),
+          supabase.from("payment_methods").select("*").order("name_en"),
+          supabase
+            .from("subscriptions")
+            .select(`
+              *,
+              categories (*),
+              payment_methods (*)
+            `)
+            .eq("id", id)
+            .single()
+        ]);
 
-        if (error) throw error;
-        setSubscription(data);
+        if (categoriesData.data) setDbCategories(categoriesData.data);
+        if (paymentMethodsData.data) setDbPaymentMethods(paymentMethodsData.data);
+
+        if (subscriptionData.error) throw subscriptionData.error;
+        setSubscription(subscriptionData.data);
+
+        // Pre-fill form immediately after data is loaded
+        if (subscriptionData.data) {
+          reset({
+            name: subscriptionData.data.name,
+            category_id: subscriptionData.data.category_id,
+            description: subscriptionData.data.description || "",
+            amount: subscriptionData.data.amount.toString(),
+            currency: subscriptionData.data.currency,
+            billing_cycle: subscriptionData.data.billing_cycle,
+            payment_method_id: subscriptionData.data.payment_method_id,
+            card_last_4: subscriptionData.data.card_last_4 || "",
+            website_url: subscriptionData.data.website_url || "",
+            notes: subscriptionData.data.notes || "",
+            start_date: new Date(subscriptionData.data.start_date),
+            next_billing_date: new Date(subscriptionData.data.next_billing_date),
+            reminder_enabled: subscriptionData.data.reminder_enabled || false,
+            reminder_days: subscriptionData.data.reminder_days || 7,
+            auto_renew: subscriptionData.data.auto_renew ?? true,
+          });
+        }
       } catch (error) {
         console.error("Error loading data:", error);
         toast({
@@ -170,44 +199,7 @@ export default function EditSubscription() {
     if (id) {
       loadSubscription();
     }
-  }, [id]);
-
-  // Pre-fill form when subscription data is loaded
-  useEffect(() => {
-    const loadFormData = async () => {
-      if (!subscription) return;
-
-      // Load categories and payment methods first
-      const [categoriesData, paymentMethodsData] = await Promise.all([
-        supabase.from("categories").select("*").order("name_en"),
-        supabase.from("payment_methods").select("*").order("name_en")
-      ]);
-
-      if (categoriesData.data) setDbCategories(categoriesData.data);
-      if (paymentMethodsData.data) setDbPaymentMethods(paymentMethodsData.data);
-
-      // Pre-fill form with subscription data
-      reset({
-        name: subscription.name,
-        category_id: subscription.category_id,
-        description: subscription.description || "",
-        amount: subscription.amount.toString(),
-        currency: subscription.currency,
-        billing_cycle: subscription.billing_cycle,
-        payment_method_id: subscription.payment_method_id,
-        card_last_4: subscription.card_last_4 || "",
-        website_url: subscription.website_url || "",
-        notes: subscription.notes || "",
-        start_date: new Date(subscription.start_date),
-        next_billing_date: new Date(subscription.next_billing_date),
-        reminder_enabled: subscription.reminder_enabled || false,
-        reminder_days: subscription.reminder_days || 7,
-        auto_renew: subscription.auto_renew ?? true,
-      });
-    };
-
-    loadFormData();
-  }, [subscription, reset]);
+  }, [id, reset, toast]);
 
   const handleAutocompleteTemplateSelect = (template: SubscriptionTemplate) => {
     setValue("name", template.name, { shouldValidate: true });
