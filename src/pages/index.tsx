@@ -139,16 +139,19 @@ export default function LandingPage() {
                 <a href="#testimonials" className="text-white hover:text-blue-300 transition-colors">
                   รีวิว
                 </a>
-                <Link href="/auth/login">
-                  <Button variant="ghost" className="text-white hover:bg-white/10">
-                    เข้าสู่ระบบ
-                  </Button>
-                </Link>
-                <Link href="/auth/signup">
-                  <Button className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
-                    เริ่มใช้งานฟรี
-                  </Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  className="text-white hover:bg-white/10"
+                  onClick={() => router.push("/auth/login")}
+                >
+                  เข้าสู่ระบบ
+                </Button>
+                <Button 
+                  className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
+                  onClick={() => router.push("/auth/signup")}
+                >
+                  เริ่มใช้งานฟรี
+                </Button>
               </div>
 
               {/* Mobile Menu Button */}
@@ -199,16 +202,19 @@ export default function LandingPage() {
                 รีวิว
               </a>
               <div className="border-t border-white/10 pt-6 space-y-4">
-                <Link href="/auth/login" onClick={closeMobileMenu}>
-                  <Button variant="ghost" className="w-full text-white hover:bg-white/10 justify-start">
-                    เข้าสู่ระบบ
-                  </Button>
-                </Link>
-                <Link href="/auth/signup" onClick={closeMobileMenu}>
-                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
-                    เริ่มใช้งานฟรี
-                  </Button>
-                </Link>
+                <Button 
+                  variant="ghost" 
+                  className="w-full text-white hover:bg-white/10 justify-start"
+                  onClick={() => { closeMobileMenu(); router.push("/auth/login"); }}
+                >
+                  เข้าสู่ระบบ
+                </Button>
+                <Button 
+                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg"
+                  onClick={() => { closeMobileMenu(); router.push("/auth/signup"); }}
+                >
+                  เริ่มใช้งานฟรี
+                </Button>
               </div>
             </div>
           </div>
@@ -262,17 +268,25 @@ export default function LandingPage() {
                 </p>
 
                 <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
-                  <Link href="/auth/signup">
-                    <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
-                      เริ่มใช้งานฟรี
-                      <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                    </Button>
-                  </Link>
-                  <Link href="#features">
-                    <Button size="lg" variant="outline" className="border-2 border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 rounded-xl">
-                      ดูฟีเจอร์ทั้งหมด
-                    </Button>
-                  </Link>
+                  <Button 
+                    size="lg" 
+                    className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group"
+                    onClick={() => router.push("/auth/signup")}
+                  >
+                    เริ่มใช้งานฟรี
+                    <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+                  </Button>
+                  <Button 
+                    size="lg" 
+                    variant="outline" 
+                    className="border-2 border-white/30 text-white hover:bg-white/10 text-lg px-8 py-6 rounded-xl"
+                    onClick={() => {
+                      const featuresSection = document.getElementById('features');
+                      featuresSection?.scrollIntoView({ behavior: 'smooth' });
+                    }}
+                  >
+                    ดูฟีเจอร์ทั้งหมด
+                  </Button>
                 </div>
 
                 {/* Stats */}
@@ -421,11 +435,12 @@ export default function LandingPage() {
 
                         {/* Analysis Button */}
                         <div className="mt-4 pt-4 border-t border-gray-700/50">
-                          <Link href="/auth/login">
-                            <button className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300">
-                              วิเคราะห์รายจ่ายของฉัน
-                            </button>
-                          </Link>
+                          <button 
+                            className="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-4 px-6 rounded-xl transition-colors duration-300"
+                            onClick={() => router.push("/auth/login")}
+                          >
+                            วิเคราะห์รายจ่ายของฉัน
+                          </button>
                         </div>
                       </div>
                     </div>
@@ -498,11 +513,12 @@ export default function LandingPage() {
                         </li>
                       ))}
                     </ul>
-                    <Link href="/auth/signup">
-                      <Button className={`w-full text-lg py-6 rounded-xl ${plan.popular ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-purple-500/50' : 'bg-white/10 hover:bg-white/20 border border-white/20'} text-white`}>
-                        {plan.cta}
-                      </Button>
-                    </Link>
+                    <Button 
+                      className={`w-full text-lg py-6 rounded-xl ${plan.popular ? 'bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg shadow-purple-500/50' : 'bg-white/10 hover:bg-white/20 border border-white/20'} text-white`}
+                      onClick={() => router.push("/auth/signup")}
+                    >
+                      {plan.cta}
+                    </Button>
                   </CardContent>
                 </Card>
               ))}
@@ -552,12 +568,14 @@ export default function LandingPage() {
               <p className="text-xl text-blue-200 mb-8">
                 เริ่มใช้งานฟรีวันนี้ ไม่ต้องผูกบัตรเครดิต
               </p>
-              <Link href="/auth/signup">
-                <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-12 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
-                  เริ่มใช้งานฟรี
-                  <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
-                </Button>
-              </Link>
+              <Button 
+                size="lg" 
+                className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-12 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group"
+                onClick={() => router.push("/auth/signup")}
+              >
+                เริ่มใช้งานฟรี
+                <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
+              </Button>
             </div>
           </div>
         </section>
