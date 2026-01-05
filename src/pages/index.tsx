@@ -741,9 +741,36 @@ export default function Home() {
                             </div>
                           </div>
                           
+                          <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 md:opacity-100 transition-opacity">
+                            <Link href={`/edit-subscription/${sub.id}`}>
+                              <Button 
+                                variant="ghost" 
+                                size="icon"
+                                className="h-8 w-8 hover:bg-blue-50 hover:text-blue-600"
+                                title={t("subscriptions.edit")}
+                              >
+                                <Edit className="w-4 h-4" />
+                              </Button>
+                            </Link>
+                            
+                            <Button
+                              variant="ghost"
+                              size="icon"
+                              className="h-8 w-8 hover:bg-red-50 hover:text-red-600"
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                setDeleteId(sub.id);
+                              }}
+                              title={t("subscriptions.delete")}
+                            >
+                              <Trash2 className="w-4 h-4" />
+                            </Button>
+                          </div>
+                          
                           <DropdownMenu>
                             <DropdownMenuTrigger asChild onClick={(e) => e.preventDefault()}>
-                              <Button variant="ghost" size="icon" className="opacity-0 group-hover:opacity-100 transition-opacity">
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
                                 <Bell className={`w-4 h-4 ${sub.reminder_enabled ? 'text-blue-600' : 'text-slate-400'}`} />
                               </Button>
                             </DropdownMenuTrigger>
