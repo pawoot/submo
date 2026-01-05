@@ -228,23 +228,34 @@ export default function Dashboard() {
         {/* Main Content */}
         <div className="container mx-auto px-6 py-6">
           <div className="space-y-6">
-            {/* Top Row: Insight Panel + Savings Recommendation */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-              <InsightPanel 
-                subscriptions={subscriptions}
-                onToggleReminder={handleToggleReminder}
-              />
-              <SavingsRecommendation 
-                subscriptions={subscriptions}
-                onToggleReminder={handleToggleReminder}
-              />
-            </div>
-
-            {/* Middle Row: Total Spending + Charts + Upcoming Renewals (3 columns) */}
+            {/* Main 2-Column Layout */}
             <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              <TotalSpending subscriptions={subscriptions} />
-              <SubscriptionCharts />
-              <UpcomingRenewals subscriptions={subscriptions} />
+              {/* Left Column (2/3 width) */}
+              <div className="lg:col-span-2 space-y-6">
+                {/* Insight Panel */}
+                <InsightPanel 
+                  subscriptions={subscriptions}
+                  onToggleReminder={handleToggleReminder}
+                />
+                
+                {/* Total Spending */}
+                <TotalSpending subscriptions={subscriptions} />
+                
+                {/* Subscription Charts */}
+                <SubscriptionCharts />
+              </div>
+
+              {/* Right Column (1/3 width) */}
+              <div className="space-y-6">
+                {/* Savings Recommendation */}
+                <SavingsRecommendation 
+                  subscriptions={subscriptions}
+                  onToggleReminder={handleToggleReminder}
+                />
+                
+                {/* Upcoming Renewals */}
+                <UpcomingRenewals subscriptions={subscriptions} />
+              </div>
             </div>
 
             {/* Subscription List */}
