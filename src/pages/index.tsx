@@ -1,6 +1,8 @@
 import SEO from "@/components/SEO";
 import MobileHeader from "@/components/MobileHeader";
 import { AuthGuard } from "@/components/AuthGuard";
+import { InsightPanel } from "@/components/InsightPanel";
+import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,7 +41,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from "@/components/ui/pagination";
-import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon } from "lucide-react";
+import { CreditCard, Calendar, DollarSign, Users, Plus, TrendingUp, AlertCircle, Edit, Trash2, ArrowUpDown, LogOut, Settings, Bell, User as UserIcon, ListFilter, PieChart, BarChart3 } from "lucide-react";
 import Link from "next/link";
 import { useEffect, useState } from "react";
 import { useToast } from "@/hooks/use-toast";
@@ -70,6 +72,7 @@ export default function Home() {
   const [sortedSubscriptions, setSortedSubscriptions] = useState<DisplaySubscription[]>([]);
   const [displaySubscriptions, setDisplaySubscriptions] = useState<DisplaySubscription[]>([]);
   const [totals, setTotals] = useState({ monthly: 0, yearly: 0 });
+  const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
   const [sortOption, setSortOption] = useState<SortOption>("date-asc");
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
@@ -463,79 +466,75 @@ export default function Home() {
           </div>
         </header>
 
-        <main className="container mx-auto px-4 py-8">
-          <div className="grid grid-cols-2 md:grid-cols-4 gap-3 md:gap-6 mb-8">
-            <Card className="border-l-4 border-l-indigo-500 shadow-sm">
-              <CardHeader className="pb-2 p-4">
-                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                  <DollarSign className="w-3.5 h-3.5 shrink-0" />
-                  {t("dashboard.totalCost")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white truncate">
-                  {formatCurrency(totals.monthly, preferredCurrency)}
+        <main className="container mx-auto px-4 py-8 space-y-8">
+          {/* Intelligence Section */}
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+            <div className="lg:col-span-2 space-y-6">
+              <InsightPanel subscriptions={subscriptions} currency={preferredCurrency} />
+              
+              {/* Cost Toggle & Summary */}
+              <div className="flex items-center justify-between bg-white dark:bg-slate-900 p-4 rounded-xl shadow-sm border">
+                <div className="flex items-center gap-4">
+                   <div className="p-2 bg-indigo-100 dark:bg-indigo-900 rounded-lg">
+                      <DollarSign className="w-6 h-6 text-indigo-600 dark:text-indigo-400" />
+                   </div>
+                   <div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400">
+                        {viewMode === "monthly" ? t("dashboard.totalCost") + " (" + t("dashboard.perMonth") + ")" : t("dashboard.totalCost") + " (" + t("dashboard.perYear") + ")"}
+                      </p>
+                      <h2 className="text-2xl font-bold text-slate-900 dark:text-white">
+                        {formatCurrency(viewMode === "monthly" ? totals.monthly : totals.yearly, preferredCurrency)}
+                      </h2>
+                   </div>
                 </div>
-                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {t("dashboard.perMonth")}
-                </p>
-              </CardContent>
-            </Card>
-
-            <Card className="border-l-4 border-l-purple-500 shadow-sm">
-              <CardHeader className="pb-2 p-4">
-                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                  <TrendingUp className="w-3.5 h-3.5 shrink-0" />
-                  {t("dashboard.totalCost")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white truncate">
-                  {formatCurrency(totals.yearly, preferredCurrency)}
+                <div className="flex bg-slate-100 dark:bg-slate-800 p-1 rounded-lg">
+                  <button
+                    onClick={() => setViewMode("monthly")}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                      viewMode === "monthly" 
+                        ? "bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-400" 
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                  >
+                    {t("dashboard.perMonth")}
+                  </button>
+                  <button
+                    onClick={() => setViewMode("yearly")}
+                    className={`px-4 py-2 text-sm font-medium rounded-md transition-all ${
+                      viewMode === "yearly" 
+                        ? "bg-white dark:bg-slate-700 shadow text-indigo-600 dark:text-indigo-400" 
+                        : "text-slate-600 dark:text-slate-400 hover:text-slate-900"
+                    }`}
+                  >
+                    {t("dashboard.perYear")}
+                  </button>
                 </div>
-                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {t("dashboard.perYear")}
-                </p>
-              </CardContent>
-            </Card>
+              </div>
 
-            <Card className="border-l-4 border-l-green-500 shadow-sm">
-              <CardHeader className="pb-2 p-4">
-                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                  <CreditCard className="w-3.5 h-3.5 shrink-0" />
-                  {t("dashboard.activeSubscriptions")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                  {subscriptions.length}
-                </div>
-                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {t("dashboard.items")}
-                </p>
-              </CardContent>
-            </Card>
+              {/* Charts - Visual Breakdown */}
+              <SubscriptionCharts />
+            </div>
 
-            <Card className="border-l-4 border-l-orange-500 shadow-sm">
-              <CardHeader className="pb-2 p-4">
-                <CardTitle className="text-xs font-medium text-slate-600 dark:text-slate-400 flex items-center gap-1.5 truncate">
-                  <AlertCircle className="w-3.5 h-3.5 shrink-0" />
-                  {t("dashboard.upcomingRenewals")}
-                </CardTitle>
-              </CardHeader>
-              <CardContent className="p-4 pt-0">
-                <div className="text-xl md:text-3xl font-bold text-slate-900 dark:text-white">
-                  {subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 7).length}
-                </div>
-                <p className="text-[10px] md:text-xs text-slate-500 dark:text-slate-400 mt-1">
-                  {t("dashboard.within30Days")}
-                </p>
-              </CardContent>
-            </Card>
-          </div>
-
-          <div className="mb-8">
-            <SubscriptionCharts />
+            <div className="space-y-6">
+              <SavingsRecommendation subscriptions={subscriptions} currency={preferredCurrency} />
+              
+              {/* Stats Cards Vertical Stack */}
+              <div className="grid grid-cols-2 lg:grid-cols-1 gap-4">
+                <Card className="border-l-4 border-l-green-500 shadow-sm">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-slate-500 mb-1">{t("dashboard.activeSubscriptions")}</p>
+                    <div className="text-2xl font-bold">{subscriptions.length}</div>
+                  </CardContent>
+                </Card>
+                <Card className="border-l-4 border-l-orange-500 shadow-sm">
+                  <CardContent className="p-4">
+                    <p className="text-xs text-slate-500 mb-1">{t("dashboard.upcomingRenewals")}</p>
+                    <div className="text-2xl font-bold">{subscriptions.filter(s => getDaysUntilRenewal(s.next_billing_date) <= 7).length}</div>
+                    <p className="text-xs text-orange-600 mt-1">{t("dashboard.within30Days")}</p>
+                  </CardContent>
+                </Card>
+              </div>
+            </div>
           </div>
 
           {sortedSubscriptions.length > 0 ? (
@@ -568,24 +567,51 @@ export default function Home() {
                     const daysUntil = getDaysUntilRenewal(sub.next_billing_date);
                     const isUrgent = daysUntil <= 7;
                     
+                    // Intelligence Badges
+                    const isHighCost = sub.amount > (totals.monthly * 0.2); // > 20% of total
+                    const isYearly = sub.billing_cycle === "yearly";
+                    
                     return (
                       <Link
                         key={sub.id}
                         href={`/edit-subscription/${sub.id}`}
-                        className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-l-4"
+                        className="flex items-start gap-4 p-4 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors border-l-4 group"
                         style={{ borderLeftColor: getCategoryColor(sub.category) }}
                       >
-                        <SubscriptionIcon
-                          name={sub.name}
-                          websiteUrl={sub.website_url}
-                          size="lg"
-                        />
+                        <div className="relative">
+                          <SubscriptionIcon
+                            name={sub.name}
+                            websiteUrl={sub.website_url}
+                            size="lg"
+                          />
+                          {isUrgent && (
+                            <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-orange-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-3 w-3 bg-orange-500"></span>
+                            </span>
+                          )}
+                        </div>
+                        
                         <div className="flex-1 min-w-0">
-                          <h3 className="font-bold text-slate-900 dark:text-white leading-tight">{sub.name}</h3>
-                          <div className="flex items-center gap-2 mt-1">
+                          <div className="flex items-center gap-2">
+                             <h3 className="font-bold text-slate-900 dark:text-white leading-tight group-hover:text-indigo-600 transition-colors">{sub.name}</h3>
+                             {isUrgent && <Badge variant="outline" className="text-[10px] border-orange-200 text-orange-600 bg-orange-50">Renewing Soon</Badge>}
+                          </div>
+                          
+                          <div className="flex flex-wrap items-center gap-2 mt-1.5">
                             <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal bg-slate-50">
                               {categoryLabels[sub.category] || sub.category}
                             </Badge>
+                            {isHighCost && (
+                               <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal border-red-100 text-red-600 bg-red-50">
+                                 High Cost
+                               </Badge>
+                            )}
+                            {isYearly && (
+                               <Badge variant="outline" className="text-[10px] h-5 px-1.5 font-normal border-blue-100 text-blue-600 bg-blue-50">
+                                 Yearly
+                               </Badge>
+                            )}
                           </div>
                         </div>
 
@@ -597,6 +623,9 @@ export default function Home() {
                             {sub.billing_cycle === "monthly" ? t("subscriptions.perMonth") : 
                              sub.billing_cycle === "yearly" ? t("subscriptions.perYear") : 
                              billingCycleLabels[sub.billing_cycle]}
+                          </div>
+                          <div className="text-[10px] font-medium text-slate-400 mt-1">
+                             {new Date(sub.next_billing_date).toLocaleDateString(undefined, { day: 'numeric', month: 'short' })}
                           </div>
                         </div>
                       </Link>
