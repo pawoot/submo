@@ -57,46 +57,25 @@ export default function AddSubscription() {
   const handleSubmit = async (data: any) => {
     setIsSubmitting(true);
     try {
-      const subscriptionData = {
+      const newSubscription = {
         name: data.name,
-        category_id: data.category_id,
-        category: categories.find(c => c.id === data.category_id)?.slug || "other",
-        description: null,
-        amount: data.amount,
+        amount: parseFloat(data.amount),
         currency: data.currency,
         billing_cycle: data.billing_cycle,
-        payment_method_id: data.payment_method_id,
-        payment_method: paymentMethods.find(p => p.id === data.payment_method_id)?.slug || "other",
-        card_last_4: data.card_last_4 || null,
-        start_date: data.start_date.toISOString(),
         next_billing_date: data.next_billing_date.toISOString(),
-        notes: data.notes || null,
-        shared_with: data.shared_with || [],
-        template_id: data.template_id,
-        icon_url: data.icon_url,
-        logo_url: data.icon_url,
-        is_template: false,
-        is_active: true,
-        popularity_score: 0,
-        remind_3_days_before: data.remind_3_days,
-        remind_7_days_before: data.remind_7_days,
-        usage_frequency: data.usage_frequency || null,
-        website_url: null,
-        updated_at: new Date().toISOString(),
-        usage_count: 0
+        category_id: data.category_id,
+        payment_method_id: data.payment_method_id,
+        reminder_enabled: data.reminder_enabled,
+        reminder_days: data.reminder_days,
+        auto_renew: data.auto_renew,
+        notes: data.notes,
       };
 
-      await subscriptionService.create({
-        ...subscriptionData,
-        amount: parseFloat(subscriptionData.amount),
-        usage_count: 0,
-        reminder_enabled: false,
-        reminder_days: 7,
-      });
+      await subscriptionService.createSubscription(newSubscription);
 
       toast({
-        title: t("common.success"),
-        description: t("subscription.add_success"),
+        title: "สร้างรายการสำเร็จ",
+        description: `เพิ่ม ${data.name} เรียบร้อยแล้ว`,
       });
 
       router.push("/");

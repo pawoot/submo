@@ -93,6 +93,9 @@ export default function EditSubscription() {
       required_error: t("validation.required"),
       invalid_type_error: t("validation.invalidDate"),
     }),
+    reminder_enabled: z.boolean().optional(),
+    reminder_days: z.coerce.number().optional(),
+    auto_renew: z.boolean().optional(),
   }).refine((data) => data.next_billing_date > data.start_date, {
     message: t("validation.invalidDate"),
     path: ["next_billing_date"],
@@ -186,6 +189,9 @@ export default function EditSubscription() {
         notes: subscription.notes || "",
         start_date: new Date(subscription.start_date),
         next_billing_date: new Date(subscription.next_billing_date),
+        reminder_enabled: subscription.reminder_enabled || false,
+        reminder_days: subscription.reminder_days || 7,
+        auto_renew: subscription.auto_renew ?? true,
       });
     };
 
@@ -228,26 +234,25 @@ export default function EditSubscription() {
       const selectedCategory = dbCategories.find(c => c.id === data.category_id);
       const selectedPaymentMethod = dbPaymentMethods.find(p => p.id === data.payment_method_id);
 
-      await subscriptionService.update(id as string, {
+      const updates = {
         name: data.name,
-        category_id: data.category_id,
-        category: selectedCategory?.slug || "other", // Legacy support
-        description: data.description || null,
-        amount: Number(data.amount),
+        amount: parseFloat(data.amount),
         currency: data.currency,
         billing_cycle: data.billing_cycle,
-        payment_method_id: data.payment_method_id,
-        payment_method: selectedPaymentMethod?.slug || "other", // Legacy support
-        card_last_4: data.card_last_4 || null,
-        start_date: data.start_date.toISOString(),
         next_billing_date: data.next_billing_date.toISOString(),
-        website_url: data.website_url || null,
-        notes: data.notes || null,
-      });
+        category_id: data.category_id,
+        payment_method_id: data.payment_method_id,
+        reminder_enabled: data.reminder_enabled,
+        reminder_days: data.reminder_days,
+        auto_renew: data.auto_renew,
+        notes: data.notes,
+      };
+
+      await subscriptionService.updateSubscription(id as string, updates);
 
       toast({
-        title: t("common.success"),
-        description: t("subscription.update_success"),
+        title: "บันทึกข้อมูลสำเร็จ",
+        description: "อัปเดตข้อมูล Subscription เรียบร้อยแล้ว",
       });
       
       router.push("/");
