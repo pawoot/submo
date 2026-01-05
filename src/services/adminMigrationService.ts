@@ -41,16 +41,14 @@ export interface AdminActionLog {
 }
 
 export interface MigrationHealth {
-  status: "healthy" | "needs_attention" | "in_progress";
   total_subscriptions: number;
+  successfully_mapped?: number; // Optional as it might be calculated
   successfully_mapped_percent: number;
   unmapped_categories: number;
   unmapped_payment_methods: number;
   invalid_shared_with: number;
-  unresolved_issues: number;
-  success_rate: number;
-  health_status: string;
-  checked_at: string;
+  status: "healthy" | "needs_attention" | "critical" | "in_progress" | "unknown";
+  last_report_created_at?: string | null;
 }
 
 export interface UnmappedRecord {
@@ -240,7 +238,9 @@ export async function rerunCategoryBackfill(): Promise<{
     return { success: false, error: error.message };
   }
 
-  return { success: true, mapped_count: data as number };
+  // Supabase RPC returns integer directly as data
+  const mappedCount = typeof data === 'number' ? data : (data?.categories_mapped || 0);
+  return { success: true, mapped_count: mappedCount };
 }
 
 /**
@@ -258,7 +258,9 @@ export async function rerunPaymentMethodBackfill(): Promise<{
     return { success: false, error: error.message };
   }
 
-  return { success: true, mapped_count: data as number };
+  // Supabase RPC returns integer directly as data
+  const mappedCount = typeof data === 'number' ? data : (data?.payment_methods_mapped || 0);
+  return { success: true, mapped_count: mappedCount };
 }
 
 /**

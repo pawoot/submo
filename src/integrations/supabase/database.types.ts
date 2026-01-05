@@ -615,6 +615,7 @@ export type Database = {
         Args: { p_new_payment_method_id: string; p_subscription_id: string }
         Returns: Json
       }
+      generate_migration_report: { Args: never; Returns: string }
       get_migration_health: { Args: never; Returns: Json }
       log_admin_action: {
         Args: {
@@ -627,6 +628,22 @@ export type Database = {
           p_target_id?: string
         }
         Returns: string
+      }
+      rerun_category_backfill: {
+        Args: never
+        Returns: {
+          still_unmapped: number
+          successfully_mapped: number
+          total_attempted: number
+        }[]
+      }
+      rerun_payment_method_backfill: {
+        Args: never
+        Returns: {
+          still_unmapped: number
+          successfully_mapped: number
+          total_attempted: number
+        }[]
       }
     }
     Enums: {
