@@ -241,9 +241,9 @@ export default function LandingPage() {
               transition: "transform 0.1s ease-out"
             }}
           >
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
+            <div className="grid lg:grid-cols-2 gap-6 items-center">
               {/* Left Column - Text Content */}
-              <div className="text-center">
+              <div className="text-center lg:text-left lg:pr-8">
                 <div className="inline-flex items-center space-x-2 bg-white/10 backdrop-blur-sm rounded-full px-6 py-2 mb-8 border border-white/20">
                   <Star className="h-4 w-4 text-yellow-400 fill-yellow-400" />
                   <span className="text-sm">ใช้งานฟรี ไม่ต้องผูกบัตรเครดิต</span>
@@ -261,7 +261,7 @@ export default function LandingPage() {
                   <span className="text-blue-400">Submo</span> ช่วยคุณคืนค่าและหยุดรายจ่ายแผงเหล่านี้... ในคลิกเดียว
                 </p>
 
-                <div className="flex flex-col sm:flex-row items-center justify-center gap-4 mb-12">
+                <div className="flex flex-col sm:flex-row items-center lg:items-start lg:justify-start justify-center gap-4 mb-12">
                   <Link href="/auth/signup">
                     <Button size="lg" className="bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white text-lg px-8 py-6 rounded-xl shadow-2xl shadow-purple-500/50 group">
                       เริ่มใช้งานฟรี
