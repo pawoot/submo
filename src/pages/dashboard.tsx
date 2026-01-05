@@ -33,6 +33,8 @@ import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { InsightPanel } from "@/components/InsightPanel";
 import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { SubscriptionCharts } from "@/components/SubscriptionCharts";
+import { UpcomingRenewals } from "@/components/UpcomingRenewals";
+import { TotalSpending } from "@/components/TotalSpending";
 import type { Database } from "@/integrations/supabase/types";
 
 type ServiceSubscription = Awaited<ReturnType<typeof subscriptionService.getUserSubscriptions>>[number];
@@ -218,26 +220,27 @@ export default function Dashboard() {
         {/* Main Content */}
         <div className="container mx-auto px-6 py-6">
           <div className="space-y-6">
-            {/* Insight Panel - Full Width */}
-            <InsightPanel 
-              subscriptions={subscriptions}
-              onToggleReminder={handleToggleReminder}
-            />
+            {/* Top Row: Insight Panel + Savings Recommendation */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <InsightPanel 
+                subscriptions={subscriptions}
+                onToggleReminder={handleToggleReminder}
+              />
+              <SavingsRecommendation 
+                subscriptions={subscriptions}
+                onToggleReminder={handleToggleReminder}
+              />
+            </div>
 
-            {/* Charts and Savings Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-              {/* Charts - 2/3 width */}
-              <div className="lg:col-span-2">
-                <SubscriptionCharts />
-              </div>
-              
-              {/* Savings Recommendation - 1/3 width */}
-              <div className="lg:col-span-1">
-                <SavingsRecommendation 
-                  subscriptions={subscriptions}
-                  onToggleReminder={handleToggleReminder}
-                />
-              </div>
+            {/* Middle Top Row: Total Spending + Upcoming Renewals */}
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+              <TotalSpending subscriptions={subscriptions} />
+              <UpcomingRenewals subscriptions={subscriptions} />
+            </div>
+
+            {/* Middle Row: Charts - Full Width */}
+            <div>
+              <SubscriptionCharts />
             </div>
 
             {/* Subscription List */}
