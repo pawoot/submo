@@ -26,18 +26,13 @@ import type { SubscriptionTemplate } from "@/services/subscriptionTemplateServic
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
-// Form Schema with validation
-const formSchema = z.object({
+// Form Schema without translation (will be created inside component)
+const createFormSchema = () => z.object({
   name: z.string().min(2, "Name must be at least 2 characters").max(100),
   category_id: z.string().min(1, "Category is required"),
-  amount: z.string()
-    .min(1, t("validation.required"))
-    .refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
-      message: t("validation.positiveNumber")
-    })
-    .refine((val) => Number(val) <= 999999.99, {
-      message: t("validation.maxLength") + " 999,999.99"
-    }),
+  amount: z.coerce.number()
+    .min(0.01, "Amount must be greater than 0")
+    .max(999999.99, "Amount must be less than 999,999.99"),
   currency: z.string().min(1, "Currency is required"),
   billing_cycle: z.enum(["monthly", "yearly", "quarterly", "half-yearly"]),
   payment_method_id: z.string().min(1, "Payment method is required"),
@@ -56,7 +51,7 @@ const formSchema = z.object({
   path: ["next_billing_date"],
 });
 
-type FormValues = z.infer<typeof formSchema>;
+type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
 
 interface AddSubscriptionWizardProps {
   categories: Category[];
@@ -80,12 +75,12 @@ export function AddSubscriptionWizard({
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
 
   const form = useForm<FormValues>({
-    resolver: zodResolver(formSchema),
+    resolver: zodResolver(createFormSchema()),
     defaultValues: {
       name: "",
       category_id: "",
       amount: 0,
-      currency: preferredCurrency || "THB", // Use preferred currency or default to THB
+      currency: preferredCurrency || "THB",
       billing_cycle: "monthly",
       payment_method_id: "",
       card_last_4: "",
@@ -143,26 +138,20 @@ export function AddSubscriptionWizard({
 
   // Handle template selection
   const handleTemplateSelect = async (template: SubscriptionTemplate) => {
-    // Set form values from template
     setValue("name", template.name);
     setValue("category_id", template.category_id);
-    // Use default_amount if available, fallback to amount, then 0
     setValue("amount", template.amount ?? 0);
     setValue("currency", template.currency);
-    // Ensure billing_cycle is a valid enum value
     const cycle = template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly";
     setValue("billing_cycle", cycle || "monthly");
     
-    // Set website_url
     // @ts-expect-error - field might not exist in form types yet
     setValue("website_url", template.website_url || template.icon_url || "");
     // @ts-expect-error - field might not exist in form types yet
     setValue("description", template.description || "");
 
-    // Clear custom styling when template selected
     setSelectedTemplate(template);
 
-    // Scroll to amount field after template selection
     setTimeout(() => {
       const amountField = document.querySelector('input[name="amount"]');
       if (amountField) {
@@ -172,12 +161,10 @@ export function AddSubscriptionWizard({
     }, 100);
   };
 
-  // Handle form submission
   const onSubmitHandler = async (data: FormValues) => {
     await onSubmit(data);
   };
 
-  // Navigate between steps
   const nextStep = () => {
     if (step < 3) setStep(step + 1);
   };
@@ -186,7 +173,6 @@ export function AddSubscriptionWizard({
     if (step > 1) setStep(step - 1);
   };
 
-  // Validate step before proceeding
   const canProceedToNextStep = () => {
     if (step === 1) {
       return watchedValues.name && watchedValues.category_id && watchedValues.amount > 0;
@@ -241,7 +227,6 @@ export function AddSubscriptionWizard({
                           setValue("name", "");
                           setValue("category_id", "");
                           setValue("icon_url", "");
-                          // Focus on name input
                           setTimeout(() => {
                             const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
                             if (nameInput) nameInput.focus();
