@@ -211,8 +211,20 @@ export function AddSubscriptionWizard({
                     <div className="mb-6">
                       <Label className="text-base mb-3 block">{t("addSub.popularTemplates")}</Label>
                       <SubscriptionTemplateBrowser
-                        onSelectTemplate={handleTemplateSelect}
-                        compact={true}
+                        isOpen={showTemplateBrowser}
+                        onClose={() => setShowTemplateBrowser(false)}
+                        onSelect={handleTemplateSelect}
+                        onCustom={() => {
+                          setSelectedTemplate(null);
+                          setValue("name", "");
+                          setValue("category_id", "");
+                          setValue("icon_url", "");
+                          // Focus on name input
+                          setTimeout(() => {
+                            const nameInput = document.querySelector('input[name="name"]') as HTMLInputElement;
+                            if (nameInput) nameInput.focus();
+                          }, 100);
+                        }}
                       />
                     </div>
 

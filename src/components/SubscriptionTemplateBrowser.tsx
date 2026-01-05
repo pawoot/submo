@@ -10,13 +10,19 @@ import type { SubscriptionTemplate } from "@/services/subscriptionTemplateServic
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 import { useLanguage } from "@/contexts/LanguageContext";
 
-type Props = {
-  onSelectTemplate: (template: SubscriptionTemplate) => void;
-  selectedTemplateId?: string;
-  compact?: boolean;
-};
+interface SubscriptionTemplateBrowserProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSelect: (template: SubscriptionTemplate) => void;
+  onCustom?: () => void;
+}
 
-export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplateId, compact = false }: Props) {
+export function SubscriptionTemplateBrowser({
+  isOpen,
+  onClose,
+  onSelect,
+  onCustom,
+}: SubscriptionTemplateBrowserProps) {
   const { t, language } = useLanguage();
   const [popularTemplates, setPopularTemplates] = useState<SubscriptionTemplate[]>([]);
   const [allTemplatesByCategory, setAllTemplatesByCategory] = useState<Record<string, SubscriptionTemplate[]>>({});
@@ -55,7 +61,7 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
   };
 
   const handleTemplateClick = async (template: SubscriptionTemplate) => {
-    onSelectTemplate(template);
+    onSelect(template);
     // Increment usage count
     try {
       await subscriptionTemplateService.incrementUsageCount(template.id);
@@ -229,6 +235,24 @@ export function SubscriptionTemplateBrowser({ onSelectTemplate, selectedTemplate
                   </div>
                 ))
               )}
+            </div>
+            
+            {/* Custom Service Link */}
+            <div className="border-t pt-4 mt-4 text-center">
+              <p className="text-sm text-slate-500 mb-2">
+                {t("subscriptions.notFoundAddCustom")}
+              </p>
+              <button
+                onClick={() => {
+                  if (onCustom) {
+                    onCustom();
+                  }
+                  onClose();
+                }}
+                className="text-sm font-medium text-blue-600 hover:text-blue-700 hover:underline transition-colors"
+              >
+                {t("subscriptions.addCustomService")}
+              </button>
             </div>
           </div>
         </DialogContent>

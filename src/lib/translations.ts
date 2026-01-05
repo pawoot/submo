@@ -260,6 +260,14 @@ export const translations = {
     th: "ค้นหาเทมเพลต...",
     en: "Search templates..."
   },
+  "subscriptions.addCustomService": {
+    th: "เพิ่มบริการที่คุณต้องการ",
+    en: "Add your own service"
+  },
+  "subscriptions.notFoundAddCustom": {
+    th: "ไม่พบบริการที่ต้องการ?",
+    en: "Service not found?"
+  },
 
   // Search & Filter
   "search.label": {
@@ -2082,39 +2090,7 @@ export const translations = {
   },
   "intelligence.multipleInCategory": {
     th: "🔁 คุณมีบริการในหมวดหมู่นี้แล้ว {count} รายการ",
-    en: "🔁 You already have {count} subscriptions in this category"
-  },
-  "intelligence.rarelyUsed": {
-    th: "✂️ บริการที่ใช้ไม่บ่อยมักจะถูกยกเลิกโดยผู้ใช้",
-    en: "✂️ Subscriptions used rarely are often canceled by users"
-  },
-  "intelligence.yearlyBillingSuggestion": {
-    th: "💡 ลองพิจารณาจ่ายแบบรายปี อาจประหยัดได้ประมาณ {savings} บาท",
-    en: "💡 Consider yearly billing to potentially save around {savings}"
-  },
-  "intelligence.reminderSuggestion": {
-    th: "🔔 แนะนำให้เปิดการแจ้งเตือนเพื่อไม่ให้ลืมบริการนี้",
-    en: "🔔 We recommend enabling reminders for this subscription"
-  },
-  "intelligence.summary": {
-    th: "สรุปข้อมูลอัจฉริยะ",
-    en: "Submo Insight"
-  },
-  "intelligence.summaryYearlyCost": {
-    th: "บริการนี้มีค่าใช้จ่าย {amount} ต่อปี",
-    en: "This subscription costs {amount}/year"
-  },
-  "intelligence.summaryPercentage": {
-    th: "คิดเป็น {percentage}% ของค่าใช้จ่ายรายเดือนของคุณ",
-    en: "It accounts for {percentage}% of your monthly subscription spending"
-  },
-  "intelligence.summaryReminder": {
-    th: "เปิดการแจ้งเตือนเพื่อป้องกันการลืมแล้ว",
-    en: "A reminder has been enabled to prevent forgetting"
-  },
-  "intelligence.noActionRequired": {
-    th: "ไม่ต้องทำอะไรเพิ่มเติม",
-    en: "No additional action required"
+    en: "🔁 You already have {count} item(s) in this category"
   }
 };
 
