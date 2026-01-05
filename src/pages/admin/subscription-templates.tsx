@@ -189,6 +189,16 @@ export default function AdminSubscriptionTemplates() {
 
   const confirmAdd = async () => {
     try {
+      // Validate required fields
+      if (!formData.name || !formData.category_id) {
+        toast({
+          title: "Validation Error",
+          description: "Please fill in template name and select a category",
+          variant: "destructive",
+        });
+        return;
+      }
+
       await subscriptionTemplateService.createTemplate({
         name: formData.name,
         category_id: formData.category_id,
@@ -210,9 +220,10 @@ export default function AdminSubscriptionTemplates() {
       loadTemplates();
     } catch (error) {
       console.error("Error adding template:", error);
+      const errorMessage = error instanceof Error ? error.message : "Failed to add template";
       toast({
         title: "Error",
-        description: "Failed to add template",
+        description: errorMessage,
         variant: "destructive",
       });
     }

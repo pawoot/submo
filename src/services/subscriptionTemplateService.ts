@@ -25,15 +25,22 @@ export type SubscriptionTemplate = {
 export const subscriptionTemplateService = {
   // Create a new template
   async createTemplate(template: Partial<SubscriptionTemplate>): Promise<SubscriptionTemplate> {
+    // Validate required fields
+    if (!template.name || !template.category_id) {
+      throw new Error("Name and category are required");
+    }
+
     const dbPayload: any = {
       name: template.name,
       category_id: template.category_id,
       amount: template.amount ?? 0,
-      currency: template.currency,
-      billing_cycle: template.billing_cycle,
+      currency: template.currency || "USD",
+      billing_cycle: template.billing_cycle || "monthly",
+      next_billing_date: new Date().toISOString(), // Required field, use current date as placeholder
       website_url: template.website_url,
       description: template.description,
       is_template: true,
+      user_id: null, // System templates don't belong to any user
       usage_count: 0,
       popularity_score: 0
     };
@@ -54,7 +61,10 @@ export const subscriptionTemplateService = {
       `)
       .single();
 
-    if (error) throw error;
+    if (error) {
+      console.error("Error creating template:", error);
+      throw error;
+    }
     return this.mapResponse(data);
   },
 
