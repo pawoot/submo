@@ -573,7 +573,7 @@ export default function Home() {
             <div className="space-y-6">
               {/* Savings Recommendation */}
               <SavingsRecommendation 
-                subscriptions={convertedSubscriptions}
+                subscriptions={displaySubscriptions}
                 onToggleReminder={handleToggleReminder}
               />
               
