@@ -10,7 +10,9 @@ import {
   Users,
   Check,
   Star,
-  ArrowRight
+  ArrowRight,
+  Menu,
+  X
 } from "lucide-react";
 import Link from "next/link";
 import { useRouter } from "next/router";
@@ -19,6 +21,7 @@ import { useState, useEffect } from "react";
 export default function LandingPage() {
   const router = useRouter();
   const [scrollY, setScrollY] = useState(0);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -28,6 +31,11 @@ export default function LandingPage() {
     window.addEventListener("scroll", handleScroll, { passive: true });
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close mobile menu when clicking outside or on a link
+  const closeMobileMenu = () => {
+    setMobileMenuOpen(false);
+  };
 
   const features = [
     {
@@ -123,7 +131,7 @@ export default function LandingPage() {
 
       <div className="min-h-screen bg-gradient-to-br from-blue-950 via-purple-950 to-blue-900 text-white">
         {/* Navigation */}
-        <nav className="border-b border-white/10 backdrop-blur-xl bg-white/5">
+        <nav className="border-b border-white/10 backdrop-blur-xl bg-white/5 fixed top-0 left-0 right-0 z-50">
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
             <div className="flex justify-between items-center h-16">
               <div className="flex items-center space-x-3">
@@ -134,7 +142,18 @@ export default function LandingPage() {
                   Submo.ai
                 </span>
               </div>
-              <div className="flex items-center space-x-4">
+
+              {/* Desktop Navigation */}
+              <div className="hidden md:flex items-center space-x-8">
+                <a href="#features" className="text-white hover:text-blue-300 transition-colors">
+                  ฟีเจอร์
+                </a>
+                <a href="#pricing" className="text-white hover:text-blue-300 transition-colors">
+                  ราคา
+                </a>
+                <a href="#testimonials" className="text-white hover:text-blue-300 transition-colors">
+                  รีวิว
+                </a>
                 <Link href="/auth/login">
                   <Button variant="ghost" className="text-white hover:bg-white/10">
                     เข้าสู่ระบบ
@@ -146,12 +165,72 @@ export default function LandingPage() {
                   </Button>
                 </Link>
               </div>
+
+              {/* Mobile Menu Button */}
+              <button
+                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                className="md:hidden text-white hover:bg-white/10 p-2 rounded-lg transition-colors"
+                aria-label="Toggle menu"
+              >
+                {mobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
+              </button>
+            </div>
+          </div>
+
+          {/* Mobile Menu Overlay */}
+          {mobileMenuOpen && (
+            <div
+              className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40 md:hidden"
+              onClick={closeMobileMenu}
+            />
+          )}
+
+          {/* Mobile Menu */}
+          <div
+            className={`fixed top-16 right-0 bottom-0 w-64 bg-gradient-to-br from-blue-950 via-purple-950 to-blue-900 border-l border-white/10 z-50 md:hidden transform transition-transform duration-300 ${
+              mobileMenuOpen ? "translate-x-0" : "translate-x-full"
+            }`}
+          >
+            <div className="flex flex-col p-6 space-y-6">
+              <a
+                href="#features"
+                onClick={closeMobileMenu}
+                className="text-white hover:text-blue-300 transition-colors text-lg font-medium"
+              >
+                ฟีเจอร์
+              </a>
+              <a
+                href="#pricing"
+                onClick={closeMobileMenu}
+                className="text-white hover:text-blue-300 transition-colors text-lg font-medium"
+              >
+                ราคา
+              </a>
+              <a
+                href="#testimonials"
+                onClick={closeMobileMenu}
+                className="text-white hover:text-blue-300 transition-colors text-lg font-medium"
+              >
+                รีวิว
+              </a>
+              <div className="border-t border-white/10 pt-6 space-y-4">
+                <Link href="/auth/login" onClick={closeMobileMenu}>
+                  <Button variant="ghost" className="w-full text-white hover:bg-white/10 justify-start">
+                    เข้าสู่ระบบ
+                  </Button>
+                </Link>
+                <Link href="/auth/signup" onClick={closeMobileMenu}>
+                  <Button className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 text-white shadow-lg">
+                    เริ่มใช้งานฟรี
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         </nav>
 
         {/* Hero Section */}
-        <section className="relative overflow-hidden pt-20 pb-32 px-4 sm:px-6 lg:px-8">
+        <section className="relative overflow-hidden pt-32 pb-32 px-4 sm:px-6 lg:px-8">
           {/* Animated Background Elements with Parallax */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div 
@@ -260,7 +339,7 @@ export default function LandingPage() {
         </section>
 
         {/* Pricing Section */}
-        <section className="py-24 px-4 sm:px-6 lg:px-8">
+        <section id="pricing" className="py-24 px-4 sm:px-6 lg:px-8">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">
@@ -304,7 +383,7 @@ export default function LandingPage() {
         </section>
 
         {/* Testimonials Section */}
-        <section className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black/20 to-transparent">
+        <section id="testimonials" className="py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-black/20 to-transparent">
           <div className="max-w-7xl mx-auto">
             <div className="text-center mb-16">
               <h2 className="text-4xl sm:text-5xl font-bold mb-4">
