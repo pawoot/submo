@@ -231,9 +231,7 @@ export default function Dashboard() {
                   </CardTitle>
                 </CardHeader>
                 <CardContent>
-                  <div className="h-64 flex items-center justify-center text-muted-foreground">
-                    {t("dashboard.chartsComingSoon")}
-                  </div>
+                  <SubscriptionCharts />
                 </CardContent>
               </Card>
 
