@@ -295,50 +295,71 @@ export function SubscriptionCharts() {
               </CardContent>
             </Card>
 
-            <Card className="shadow-lg border-2 border-gray-100">
-              <CardHeader className="bg-gradient-to-r from-green-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
-                  <PieChartIcon className="w-6 h-6 text-green-600" />
+            {/* Payment Method Distribution */}
+            <Card>
+              <CardHeader>
+                <CardTitle className="text-base font-medium flex items-center gap-2">
+                  <CreditCard className="h-4 w-4" />
                   {t("charts.paymentMethodDistribution")}
                 </CardTitle>
               </CardHeader>
-              <CardContent className="pt-6">
-                <div className="h-[300px] w-full">
-                  {calculating ? (
-                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
-                  ) : (
-                    <ResponsiveContainer width="100%" height="100%">
+              <CardContent>
+                <div className="flex flex-col md:flex-row items-center justify-center gap-6">
+                  <div className="w-full md:w-1/2 max-w-[240px]">
+                    <ResponsiveContainer width="100%" height={240}>
                       <PieChart>
                         <Pie
                           data={paymentChartData}
                           cx="50%"
                           cy="50%"
                           innerRadius={60}
-                          outerRadius={100}
+                          outerRadius={90}
                           paddingAngle={2}
                           dataKey="amount"
-                          nameKey="name"
                         >
                           {paymentChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color || "#10b981"} />
+                            <Cell key={`cell-${index}`} fill={entry.color} />
                           ))}
                         </Pie>
-                        <Tooltip 
-                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
-                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                        <Tooltip
+                          content={({ active, payload }) => {
+                            if (active && payload && payload.length) {
+                              return (
+                                <div className="bg-background border border-border rounded-lg shadow-lg p-3">
+                                  <p className="font-medium">{payload[0].name}</p>
+                                  <p className="text-sm text-muted-foreground">
+                                    {formatCurrency(payload[0].value as number, preferredCurrency)} ({payload[0].payload.percentage}%)
+                                  </p>
+                                </div>
+                              );
+                            }
+                            return null;
+                          }}
                         />
-                        <text x="50%" y="50%" textAnchor="middle" dominantBaseline="middle" className="fill-slate-500 text-xs">
+                        <text
+                          x="50%"
+                          y="50%"
+                          textAnchor="middle"
+                          dominantBaseline="middle"
+                          className="fill-muted-foreground text-sm"
+                        >
                           Methods
                         </text>
                       </PieChart>
                     </ResponsiveContainer>
-                  )}
-                  {/* Legend */}
-                  <div className="mt-4 flex flex-wrap justify-center gap-3">
-                    {paymentChartData.map((entry, index) => (
-                      <div key={index} className="flex items-center gap-1.5 text-xs text-slate-600">
-                        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color || "#10b981" }} />
-                        <span>{entry.name} ({entry.percentage}%)</span>
+                  </div>
+                  
+                  {/* Legend - Side by side with proper alignment */}
+                  <div className="flex flex-col gap-3 w-full md:w-1/2">
+                    {paymentChartData.map((item, index) => (
+                      <div key={index} className="flex items-center gap-3">
+                        <div
+                          className="w-4 h-4 rounded-sm flex-shrink-0"
+                          style={{ backgroundColor: item.color }}
+                        />
+                        <span className="text-sm text-foreground leading-none">
+                          {item.name} ({item.percentage}%)
+                        </span>
                       </div>
                     ))}
                   </div>
