@@ -50,6 +50,8 @@ export default function EditSubscription() {
   const { t, language } = useLanguage();
 
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [showAmountChangeDialog, setShowAmountChangeDialog] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState<SubscriptionFormData | null>(null);
   const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [newUserEmail, setNewUserEmail] = useState("");
   const [emailError, setEmailError] = useState("");
@@ -62,7 +64,10 @@ export default function EditSubscription() {
   const subscriptionSchema = z.object({
     name: z.string()
       .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
-      .max(100, t("validation.maxLength") + " 100 " + t("validation.characters")),
+      .max(100, t("validation.maxLength") + " 100 " + t("validation.characters"))
+      .refine((val) => val.trim().length >= 2, {
+        message: t("validation.required")
+      }),
     category_id: z.string()
       .min(1, t("validation.required")),
     description: z.string()
@@ -76,19 +81,42 @@ export default function EditSubscription() {
       })
       .refine((val) => Number(val) <= 999999.99, {
         message: t("validation.maxLength") + " 999,999.99"
+      })
+      .refine((val) => {
+        const num = Number(val);
+        return Number.isFinite(num) && num.toFixed(2) === num.toString() || val.split('.')[1]?.length <= 2;
+      }, {
+        message: "รองรับทศนิยมสูงสุด 2 ตำแหน่ง"
       }),
     currency: z.string()
-      .min(1, t("validation.required")),
+      .min(1, t("validation.required"))
+      .length(3, "รหัสสกุลเงินต้องมี 3 ตัวอักษร"),
     billing_cycle: z.string()
-      .min(1, t("validation.required")),
+      .min(1, t("validation.required"))
+      .refine((val) => ['monthly', 'yearly', 'quarterly', 'half-yearly'].includes(val), {
+        message: "กรุณาเลือกรอบบิลที่ถูกต้อง"
+      }),
     payment_method_id: z.string()
       .min(1, t("validation.required")),
     card_last_4: z.string()
       .max(4, t("validation.maxLength") + " 4")
+      .refine((val) => !val || /^\d{4}$/.test(val), {
+        message: "หมายเลขบัตรท้าย 4 หลักต้องเป็นตัวเลขเท่านั้น"
+      })
       .optional()
       .nullable(),
     website_url: z.string()
-      .url(t("validation.invalidUrl"))
+      .refine((val) => {
+        if (!val || val === "") return true;
+        try {
+          new URL(val);
+          return true;
+        } catch {
+          return false;
+        }
+      }, {
+        message: t("validation.invalidUrl")
+      })
       .optional()
       .nullable()
       .or(z.literal("")),
@@ -99,17 +127,32 @@ export default function EditSubscription() {
     start_date: z.date({
       required_error: t("validation.required"),
       invalid_type_error: t("validation.invalidDate"),
-    }),
+    })
+      .refine((date) => date <= new Date(), {
+        message: "วันเริ่มต้นต้องไม่เกินวันที่ปัจจุบัน"
+      }),
     next_billing_date: z.date({
       required_error: t("validation.required"),
       invalid_type_error: t("validation.invalidDate"),
     }),
     reminder_enabled: z.boolean().optional(),
-    reminder_days: z.coerce.number().optional(),
+    reminder_days: z.coerce.number()
+      .min(1, "ต้องแจ้งเตือนล่วงหน้าอย่างน้อย 1 วัน")
+      .max(30, "แจ้งเตือนล่วงหน้าได้สูงสุด 30 วัน")
+      .optional(),
     auto_renew: z.boolean().optional(),
   }).refine((data) => data.next_billing_date > data.start_date, {
-    message: t("validation.invalidDate"),
+    message: "วันต่ออายุต้องหลังจากวันเริ่มต้น",
     path: ["next_billing_date"],
+  }).refine((data) => {
+    // ตรวจสอบว่าถ้าเปิดการแจ้งเตือน ต้องมีจำนวนวัน
+    if (data.reminder_enabled && !data.reminder_days) {
+      return false;
+    }
+    return true;
+  }, {
+    message: "กรุณาระบุจำนวนวันแจ้งเตือนล่วงหน้า",
+    path: ["reminder_days"],
   });
 
   type SubscriptionFormData = z.infer<typeof subscriptionSchema>;
@@ -232,23 +275,86 @@ export default function EditSubscription() {
   };
 
   const handleSubmit = async (data: SubscriptionFormData) => {
+    // Pre-submission validation
+    if (!id) {
+      toast({
+        title: "❌ เกิดข้อผิดพลาด",
+        description: "ไม่พบรหัส Subscription",
+        variant: "destructive",
+      });
+      return;
+    }
+
+    // ตรวจสอบว่ามีการเปลี่ยนแปลงข้อมูลหรือไม่
+    if (subscription) {
+      const hasChanges = 
+        data.name !== subscription.name ||
+        parseFloat(data.amount) !== subscription.amount ||
+        data.currency !== subscription.currency ||
+        data.billing_cycle !== subscription.billing_cycle ||
+        data.category_id !== subscription.category_id ||
+        data.payment_method_id !== subscription.payment_method_id ||
+        data.next_billing_date.toISOString() !== new Date(subscription.next_billing_date).toISOString() ||
+        data.reminder_enabled !== subscription.reminder_enabled ||
+        data.reminder_days !== subscription.reminder_days ||
+        data.auto_renew !== subscription.auto_renew ||
+        (data.notes || "") !== (subscription.notes || "");
+
+      if (!hasChanges) {
+        toast({
+          title: "ℹ️ ไม่มีการเปลี่ยนแปลง",
+          description: "ข้อมูลยังคงเหมือนเดิม",
+          variant: "default",
+        });
+        return;
+      }
+
+      // ตรวจสอบการลดราคา - ให้ confirm
+      const oldAmount = subscription.amount;
+      const newAmount = parseFloat(data.amount);
+      if (newAmount < oldAmount * 0.5) {
+        setPendingFormData(data);
+        setShowAmountChangeDialog(true);
+        return;
+      }
+    }
+
+    await submitForm(data);
+  };
+
+  const submitForm = async (data: SubscriptionFormData) => {
     setIsSubmitting(true);
     try {
+      // Validate required fields one more time
+      if (!data.category_id || !data.payment_method_id) {
+        throw new Error("กรุณากรอกข้อมูลให้ครบถ้วน");
+      }
+
       const selectedCategory = dbCategories.find(c => c.id === data.category_id);
       const selectedPaymentMethod = dbPaymentMethods.find(p => p.id === data.payment_method_id);
 
+      if (!selectedCategory) {
+        throw new Error("ไม่พบหมวดหมู่ที่เลือก");
+      }
+
+      if (!selectedPaymentMethod) {
+        throw new Error("ไม่พบช่องทางชำระเงินที่เลือก");
+      }
+
       const updates = {
-        name: data.name,
+        name: data.name.trim(),
         amount: parseFloat(data.amount),
         currency: data.currency,
         billing_cycle: data.billing_cycle,
         next_billing_date: data.next_billing_date.toISOString(),
         category_id: data.category_id,
         payment_method_id: data.payment_method_id,
-        reminder_enabled: data.reminder_enabled,
-        reminder_days: data.reminder_days,
-        auto_renew: data.auto_renew,
-        notes: data.notes,
+        reminder_enabled: data.reminder_enabled || false,
+        reminder_days: data.reminder_days || 7,
+        auto_renew: data.auto_renew ?? true,
+        notes: data.notes?.trim() || null,
+        card_last_4: data.card_last_4 || null,
+        website_url: data.website_url || null,
       };
 
       await subscriptionService.updateSubscription(id as string, updates);
@@ -267,11 +373,13 @@ export default function EditSubscription() {
       console.error("Error updating subscription:", error);
       toast({
         title: "❌ เกิดข้อผิดพลาด",
-        description: "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
+        description: error instanceof Error ? error.message : "ไม่สามารถบันทึกข้อมูลได้ กรุณาลองใหม่อีกครั้ง",
         variant: "destructive",
       });
     } finally {
       setIsSubmitting(false);
+      setShowAmountChangeDialog(false);
+      setPendingFormData(null);
     }
   };
 
@@ -453,8 +561,14 @@ export default function EditSubscription() {
                       id="description"
                       {...register("description")}
                       placeholder={t("addSub.descriptionPlaceholder")}
-                      className="min-h-[100px]"
+                      className={cn("min-h-[100px]", errors.description && "border-red-500")}
                     />
+                    {errors.description && (
+                      <p className="text-sm text-red-500 flex items-center gap-1">
+                        <span>⚠️</span>
+                        {errors.description.message}
+                      </p>
+                    )}
                   </div>
                 </CardContent>
               </Card>
@@ -735,6 +849,47 @@ export default function EditSubscription() {
                   className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
                 >
                   {t("subscriptions.delete")}
+                </AlertDialogAction>
+              </AlertDialogFooter>
+            </AlertDialogContent>
+          </AlertDialog>
+
+          {/* Amount Change Confirmation Dialog */}
+          <AlertDialog open={showAmountChangeDialog} onOpenChange={setShowAmountChangeDialog}>
+            <AlertDialogContent>
+              <AlertDialogHeader>
+                <AlertDialogTitle>⚠️ ยืนยันการเปลี่ยนแปลงราคา</AlertDialogTitle>
+                <AlertDialogDescription className="space-y-2">
+                  <p>คุณกำลังจะลดราคามากกว่า 50%</p>
+                  {subscription && pendingFormData && (
+                    <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg mt-2">
+                      <p className="text-sm">
+                        <strong>ราคาเดิม:</strong> {subscription.amount} {subscription.currency}
+                      </p>
+                      <p className="text-sm">
+                        <strong>ราคาใหม่:</strong> {pendingFormData.amount} {pendingFormData.currency}
+                      </p>
+                    </div>
+                  )}
+                  <p className="mt-2">กรุณายืนยันว่าข้อมูลถูกต้อง</p>
+                </AlertDialogDescription>
+              </AlertDialogHeader>
+              <AlertDialogFooter>
+                <AlertDialogCancel onClick={() => {
+                  setPendingFormData(null);
+                  setShowAmountChangeDialog(false);
+                }}>
+                  {t("common.cancel")}
+                </AlertDialogCancel>
+                <AlertDialogAction
+                  onClick={() => {
+                    if (pendingFormData) {
+                      submitForm(pendingFormData);
+                    }
+                  }}
+                  className="bg-yellow-600 hover:bg-yellow-700"
+                >
+                  ยืนยันการเปลี่ยนแปลง
                 </AlertDialogAction>
               </AlertDialogFooter>
             </AlertDialogContent>
