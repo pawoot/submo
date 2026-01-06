@@ -1,5 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
+import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SEO } from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
@@ -222,12 +224,51 @@ export default function Dashboard() {
         description="จัดการ Subscriptions ของคุณ"
       />
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        {/* Mobile Header */}
-        <MobileHeader
-          user={user}
-          isAdmin={isAdmin}
-          unreadCount={unreadCount}
-        />
+        {/* Mobile Header - Sticky */}
+        <div className="md:hidden sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+          <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
+        </div>
+
+        {/* Desktop Header - Sticky */}
+        <div className="hidden md:block sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+          <div className="container mx-auto px-4 py-4">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                  {t("dashboard.title")}
+                </h1>
+                <ThemeSwitch />
+                <LanguageSwitcher />
+              </div>
+              <div className="flex items-center gap-3">
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/notifications")}
+                >
+                  <Bell className="h-4 w-4 mr-2" />
+                  {t("nav.notifications")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={() => router.push("/profile")}
+                >
+                  <User className="h-4 w-4 mr-2" />
+                  {t("nav.profile")}
+                </Button>
+                <Button
+                  variant="outline"
+                  size="sm"
+                  onClick={handleLogout}
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  {t("auth.signOut")}
+                </Button>
+              </div>
+            </div>
+          </div>
+        </div>
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
