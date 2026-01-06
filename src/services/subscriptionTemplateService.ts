@@ -10,6 +10,8 @@ export type SubscriptionTemplate = {
   billing_cycle: "monthly" | "yearly" | "quarterly" | "half-yearly";
   website_url: string | null;
   description: string | null;
+  icon_url?: string;
+  usage_frequency?: string;
   usage_count: number;
   is_active: boolean;
   categories: {
@@ -179,6 +181,29 @@ export const subscriptionTemplateService = {
 
     if (error) throw error;
 
+    return (data || []).map(this.mapResponse);
+  },
+
+  // Search templates by name
+  async searchTemplates(query: string): Promise<SubscriptionTemplate[]> {
+    const { data, error } = await supabase
+      .from("subscriptions")
+      .select(`
+        *,
+        categories (
+          id,
+          slug,
+          name_en,
+          name_th,
+          color,
+          icon
+        )
+      `)
+      .eq("is_template", true)
+      .ilike("name", `%${query}%`)
+      .limit(5);
+
+    if (error) throw error;
     return (data || []).map(this.mapResponse);
   },
 

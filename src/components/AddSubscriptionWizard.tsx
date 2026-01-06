@@ -26,32 +26,27 @@ import type { SubscriptionTemplate } from "@/services/subscriptionTemplateServic
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 
-// Form Schema without translation (will be created inside component)
-const createFormSchema = () => z.object({
-  name: z.string().min(2, "Name must be at least 2 characters").max(100),
-  category_id: z.string().min(1, "Category is required"),
-  amount: z.coerce.number()
-    .min(0.01, "Amount must be greater than 0")
-    .max(999999.99, "Amount must be less than 999,999.99"),
-  currency: z.string().min(1, "Currency is required"),
-  billing_cycle: z.enum(["monthly", "yearly", "quarterly", "half-yearly"]),
-  payment_method_id: z.string().min(1, "Payment method is required"),
-  card_last_4: z.string().max(4).optional(),
-  start_date: z.date(),
-  next_billing_date: z.date(),
-  notes: z.string().max(500).optional(),
-  shared_with: z.array(z.string().email()).optional(),
-  template_id: z.string().optional(),
-  icon_url: z.string().optional(),
-  remind_3_days: z.boolean().optional(),
-  remind_7_days: z.boolean().optional(),
-  usage_frequency: z.enum(["often", "sometimes", "rarely"]).optional(),
-}).refine((data) => data.next_billing_date >= data.start_date, {
-  message: "Next billing date must be after or equal to start date",
-  path: ["next_billing_date"],
-});
-
-type FormValues = z.infer<ReturnType<typeof createFormSchema>>;
+// Moved schema inside component to use translations
+type FormValues = {
+  name: string;
+  category_id: string;
+  amount: number;
+  currency: string;
+  billing_cycle: "monthly" | "yearly" | "quarterly" | "half-yearly";
+  payment_method_id: string;
+  card_last_4?: string;
+  start_date: Date;
+  next_billing_date: Date;
+  notes?: string;
+  shared_with?: string[];
+  template_id?: string;
+  icon_url?: string;
+  website_url?: string;
+  remind_3_days?: boolean;
+  remind_7_days?: boolean;
+  usage_frequency?: "often" | "sometimes" | "rarely";
+  description?: string;
+};
 
 interface AddSubscriptionWizardProps {
   categories: Category[];
@@ -73,6 +68,53 @@ export function AddSubscriptionWizard({
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
+
+  const createFormSchema = () => z.object({
+    name: z.string()
+      .min(2, t("validation.minLength") + " 2 " + t("validation.characters"))
+      .max(100, t("validation.maxLength") + " 100 " + t("validation.characters"))
+      .refine((val) => val.trim().length >= 2, {
+        message: t("validation.required")
+      }),
+    category_id: z.string().min(1, t("validation.required")),
+    amount: z.coerce.number()
+      .min(0.01, t("validation.positiveNumber"))
+      .max(999999.99, t("validation.maxLength") + " 999,999.99"),
+    currency: z.string().min(1, t("validation.required")),
+    billing_cycle: z.enum(["monthly", "yearly", "quarterly", "half-yearly"]),
+    payment_method_id: z.string().min(1, t("validation.required")),
+    card_last_4: z.string()
+      .max(4)
+      .optional()
+      .refine((val) => !val || /^\d{4}$/.test(val), {
+        message: language === 'th' ? "ต้องเป็นตัวเลข 4 หลัก" : "Must be 4 digits"
+      }),
+    start_date: z.date({
+      required_error: t("validation.required"),
+      invalid_type_error: t("validation.invalidDate"),
+    }),
+    next_billing_date: z.date({
+      required_error: t("validation.required"),
+      invalid_type_error: t("validation.invalidDate"),
+    }),
+    notes: z.string().max(500, t("validation.maxLength") + " 500 " + t("validation.characters")).optional(),
+    shared_with: z.array(z.string().email()).optional(),
+    template_id: z.string().optional(),
+    icon_url: z.string().optional(),
+    website_url: z.string()
+      .optional()
+      .refine((val) => {
+        if (!val) return true;
+        try { new URL(val); return true; } catch { return false; }
+      }, { message: t("validation.invalidUrl") }),
+    remind_3_days: z.boolean().optional(),
+    remind_7_days: z.boolean().optional(),
+    usage_frequency: z.enum(["often", "sometimes", "rarely"]).optional(),
+    description: z.string().optional(),
+  }).refine((data) => data.next_billing_date >= data.start_date, {
+    message: language === 'th' ? "วันเรียกเก็บเงินถัดไปต้องอยู่หลังวันเริ่มต้น" : "Next billing date must be after start date",
+    path: ["next_billing_date"],
+  });
 
   const form = useForm<FormValues>({
     resolver: zodResolver(createFormSchema()),
@@ -152,9 +194,7 @@ export function AddSubscriptionWizard({
     const cycle = template.billing_cycle as "monthly" | "yearly" | "quarterly" | "half-yearly";
     setValue("billing_cycle", cycle || "monthly");
     
-    // @ts-expect-error - field might not exist in form types yet
     setValue("website_url", template.website_url || template.icon_url || "");
-    // @ts-expect-error - field might not exist in form types yet
     setValue("description", template.description || "");
 
     setSelectedTemplate(template);

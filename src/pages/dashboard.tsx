@@ -30,7 +30,12 @@ import {
   LogOut,
   Shield,
   Home,
-  UserCircle
+  UserCircle,
+  ArrowUpDown,
+  Calendar as CalendarIcon,
+  DollarSign,
+  ArrowUp,
+  ArrowDown
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
@@ -43,6 +48,7 @@ import type { Database } from "@/integrations/supabase/types";
 import Link from "next/link";
 
 type ServiceSubscription = Awaited<ReturnType<typeof subscriptionService.getUserSubscriptions>>[number];
+type SortOption = 'default' | 'price-asc' | 'price-desc' | 'date-asc' | 'date-desc' | 'name-asc';
 
 export default function Dashboard() {
   const router = useRouter();
@@ -55,6 +61,7 @@ export default function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+  const [sortOption, setSortOption] = useState<SortOption>('default');
 
   useEffect(() => {
     loadData();
@@ -176,6 +183,38 @@ export default function Dashboard() {
 
   const activeSubscriptions = subscriptions.filter(s => s.is_active);
 
+  // Sorting Logic
+  const sortedSubscriptions = [...activeSubscriptions].sort((a, b) => {
+    switch (sortOption) {
+      case 'price-desc':
+        return (b.amount || 0) - (a.amount || 0);
+      case 'price-asc':
+        return (a.amount || 0) - (b.amount || 0);
+      case 'date-asc':
+        // Next billing date: soonest first
+        return new Date(a.next_billing_date).getTime() - new Date(b.next_billing_date).getTime();
+      case 'date-desc':
+        // Next billing date: furthest first
+        return new Date(b.next_billing_date).getTime() - new Date(a.next_billing_date).getTime();
+      case 'name-asc':
+        return a.name.localeCompare(b.name);
+      default:
+        // Default: usually by created_at desc or next_billing (original order from DB)
+        return 0;
+    }
+  });
+
+  const getSortLabel = () => {
+    switch (sortOption) {
+      case 'price-desc': return t("subscriptions.sortPriceHigh");
+      case 'price-asc': return t("subscriptions.sortPriceLow");
+      case 'date-asc': return t("subscriptions.sortNextBilling");
+      case 'date-desc': return t("subscriptions.sortNextBillingDesc");
+      case 'name-asc': return t("subscriptions.sortNameAZ");
+      default: return t("subscriptions.sort");
+    }
+  };
+
   return (
     <AuthGuard>
       <SEO
@@ -226,22 +265,55 @@ export default function Dashboard() {
             {/* Subscription List */}
             <Card>
               <CardContent className="pt-6">
-                <div className="flex items-center justify-between mb-6">
+                <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h2 className="text-xl font-bold">
                     {t("subscription.all")} ({activeSubscriptions.length})
                   </h2>
-                  <Button 
-                    variant="outline" 
-                    size="sm"
-                    onClick={() => router.push("/add-subscription")}
-                  >
-                    <Plus className="w-4 h-4 mr-2" />
-                    {t("subscription.add")}
-                  </Button>
+                  
+                  <div className="flex items-center gap-2">
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="outline" size="sm" className="w-full sm:w-auto justify-between">
+                          <span className="flex items-center">
+                            <ArrowUpDown className="w-4 h-4 mr-2" />
+                            {getSortLabel()}
+                          </span>
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end" className="w-56">
+                        <DropdownMenuLabel>{t("subscriptions.sort")}</DropdownMenuLabel>
+                        <DropdownMenuSeparator />
+                        <DropdownMenuItem onClick={() => setSortOption('date-asc')}>
+                          <CalendarIcon className="w-4 h-4 mr-2" />
+                          {t("subscriptions.sortNextBilling")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOption('price-desc')}>
+                          <ArrowDown className="w-4 h-4 mr-2" />
+                          {t("subscriptions.sortPriceHigh")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOption('price-asc')}>
+                          <ArrowUp className="w-4 h-4 mr-2" />
+                          {t("subscriptions.sortPriceLow")}
+                        </DropdownMenuItem>
+                        <DropdownMenuItem onClick={() => setSortOption('name-asc')}>
+                          <span className="w-4 h-4 mr-2 font-bold text-xs flex items-center justify-center">AZ</span>
+                          {t("subscriptions.sortNameAZ")}
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+
+                    <Button 
+                      size="sm"
+                      onClick={() => router.push("/add-subscription")}
+                    >
+                      <Plus className="w-4 h-4 mr-2" />
+                      {t("subscription.add")}
+                    </Button>
+                  </div>
                 </div>
 
                 <div className="space-y-4">
-                  {activeSubscriptions.length === 0 ? (
+                  {sortedSubscriptions.length === 0 ? (
                     <div className="py-12 text-center">
                       <p className="text-muted-foreground mb-4">{t("subscription.noSubscriptions")}</p>
                       <Button onClick={() => router.push("/add-subscription")}>
@@ -251,7 +323,7 @@ export default function Dashboard() {
                     </div>
                   ) : (
                     <div className="grid gap-3">
-                      {activeSubscriptions.map(sub => (
+                      {sortedSubscriptions.map(sub => (
                         <div 
                           key={sub.id}
                           className="flex items-center justify-between p-4 rounded-lg border hover:border-primary cursor-pointer transition-colors bg-card"

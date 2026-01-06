@@ -9,11 +9,67 @@ interface SubscriptionIconProps {
   size?: "sm" | "md" | "lg";
 }
 
-export function SubscriptionIcon({ name, websiteUrl, size = "md" }: SubscriptionIconProps) {
+// Known domains map to ensure correct favicons
+const KNOWN_DOMAINS: Record<string, string> = {
+  "google one": "one.google.com",
+  "google": "google.com",
+  "youtube": "youtube.com",
+  "youtube premium": "youtube.com",
+  "netflix": "netflix.com",
+  "spotify": "spotify.com",
+  "apple": "apple.com",
+  "icloud": "icloud.com",
+  "icloud+": "icloud.com",
+  "adobe": "adobe.com",
+  "adobe creative cloud": "adobe.com",
+  "aws": "aws.amazon.com",
+  "amazon prime": "amazon.com",
+  "disney+": "disneyplus.com",
+  "disney plus": "disneyplus.com",
+  "hbo": "hbomax.com",
+  "hbo go": "hbogo.co.th",
+  "canva": "canva.com",
+  "figma": "figma.com",
+  "notion": "notion.so",
+  "chatgpt": "openai.com",
+  "openai": "openai.com",
+  "midjourney": "midjourney.com",
+  "zoom": "zoom.us",
+  "microsoft": "microsoft.com",
+  "microsoft 365": "microsoft.com",
+  "office 365": "office.com",
+  "dropbox": "dropbox.com",
+  "slack": "slack.com",
+  "github": "github.com",
+  "gitlab": "gitlab.com",
+  "vercel": "vercel.com",
+  "digitalocean": "digitalocean.com",
+  "lineman": "lineman.line.me",
+  "grab": "grab.com",
+  "foodpanda": "foodpanda.co.th",
+  "trueid": "trueid.net",
+  "ais": "ais.th",
+  "dtac": "dtac.co.th"
+};
+
+export function SubscriptionIcon({ name, websiteUrl, size = "md", className }: SubscriptionIconProps) {
   const [imageError, setImageError] = useState(false);
   
-  const faviconUrl = websiteUrl 
-    ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(websiteUrl).hostname)}&sz=128`
+  // Determine the best URL to use for favicon fetching
+  let targetUrl = websiteUrl;
+  
+  // If no URL provided, or if we have a better known domain for this service name
+  if (!targetUrl) {
+    const lowerName = name.toLowerCase().trim();
+    // Check exact match or partial match
+    const knownKey = Object.keys(KNOWN_DOMAINS).find(key => lowerName.includes(key));
+    if (knownKey) {
+      targetUrl = `https://${KNOWN_DOMAINS[knownKey]}`;
+    }
+  }
+  
+  const faviconUrl = targetUrl 
+    ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(targetUrl).hostname)}&sz=128`
     : null;
 
   const sizeClasses = {
@@ -28,7 +84,8 @@ export function SubscriptionIcon({ name, websiteUrl, size = "md" }: Subscription
     <div className={cn(
       "relative rounded-full flex items-center justify-center overflow-hidden",
       "bg-white border border-slate-200 dark:border-slate-700 shadow-sm",
-      sizeClasses[size]
+      sizeClasses[size],
+      className
     )}>
       {showFavicon ? (
         <img 

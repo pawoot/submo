@@ -40,6 +40,7 @@ import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 import { SEO } from "@/components/SEO";
+import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -92,7 +93,7 @@ export default function EditSubscription() {
     card_last_4: z.string()
       .max(4, t("validation.maxLength") + " 4")
       .refine((val) => !val || /^\d{4}$/.test(val), {
-        message: "หมายเลขบัตรท้าย 4 หลักต้องเป็นตัวเลขเท่านั้น"
+        message: language === 'th' ? "ต้องเป็นตัวเลข 4 หลัก" : "Must be 4 digits"
       })
       .optional()
       .nullable(),
@@ -175,46 +176,50 @@ export default function EditSubscription() {
   useEffect(() => {
     const loadSubscription = async () => {
       try {
-        const [categoriesData, paymentMethodsData, subscriptionData, allSubscriptionsData] = await Promise.all([
-          supabase.from("categories").select("*").order("name_en"),
-          supabase.from("payment_methods").select("*").order("name_en"),
-          supabase
-            .from("subscriptions")
-            .select(`
-              *,
-              categories (*),
-              payment_methods (*)
-            `)
-            .eq("id", id)
-            .single(),
-          subscriptionService.getUserSubscriptions()
+        const [categoriesData, paymentMethodsData, subscriptionData] = await Promise.all([
+          subscriptionService.getCategories(),
+          subscriptionService.getPaymentMethods(),
+          subscriptionService.getById(id as string)
         ]);
 
-        if (categoriesData.data) setDbCategories(categoriesData.data);
-        if (paymentMethodsData.data) setDbPaymentMethods(paymentMethodsData.data);
-        if (allSubscriptionsData) setExistingSubscriptions(allSubscriptionsData);
+        if (categoriesData) setDbCategories(categoriesData);
+        if (paymentMethodsData) setDbPaymentMethods(paymentMethodsData);
 
-        if (subscriptionData.error) throw subscriptionData.error;
-        setSubscription(subscriptionData.data);
+        if (subscriptionData) {
+          const sub = subscriptionData;
+          
+          // Smart Fill: If URL is missing, try to find it from templates
+          let smartWebsiteUrl = sub.website_url;
+          
+          if (!smartWebsiteUrl && sub.name) {
+            try {
+              const templates = await subscriptionTemplateService.searchTemplates(sub.name);
+              // Find exact match or first match
+              const match = templates.find(t => t.name.toLowerCase() === sub.name.toLowerCase()) || templates[0];
+              if (match && match.website_url) {
+                smartWebsiteUrl = match.website_url;
+                console.log("Smart fill applied: Retrieved URL from template", smartWebsiteUrl);
+              }
+            } catch (err) {
+              console.error("Smart fill failed:", err);
+            }
+          }
 
-        if (subscriptionData.data) {
           reset({
-            name: subscriptionData.data.name,
-            category_id: subscriptionData.data.category_id,
-            description: subscriptionData.data.description || "",
-            amount: subscriptionData.data.amount,
-            currency: subscriptionData.data.currency,
-            billing_cycle: subscriptionData.data.billing_cycle,
-            payment_method_id: subscriptionData.data.payment_method_id,
-            card_last_4: subscriptionData.data.card_last_4 || "",
-            website_url: subscriptionData.data.website_url || "",
-            notes: subscriptionData.data.notes || "",
-            start_date: new Date(subscriptionData.data.start_date),
-            next_billing_date: new Date(subscriptionData.data.next_billing_date),
-            reminder_enabled: subscriptionData.data.reminder_enabled || false,
-            reminder_days: subscriptionData.data.reminder_days || 7,
-            auto_renew: subscriptionData.data.auto_renew ?? true,
-            usage_frequency: subscriptionData.data.usage_frequency as "often" | "sometimes" | "rarely" | undefined,
+            name: sub.name,
+            price: sub.price,
+            currency: sub.currency,
+            category_id: sub.category_id,
+            billing_cycle: sub.billing_cycle as "monthly" | "yearly" | "weekly" | "daily",
+            next_billing_date: sub.next_billing_date ? new Date(sub.next_billing_date) : undefined,
+            start_date: sub.start_date ? new Date(sub.start_date) : undefined,
+            payment_method_id: sub.payment_method_id,
+            description: sub.description || "",
+            website_url: smartWebsiteUrl || "",
+            reminder_enabled: sub.reminder_enabled || false,
+            reminder_days_before: sub.reminder_days_before || 1,
+            card_last_4: sub.card_last_4 || "",
+            usage_frequency: (sub.usage_frequency as "often" | "sometimes" | "rarely") || undefined,
           });
         }
       } catch (error) {
@@ -254,6 +259,10 @@ export default function EditSubscription() {
     }
     if (template.website_url) {
       setValue("website_url", template.website_url, { shouldValidate: true });
+    }
+    // Add usage_frequency handling
+    if (template.usage_frequency) {
+      setValue("usage_frequency", template.usage_frequency as "often" | "sometimes" | "rarely", { shouldValidate: true });
     }
 
     toast({
