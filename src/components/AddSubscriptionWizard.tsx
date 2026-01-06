@@ -97,6 +97,13 @@ export function AddSubscriptionWizard({
   const { register, control, watch, setValue, handleSubmit, formState: { errors } } = form;
   const watchedValues = watch();
 
+  // Update currency when preferred currency is loaded
+  useEffect(() => {
+    if (preferredCurrency && watchedValues.currency !== preferredCurrency) {
+      setValue("currency", preferredCurrency, { shouldValidate: false });
+    }
+  }, [preferredCurrency, setValue, watchedValues.currency]);
+
   // Scroll to top when step changes
   useEffect(() => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
