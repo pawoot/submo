@@ -15,6 +15,8 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { subscriptionTemplateService } from "@/services/subscriptionTemplateService";
 import { getAllCategories } from "@/services/adminCategoryService";
 import { getAllPaymentMethods } from "@/services/adminPaymentMethodService";
+import { ImportSubscriptionDialog } from "@/components/ImportSubscriptionDialog";
+import { FileUp } from "lucide-react";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
 type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
@@ -130,6 +132,33 @@ export default function AddSubscription() {
               <div>
                 <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("addSub.title")}</h1>
                 <p className="text-sm text-slate-600 dark:text-slate-400">{t("addSub.subtitle")}</p>
+              </div>
+              <div className="ml-auto">
+                <ImportSubscriptionDialog 
+                  trigger={
+                    <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
+                      <FileUp className="w-4 h-4" />
+                      Import Statement
+                    </Button>
+                  }
+                  onSuccess={() => {
+                    // Refresh data if needed, or redirect
+                    toast({
+                      title: "Import Complete",
+                      description: "Your subscriptions have been added to the dashboard.",
+                    });
+                    router.push("/dashboard");
+                  }}
+                />
+                {/* Mobile version of the button (Icon only) */}
+                <ImportSubscriptionDialog 
+                  trigger={
+                    <Button variant="outline" size="icon" className="sm:hidden flex ml-2">
+                      <FileUp className="w-4 h-4" />
+                    </Button>
+                  }
+                  onSuccess={() => router.push("/dashboard")}
+                />
               </div>
             </div>
           </div>

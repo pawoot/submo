@@ -1,5 +1,5 @@
 import Papa from "papaparse";
-import type { Tables } from "@/integrations/supabase/types";
+import type { Database } from "@/integrations/supabase/types";
 
 export interface ParsedTransaction {
   rawText: string;
@@ -293,7 +293,7 @@ export function mapToSubscriptions(
 export function prepareForDatabase(
   subscriptions: MappedSubscription[],
   userId: string
-): Omit<Tables<"subscriptions">, "id" | "created_at" | "updated_at">[] {
+): Database["public"]["Tables"]["subscriptions"]["Insert"][] {
   return subscriptions.map((sub) => ({
     user_id: userId,
     name: sub.name,

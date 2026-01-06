@@ -237,6 +237,20 @@ export const subscriptionService = {
   },
 
   /**
+   * Bulk create subscriptions
+   */
+  async bulkCreateSubscriptions(subscriptions: Database["public"]["Tables"]["subscriptions"]["Insert"][]): Promise<void> {
+    const { error } = await supabase
+      .from("subscriptions")
+      .insert(subscriptions);
+
+    if (error) {
+      console.error("Error bulk creating subscriptions:", error);
+      throw error;
+    }
+  },
+
+  /**
    * Calculate next renewal date (Synchronous Helper)
    */
   getNextRenewalDate(billingCycle: string, currentBillingDate: string): string {
