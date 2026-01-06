@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -47,7 +47,6 @@ export default function AdminSubscriptionTemplates() {
   const [selectedCategory, setSelectedCategory] = useState<string>("All");
   const [categories, setCategories] = useState<Category[]>([]);
   const [loading, setLoading] = useState(true);
-  const [isAdmin, setIsAdmin] = useState(false);
   const [showAddDialog, setShowAddDialog] = useState(false);
   const [showEditDialog, setShowEditDialog] = useState(false);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
@@ -71,30 +70,13 @@ export default function AdminSubscriptionTemplates() {
   const router = useRouter();
 
   useEffect(() => {
-    checkAdminAccess();
+    loadTemplates();
+    loadCategories();
   }, []);
-
-  useEffect(() => {
-    if (isAdmin) {
-      loadTemplates();
-      loadCategories();
-    }
-  }, [isAdmin]);
 
   useEffect(() => {
     filterTemplates();
   }, [templates, searchQuery, selectedCategory]);
-
-  const checkAdminAccess = async () => {
-    try {
-      const profile = await profileService.getCurrentProfile();
-      if (!profile?.is_admin) {
-        router.push("/dashboard");
-      }
-    } catch (error) {
-      router.push("/dashboard");
-    }
-  };
 
   const loadTemplates = async () => {
     try {
@@ -297,17 +279,13 @@ export default function AdminSubscriptionTemplates() {
     setShowEditDialog(true);
   };
 
-  if (!isAdmin) {
-    return null;
-  }
-
   const totalPages = Math.ceil(filteredTemplates.length / itemsPerPage);
   const startIndex = (currentPage - 1) * itemsPerPage;
   const endIndex = startIndex + itemsPerPage;
   const paginatedTemplates = filteredTemplates.slice(startIndex, endIndex);
 
   return (
-    <AuthGuard>
+    <AuthGuard requireAdmin={true}>
       <SEO title="Admin - Subscription Templates" />
       <div className="min-h-screen bg-slate-50 dark:bg-slate-950">
         <header className="border-b bg-white dark:bg-slate-900 sticky top-0 z-50">
