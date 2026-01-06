@@ -168,7 +168,7 @@ export default function AddSubscription() {
           <AddSubscriptionWizard
             categories={categories}
             paymentMethods={paymentMethods}
-            existingSubscriptions={existingSubscriptions} // Pass to wizard
+            existingSubscriptions={existingSubscriptions}
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
           />

@@ -158,20 +158,25 @@ export function SubscriptionCharts() {
         const catMap: { [key: string]: number } = {};
         const payMap: { [key: string]: number } = {};
 
-        // 2. Process each subscription
-        await Promise.all(filteredSubscriptions.map(async (sub) => {
-          const monthlyRaw = calculateMonthlyCost(sub);
-          // Convert to preferred currency
-          const convertedAmount = await convertAmount(monthlyRaw, sub.currency || "THB");
-          
-          // Aggregate Category
-          const catId = sub.category_id || "unknown";
-          catMap[catId] = (catMap[catId] || 0) + convertedAmount;
+        // 2. Process each subscription sequentially
+        for (const sub of filteredSubscriptions) {
+          try {
+            const monthlyRaw = calculateMonthlyCost(sub);
+            // Convert to preferred currency
+            const convertedAmount = await convertAmount(monthlyRaw, sub.currency || "THB");
+            
+            // Aggregate Category
+            const catId = sub.category_id || "unknown";
+            catMap[catId] = (catMap[catId] || 0) + convertedAmount;
 
-          // Aggregate Payment Method
-          const payId = sub.payment_method_id || "unknown";
-          payMap[payId] = (payMap[payId] || 0) + convertedAmount;
-        }));
+            // Aggregate Payment Method
+            const payId = sub.payment_method_id || "unknown";
+            payMap[payId] = (payMap[payId] || 0) + convertedAmount;
+          } catch (error) {
+            console.error(`Error processing subscription ${sub.id}:`, error);
+            // Continue with next subscription if one fails
+          }
+        }
 
         // 3. Format Category Data
         const totalCatAmount = Object.values(catMap).reduce((sum, val) => sum + val, 0);

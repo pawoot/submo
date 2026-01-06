@@ -1,5 +1,8 @@
 import Papa from "papaparse";
 import type { Database } from "@/integrations/supabase/types";
+import { createWorker } from "tesseract.js";
+
+type SubscriptionInsert = Database["public"]["Tables"]["subscriptions"]["Insert"];
 
 export interface ParsedTransaction {
   rawText: string;
@@ -7,6 +10,12 @@ export interface ParsedTransaction {
   amount?: number;
   description?: string;
   confidence: "high" | "medium" | "low";
+}
+
+interface KnownMerchant {
+  name: string;
+  category: string;
+  defaultPrice: number;
 }
 
 export interface MappedSubscription {
@@ -20,6 +29,173 @@ export interface MappedSubscription {
   description?: string;
   confidence: "high" | "medium" | "low";
   rawTransaction: ParsedTransaction;
+}
+
+const KNOWN_MERCHANTS: Record<string, KnownMerchant> = {
+  // Streaming
+  netflix: { name: "Netflix", category: "Entertainment", defaultPrice: 419 },
+  spotify: { name: "Spotify", category: "Music", defaultPrice: 129 },
+  youtube: { name: "YouTube Premium", category: "Entertainment", defaultPrice: 159 },
+  disney: { name: "Disney+", category: "Entertainment", defaultPrice: 799 },
+  vi: { name: "Vine", category: "Entertainment", defaultPrice: 0 },
+  // Software
+  adobe: { name: "Adobe Creative Cloud", category: "Software", defaultPrice: 0 },
+  canva: { name: "Canva", category: "Software", defaultPrice: 0 },
+  microsoft: { name: "Microsoft 365", category: "Software", defaultPrice: 0 },
+  apple: { name: "Apple Services", category: "Software", defaultPrice: 0 },
+  google: { name: "Google One", category: "Software", defaultPrice: 0 },
+  icloud: { name: "iCloud", category: "Software", defaultPrice: 0 },
+  aws: { name: "AWS", category: "Software", defaultPrice: 0 },
+  digitalocean: { name: "DigitalOcean", category: "Software", defaultPrice: 0 },
+  vercel: { name: "Vercel", category: "Software", defaultPrice: 0 },
+};
+
+export interface ProcessedImportItem {
+  id: string;
+  originalDate: string;
+  originalDescription: string;
+  originalAmount: number;
+  // Mapped fields
+  name: string;
+  price: number;
+  category: string;
+  nextPaymentDate: string | null;
+  isValid: boolean;
+  confidence: "high" | "medium" | "low";
+}
+
+/**
+ * Extract price from text using regex
+ */
+function extractPriceFromText(text: string): number | null {
+  // Look for patterns like 1,234.56 or 1234.56
+  // We prefer numbers that appear near keywords like "Amount", "Total", "Price"
+  // But for now, let's just find all valid currency-like numbers
+  
+  const priceRegex = /[\d,]+\.\d{2}/g;
+  const matches = text.match(priceRegex);
+  
+  if (!matches) return null;
+  
+  // Convert matches to numbers
+  const numbers = matches.map(m => parseFloat(m.replace(/,/g, "")));
+  
+  // Strategy: Usually the largest number on a receipt/slip is the total
+  // Or sometimes it's the one that matches a known subscription price
+  
+  return Math.max(...numbers);
+}
+
+/**
+ * Extract date from text
+ */
+function extractDateFromText(text: string): string | null {
+  // Try to find DD/MM/YYYY or DD-MM-YYYY
+  const dateRegex = /(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{2,4})/g;
+  const matches = text.match(dateRegex);
+  
+  if (matches && matches.length > 0) {
+    // Return the first found date
+    // In a real app, we might parse this to be sure it's valid
+    return matches[0];
+  }
+  
+  // Try DD MMM YYYY (e.g. 25 Jan 2024)
+  const dateStrRegex = /(\d{1,2})\s+(Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec)[a-z]*\s+(\d{4})/iy;
+  const strMatches = text.match(dateStrRegex);
+  
+  if (strMatches && strMatches.length > 0) {
+    return strMatches[0];
+  }
+
+  return null;
+}
+
+/**
+ * Parse an image file using Tesseract OCR
+ */
+export async function parseImageFile(file: File): Promise<ProcessedImportItem[]> {
+  const worker = await createWorker("eng");
+  
+  try {
+    const ret = await worker.recognize(file);
+    const text = ret.data.text;
+    
+    // Log for debugging
+    console.log("OCR Text:", text);
+    
+    // Attempt to extract data
+    const extractedPrice = extractPriceFromText(text);
+    const extractedDate = extractDateFromText(text);
+    
+    // Attempt to identify merchant from the full text
+    // We check if any known merchant key exists in the text (case insensitive)
+    let identifiedMerchant: KnownMerchant | null = null;
+    let merchantKey = "";
+    
+    const lowerText = text.toLowerCase();
+    
+    for (const [key, info] of Object.entries(KNOWN_MERCHANTS)) {
+      if (lowerText.includes(key) || lowerText.includes(info.name.toLowerCase())) {
+        identifiedMerchant = info;
+        merchantKey = key;
+        break;
+      }
+    }
+    
+    // If we found ANY useful data, create an item
+    if (extractedPrice || identifiedMerchant) {
+      const today = new Date();
+      const nextMonth = new Date(today.setMonth(today.getMonth() + 1));
+      
+      const item: ProcessedImportItem = {
+        id: crypto.randomUUID(),
+        originalDate: extractedDate || new Date().toLocaleDateString(),
+        originalDescription: identifiedMerchant ? `OCR: ${identifiedMerchant.name}` : "OCR: Unknown Slip",
+        originalAmount: extractedPrice || (identifiedMerchant?.defaultPrice ?? 0),
+        
+        name: identifiedMerchant?.name || "Unknown Subscription",
+        price: extractedPrice || (identifiedMerchant?.defaultPrice ?? 0),
+        category: identifiedMerchant?.category || "Uncategorized",
+        nextPaymentDate: nextMonth.toISOString(),
+        
+        isValid: !!identifiedMerchant, // Valid only if we identified the merchant
+        confidence: identifiedMerchant && extractedPrice ? "high" : "low"
+      };
+      
+      return [item];
+    }
+    
+    return [];
+    
+  } catch (error) {
+    console.error("OCR Error:", error);
+    throw error;
+  } finally {
+    await worker.terminate();
+  }
+}
+
+/**
+ * Convert ProcessedImportItem[] to MappedSubscription[]
+ */
+export function mapImportItemsToSubscriptions(items: ProcessedImportItem[]): MappedSubscription[] {
+  return items.map(item => ({
+    id: item.id,
+    name: item.name,
+    amount: item.price,
+    billing_cycle: "monthly",
+    next_billing_date: item.nextPaymentDate || new Date().toISOString(),
+    description: item.originalDescription,
+    confidence: item.confidence,
+    rawTransaction: {
+      rawText: `OCR Import: ${item.originalDescription}`,
+      date: new Date(item.originalDate),
+      amount: item.originalAmount,
+      description: item.originalDescription,
+      confidence: item.confidence
+    }
+  }));
 }
 
 /**

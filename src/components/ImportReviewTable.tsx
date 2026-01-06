@@ -13,6 +13,7 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import type { MappedSubscription } from "@/services/importService";
+import { useLanguage } from "@/contexts/LanguageContext";
 
 interface ImportReviewTableProps {
   subscriptions: MappedSubscription[];
@@ -34,6 +35,7 @@ export function ImportReviewTable({
   const [editedData, setEditedData] = useState<MappedSubscription[]>(
     subscriptions
   );
+  const { t } = useLanguage();
 
   const toggleSelection = (id: string) => {
     const newSelected = new Set(selected);
@@ -77,6 +79,10 @@ export function ImportReviewTable({
       medium: "bg-yellow-500/10 text-yellow-700 dark:text-yellow-400",
       low: "bg-red-500/10 text-red-700 dark:text-red-400",
     };
+    // Note: Badges kept simple/english for now or map them if needed. 
+    // Using hardcoded symbols is fine, or we can use t() if we add them.
+    // Let's stick to the existing symbols but maybe translate text if strictly needed.
+    // For now I'll keep the symbols as they are universally understood.
     return (
       <Badge className={colors[confidence]} variant="outline">
         {confidence === "high" && "✓ Confident"}
@@ -90,20 +96,22 @@ export function ImportReviewTable({
     <div className="space-y-4">
       <div className="flex items-center justify-between">
         <div>
-          <h3 className="text-lg font-semibold">Review Imported Subscriptions</h3>
+          <h3 className="text-lg font-semibold">{t("import.review.title")}</h3>
           <p className="text-sm text-muted-foreground">
-            {selected.size} of {editedData.length} selected
+            {t("import.review.selected").replace("{count}", selected.size.toString()).replace("{total}", editedData.length.toString())}
           </p>
         </div>
         <div className="flex gap-2">
           <Button variant="outline" onClick={onCancel} disabled={isLoading}>
-            Cancel
+            {t("import.btn.cancel")}
           </Button>
           <Button
             onClick={handleConfirm}
             disabled={selected.size === 0 || isLoading}
           >
-            {isLoading ? "Importing..." : `Import ${selected.size} Subscription${selected.size !== 1 ? "s" : ""}`}
+            {isLoading 
+              ? t("import.btn.processing") 
+              : t("import.btn.confirm").replace("{count}", selected.size.toString())}
           </Button>
         </div>
       </div>
@@ -118,18 +126,18 @@ export function ImportReviewTable({
                   onCheckedChange={toggleAll}
                 />
               </TableHead>
-              <TableHead>Service Name</TableHead>
-              <TableHead>Amount</TableHead>
-              <TableHead>Next Billing</TableHead>
-              <TableHead>Confidence</TableHead>
-              <TableHead className="w-20">Actions</TableHead>
+              <TableHead>{t("import.review.col.name")}</TableHead>
+              <TableHead>{t("import.review.col.amount")}</TableHead>
+              <TableHead>{t("import.review.col.date")}</TableHead>
+              <TableHead>{t("import.review.col.confidence")}</TableHead>
+              <TableHead className="w-20">{t("import.review.col.actions")}</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
             {editedData.length === 0 ? (
               <TableRow>
                 <TableCell colSpan={6} className="text-center py-8 text-muted-foreground">
-                  No subscriptions to review
+                  {t("import.no_subs.title")}
                 </TableCell>
               </TableRow>
             ) : (
@@ -202,11 +210,11 @@ export function ImportReviewTable({
       </div>
 
       <div className="bg-muted/50 p-4 rounded-lg">
-        <h4 className="font-medium mb-2">💡 Tips:</h4>
+        <h4 className="font-medium mb-2">💡 {t("import.tips.title")}</h4>
         <ul className="text-sm text-muted-foreground space-y-1">
-          <li>• Click the pencil icon to edit subscription names or amounts</li>
-          <li>• Uncheck items that aren&apos;t subscriptions (e.g., one-time purchases)</li>
-          <li>• High confidence items are automatically matched to known services</li>
+          <li>• {t("import.tips.edit")}</li>
+          <li>• {t("import.tips.uncheck")}</li>
+          <li>• {t("import.tips.confidence")}</li>
         </ul>
       </div>
     </div>
