@@ -20,6 +20,7 @@ import { useRouter } from "next/router";
 import { useState, useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslation } from "@/lib/translations";
+import { supabase } from "@/integrations/supabase/client";
 
 export default function LandingPage() {
   const router = useRouter();
@@ -27,6 +28,27 @@ export default function LandingPage() {
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const { language, setLanguage } = useLanguage();
   const [detectingLanguage, setDetectingLanguage] = useState(true);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+
+  // Check if user is already logged in
+  useEffect(() => {
+    const checkAuth = async () => {
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session) {
+          // User is logged in, redirect to dashboard
+          router.push("/dashboard");
+          return;
+        }
+      } catch (error) {
+        console.error("Error checking auth:", error);
+      } finally {
+        setCheckingAuth(false);
+      }
+    };
+
+    checkAuth();
+  }, [router]);
 
   useEffect(() => {
     const handleScroll = () => {
@@ -160,7 +182,7 @@ export default function LandingPage() {
     }
   ];
 
-  if (detectingLanguage) {
+  if (detectingLanguage || checkingAuth) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-950 via-purple-950 to-blue-900 text-white flex items-center justify-center">
         <div className="text-center">
