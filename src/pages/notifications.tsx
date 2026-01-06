@@ -290,7 +290,7 @@ export default function NotificationsPage() {
                     <div className="flex items-start gap-4">
                       {/* Icon */}
                       <div className="flex-shrink-0 mt-1">
-                        {getNotificationIcon(notif.notification_type)}
+                        {getNotificationIcon(notif.type)}
                       </div>
 
                       {/* Content */}
@@ -301,7 +301,7 @@ export default function NotificationsPage() {
                               {notif.title}
                             </h3>
                             <Badge variant="outline" className="text-xs">
-                              {getNotificationTypeLabel(notif.notification_type)}
+                              {getNotificationTypeLabel(notif.type)}
                             </Badge>
                             {!notif.is_read && (
                               <Badge className="bg-blue-600 text-white text-xs">
