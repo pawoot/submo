@@ -10,86 +10,112 @@ export default function AuthCallback() {
     // Handle OAuth callback
     const handleCallback = async () => {
       try {
+        console.log("🔄 Starting OAuth callback handling...");
+        
         // Get the current session
         const { data: { session }, error: sessionError } = await supabase.auth.getSession();
         
         if (sessionError) {
-          console.error("Session error:", sessionError);
+          console.error("❌ Session error:", sessionError);
           router.push("/auth/login");
           return;
         }
 
-        if (session?.user) {
-          const { user } = session;
-          const metadata = user.user_metadata;
-          
-          // Extract user metadata from OAuth provider (Google)
-          const firstName = metadata?.given_name || metadata?.first_name || null;
-          const lastName = metadata?.family_name || metadata?.last_name || null;
-          const fullName = metadata?.full_name || 
-                          (firstName && lastName ? `${firstName} ${lastName}` : null) ||
-                          metadata?.name || null;
-          const email = user.email || null;
-          const avatarUrl = metadata?.avatar_url || metadata?.picture || null;
+        if (!session?.user) {
+          console.error("❌ No session or user found");
+          router.push("/auth/login");
+          return;
+        }
 
-          // Check if profile exists
-          const { data: existingProfile } = await supabase
+        console.log("✅ Session found for user:", session.user.email);
+        const { user } = session;
+        const metadata = user.user_metadata;
+        
+        // Extract user metadata from OAuth provider (Google)
+        const firstName = metadata?.given_name || metadata?.first_name || null;
+        const lastName = metadata?.family_name || metadata?.last_name || null;
+        const fullName = metadata?.full_name || 
+                        (firstName && lastName ? `${firstName} ${lastName}` : null) ||
+                        metadata?.name || null;
+        const email = user.email || null;
+        const avatarUrl = metadata?.avatar_url || metadata?.picture || null;
+
+        console.log("👤 User metadata:", { firstName, lastName, fullName, email });
+
+        // Check if profile exists
+        const { data: existingProfile, error: profileCheckError } = await supabase
+          .from("profiles")
+          .select("id")
+          .eq("id", user.id)
+          .single();
+
+        if (profileCheckError && profileCheckError.code !== "PGRST116") {
+          console.error("❌ Error checking profile:", profileCheckError);
+        }
+
+        if (existingProfile) {
+          console.log("✅ Profile exists, updating with OAuth data...");
+          // Profile exists - UPDATE with OAuth data
+          const { error: updateError } = await supabase
             .from("profiles")
-            .select("id")
-            .eq("id", user.id)
-            .single();
+            .update({
+              first_name: firstName,
+              last_name: lastName,
+              full_name: fullName,
+              email: email,
+              avatar_url: avatarUrl,
+              updated_at: new Date().toISOString(),
+            })
+            .eq("id", user.id);
 
-          if (existingProfile) {
-            // Profile exists - UPDATE with OAuth data
-            const { error: updateError } = await supabase
-              .from("profiles")
-              .update({
-                first_name: firstName,
-                last_name: lastName,
-                full_name: fullName,
-                email: email,
-                avatar_url: avatarUrl,
-                updated_at: new Date().toISOString(),
-              })
-              .eq("id", user.id);
-
-            if (updateError) {
-              console.error("Error updating profile:", updateError);
-            }
+          if (updateError) {
+            console.error("❌ Error updating profile:", updateError);
           } else {
-            // Profile doesn't exist - CREATE new profile
-            const { error: insertError } = await supabase
-              .from("profiles")
-              .insert({
-                id: user.id,
-                email: email,
-                first_name: firstName,
-                last_name: lastName,
-                full_name: fullName,
-                avatar_url: avatarUrl,
-                role: "user",
-                is_admin: false,
-                currency: "USD",
-                country: null,
-                created_at: new Date().toISOString(),
-                updated_at: new Date().toISOString(),
-              });
+            console.log("✅ Profile updated successfully");
+          }
+        } else {
+          console.log("📝 Profile doesn't exist, creating new profile...");
+          // Profile doesn't exist - CREATE new profile
+          const { error: insertError } = await supabase
+            .from("profiles")
+            .insert({
+              id: user.id,
+              email: email,
+              first_name: firstName,
+              last_name: lastName,
+              full_name: fullName,
+              avatar_url: avatarUrl,
+              role: "user",
+              is_admin: false,
+              currency: "USD",
+              country: null,
+              created_at: new Date().toISOString(),
+              updated_at: new Date().toISOString(),
+            });
 
-            if (insertError) {
-              console.error("Error creating profile:", insertError);
-              // If profile creation fails, try to continue anyway
-              // The AuthGuard will handle missing profile
-            }
+          if (insertError) {
+            console.error("❌ Error creating profile:", insertError);
+            // Don't stop - continue to dashboard, AuthGuard will handle it
+          } else {
+            console.log("✅ Profile created successfully");
           }
         }
 
-        // Wait a moment for processing
-        await new Promise(resolve => setTimeout(resolve, 1500));
+        // Wait longer for database operations to complete
+        console.log("⏳ Waiting for database sync...");
+        await new Promise(resolve => setTimeout(resolve, 2000));
         
-        // Redirect to dashboard page
-        router.push("/dashboard");
+        // Verify session one more time before redirect
+        const { data: { session: finalSession } } = await supabase.auth.getSession();
+        if (finalSession?.user) {
+          console.log("✅ Final session verified, redirecting to dashboard...");
+          router.push("/dashboard");
+        } else {
+          console.error("❌ Final session check failed");
+          router.push("/auth/login");
+        }
       } catch (error) {
-        console.error("Callback error:", error);
+        console.error("❌ Callback error:", error);
         router.push("/auth/login");
       }
     };
