@@ -64,7 +64,7 @@ export function ImportSubscriptionDialog({ onSuccess, trigger }: ImportSubscript
           toast({
             title: "No subscriptions found",
             description: "We couldn't identify any potential subscriptions in this file.",
-            variant: "warning",
+            variant: "destructive",
           });
           return;
         }
