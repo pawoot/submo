@@ -183,6 +183,25 @@ export function AddSubscriptionWizard({
     return true;
   };
 
+  const canSubmitForm = () => {
+    // ตรวจสอบว่าข้อมูลที่จำเป็นทั้งหมดครบถ้วนหรือไม่
+    return (
+      watchedValues.name &&
+      watchedValues.category_id &&
+      watchedValues.amount > 0 &&
+      watchedValues.payment_method_id &&
+      watchedValues.start_date &&
+      watchedValues.next_billing_date
+    );
+  };
+
+  const handleFinalSubmit = async () => {
+    if (!canSubmitForm()) {
+      return;
+    }
+    await onSubmitHandler(watchedValues);
+  };
+
   return (
     <div className="grid gap-8 lg:grid-cols-3">
       {/* Main Form Area */}
@@ -582,8 +601,9 @@ export function AddSubscriptionWizard({
                   </Button>
                 ) : (
                   <Button
-                    type="submit"
-                    disabled={isSubmitting}
+                    type="button"
+                    onClick={handleFinalSubmit}
+                    disabled={isSubmitting || !canSubmitForm()}
                     className="bg-indigo-600 hover:bg-indigo-700"
                   >
                     {isSubmitting ? t("addSub.submitting") : t("addSub.submit")}
