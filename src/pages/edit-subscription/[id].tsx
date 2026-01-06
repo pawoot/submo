@@ -207,7 +207,7 @@ export default function EditSubscription() {
 
           reset({
             name: sub.name,
-            price: sub.price,
+            amount: sub.amount,
             currency: sub.currency,
             category_id: sub.category_id,
             billing_cycle: sub.billing_cycle as "monthly" | "yearly" | "weekly" | "daily",
@@ -217,7 +217,7 @@ export default function EditSubscription() {
             description: sub.description || "",
             website_url: smartWebsiteUrl || "",
             reminder_enabled: sub.reminder_enabled || false,
-            reminder_days_before: sub.reminder_days_before || 1,
+            reminder_days: sub.reminder_days || 1,
             card_last_4: sub.card_last_4 || "",
             usage_frequency: (sub.usage_frequency as "often" | "sometimes" | "rarely") || undefined,
           });
