@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
 import { AddSubscriptionWizard } from "@/components/AddSubscriptionWizard";
 import { ArrowLeft } from "lucide-react";

@@ -1,4 +1,6 @@
-import SEO from "@/components/SEO";
+import { useState } from "react";
+import Link from "next/link";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { 
@@ -15,9 +17,8 @@ import {
   X,
   Globe
 } from "lucide-react";
-import Link from "next/link";
 import { useRouter } from "next/router";
-import { useState, useEffect } from "react";
+import { useEffect } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { getTranslation } from "@/lib/translations";
 import { supabase } from "@/integrations/supabase/client";

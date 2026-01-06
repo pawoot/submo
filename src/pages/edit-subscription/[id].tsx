@@ -1,4 +1,3 @@
-import SEO from "@/components/SEO";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import {
@@ -40,6 +39,7 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
 import { useLanguage } from "@/contexts/LanguageContext";
 import type { SubscriptionTemplate } from "@/services/subscriptionTemplateService";
+import { SEO } from "@/components/SEO";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 type Category = Database["public"]["Tables"]["categories"]["Row"];

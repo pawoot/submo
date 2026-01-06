@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import MobileHeader from "@/components/MobileHeader";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";

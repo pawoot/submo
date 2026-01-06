@@ -5,6 +5,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { formatNumber } from "@/lib/utils";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
@@ -89,7 +90,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
           {/* Main Amount */}
           <div>
             <p className="text-4xl font-bold text-foreground">
-              {preferredCurrency}{displayAmount.toFixed(2)}
+              {preferredCurrency}{formatNumber(displayAmount, 2)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {displayUnit}

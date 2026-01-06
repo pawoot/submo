@@ -6,6 +6,7 @@ import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock } from "lucide-react";
 import { useRouter } from "next/router";
 import { SubscriptionIcon } from "./SubscriptionIcon";
+import { formatCurrency } from "@/lib/utils";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 

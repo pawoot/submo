@@ -1,6 +1,6 @@
 import { useState } from "react";
 import Link from "next/link";
-import SEO from "@/components/SEO";
+import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
