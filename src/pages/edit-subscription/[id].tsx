@@ -187,6 +187,7 @@ export default function EditSubscription() {
 
         if (subscriptionData) {
           const sub = subscriptionData;
+          setSubscription(sub);
           
           // Smart Fill: If URL is missing, try to find it from templates
           let smartWebsiteUrl = sub.website_url;
