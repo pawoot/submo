@@ -19,6 +19,12 @@ export interface AuthSession {
 
 // Dynamic URL Helper
 const getURL = () => {
+  // OAuth is initiated in the browser. Using the current origin keeps callback
+  // URLs correct for localhost, Vercel production, and preview deployments.
+  if (typeof window !== "undefined") {
+    return `${window.location.origin}/`;
+  }
+
   let url = process?.env?.NEXT_PUBLIC_VERCEL_URL ?? 
            process?.env?.NEXT_PUBLIC_SITE_URL ?? 
            'http://localhost:3000'
