@@ -1,5 +1,6 @@
 import { supabase } from "@/integrations/supabase/client";
 import type { Database } from "@/integrations/supabase/types";
+import { currencyService } from "@/services/currencyService";
 
 type Profile = Database["public"]["Tables"]["profiles"]["Row"];
 type ProfileUpdate = Database["public"]["Tables"]["profiles"]["Update"];
@@ -148,7 +149,7 @@ export const profileService = {
   /**
    * Get user statistics
    */
-  async getUserStats(): Promise<{
+  async getUserStats(preferredCurrency: string): Promise<{
     totalSubscriptions: number;
     activeSubscriptions: number;
     totalMonthlySpend: number;
@@ -183,9 +184,17 @@ export const profileService = {
       }
     };
 
-    const totalMonthlySpend = activeSubscriptions.reduce((sum, sub) => {
-      return sum + calculateMonthlyCost(sub);
-    }, 0);
+    const convertedMonthlyCosts = await Promise.all(
+      activeSubscriptions.map(async (subscription) => {
+        const convertedAmount = await currencyService.convertCurrency(
+          subscription.amount,
+          subscription.currency || preferredCurrency,
+          preferredCurrency,
+        );
+        return calculateMonthlyCost({ ...subscription, amount: convertedAmount });
+      }),
+    );
+    const totalMonthlySpend = convertedMonthlyCosts.reduce((sum, cost) => sum + cost, 0);
 
     const totalYearlySpend = totalMonthlySpend * 12;
 

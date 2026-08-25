@@ -5,7 +5,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
-import { formatNumber } from "@/lib/utils";
+import { useSubscriptionCosts } from "@/hooks/useSubscriptionCosts";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
@@ -15,26 +15,11 @@ interface TotalSpendingProps {
 
 export function TotalSpending({ subscriptions }: TotalSpendingProps) {
   const { t } = useLanguage();
-  const { preferredCurrency } = useCurrency();
+  const { preferredCurrency, formatCurrency } = useCurrency();
   const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
-
-  const activeSubscriptions = subscriptions.filter(s => s.is_active);
-
-  // Calculate monthly total
-  const monthlyTotal = activeSubscriptions.reduce((sum, sub) => {
-    const monthlyCost = sub.billing_cycle === "yearly" 
-      ? (sub.amount / 12)
-      : sub.amount;
-    return sum + monthlyCost;
-  }, 0);
-
-  // Calculate yearly total
-  const yearlyTotal = activeSubscriptions.reduce((sum, sub) => {
-    const yearlyCost = sub.billing_cycle === "yearly" 
-      ? sub.amount
-      : sub.amount * 12;
-    return sum + yearlyCost;
-  }, 0);
+  const { costs, isLoading } = useSubscriptionCosts(subscriptions);
+  const monthlyTotal = costs.reduce((sum, subscription) => sum + subscription.monthlyCost, 0);
+  const yearlyTotal = costs.reduce((sum, subscription) => sum + subscription.yearlyCost, 0);
 
   // Mock comparison (in real app, would come from historical data)
   const previousMonthTotal = monthlyTotal * 0.92; // Mock: 8% increase
@@ -77,7 +62,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
           {/* Main Amount */}
           <div>
             <p className="text-4xl font-bold text-foreground">
-              {preferredCurrency}{formatNumber(displayAmount, 2)}
+              {isLoading ? "…" : formatCurrency(displayAmount, preferredCurrency)}
             </p>
             <p className="text-sm text-muted-foreground mt-1">
               {displayUnit}
@@ -88,7 +73,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
           <div className="flex items-center justify-between pt-3 border-t">
             <div>
               <p className="text-xs text-muted-foreground">{t("dashboard.activeSubscriptionsLabel")}</p>
-              <p className="text-lg font-semibold text-foreground">{activeSubscriptions.length}</p>
+              <p className="text-lg font-semibold text-foreground">{costs.length}</p>
             </div>
 
             {viewMode === "monthly" && (

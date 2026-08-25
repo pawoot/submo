@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useSubscriptionCosts, type SubscriptionCost } from "@/hooks/useSubscriptionCosts";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -29,12 +30,13 @@ interface Recommendation {
 
 export function SavingsRecommendation({ subscriptions, onToggleReminder }: SavingsRecommendationProps) {
   const { language, t } = useLanguage();
-  const { preferredCurrency } = useCurrency();
+  const { preferredCurrency, formatCurrency } = useCurrency();
   const router = useRouter();
   const { toast } = useToast();
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
-  const recommendations = generateRecommendations(subscriptions, preferredCurrency, language)
+  const { costs, isLoading } = useSubscriptionCosts(subscriptions);
+  const recommendations = generateRecommendations(costs, language)
     .filter(rec => !dismissedIds.includes(rec.subscription.id))
     .slice(0, 3); // Limit to top 3
 
@@ -57,7 +59,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
     });
   };
 
-  if (recommendations.length === 0) {
+  if (isLoading || recommendations.length === 0) {
     return null;
   }
 
@@ -100,11 +102,11 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
 
                 <div className="flex items-center gap-2 text-sm mb-3">
                   <span className="font-medium text-foreground">
-                    {preferredCurrency}{rec.monthlyCost.toFixed(0)}/{t("dashboard.month")}
+                    {formatCurrency(rec.monthlyCost, preferredCurrency)}/{t("dashboard.month")}
                   </span>
                   <span className="text-muted-foreground">·</span>
                   <span className="text-muted-foreground">
-                    {preferredCurrency}{rec.yearlyCost.toFixed(0)}/{t("dashboard.year")}
+                    {formatCurrency(rec.yearlyCost, preferredCurrency)}/{t("dashboard.year")}
                   </span>
                 </div>
 
@@ -150,23 +152,10 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
 }
 
 function generateRecommendations(
-  subscriptions: Subscription[],
-  preferredCurrency: string,
+  subsWithCosts: SubscriptionCost[],
   language: "th" | "en"
 ): Recommendation[] {
   const recommendations: Recommendation[] = [];
-
-  // Calculate costs for all subscriptions
-  const subsWithCosts = subscriptions.map(sub => {
-    // Amount is already converted
-    const monthlyCost = sub.billing_cycle === "yearly" 
-      ? (sub.amount / 12)
-      : sub.amount;
-    const yearlyCost = sub.billing_cycle === "yearly" 
-      ? sub.amount
-      : sub.amount * 12;
-    return { ...sub, monthlyCost, yearlyCost };
-  });
 
   // Calculate total monthly spending
   const totalMonthly = subsWithCosts.reduce((sum, sub) => sum + sub.monthlyCost, 0);
@@ -179,7 +168,7 @@ function generateRecommendations(
     const percentOfTotal = (sub.monthlyCost / totalMonthly) * 100;
     if (percentOfTotal > 20 || sub.yearlyCost > 3000) {
       recommendations.push({
-        subscription: sub,
+        subscription: sub.subscription,
         reason: "high-cost",
         monthlyCost: sub.monthlyCost,
         yearlyCost: sub.yearlyCost,
@@ -193,9 +182,9 @@ function generateRecommendations(
   // Find duplicate categories
   const categoryMap = new Map<string, typeof subsWithCosts>();
   subsWithCosts.forEach(sub => {
-    if (sub.category) {
-      const existing = categoryMap.get(sub.category) || [];
-      categoryMap.set(sub.category, [...existing, sub]);
+    if (sub.subscription.category) {
+      const existing = categoryMap.get(sub.subscription.category) || [];
+      categoryMap.set(sub.subscription.category, [...existing, sub]);
     }
   });
 
@@ -205,9 +194,9 @@ function generateRecommendations(
       const sortedSubs = [...subs].sort((a, b) => b.yearlyCost - a.yearlyCost);
       sortedSubs.slice(1).forEach(sub => {
         // Avoid duplicates
-        if (!recommendations.find(r => r.subscription.id === sub.id)) {
+        if (!recommendations.find(r => r.subscription.id === sub.subscription.id)) {
           recommendations.push({
-            subscription: sub,
+            subscription: sub.subscription,
             reason: "duplicate-category",
             monthlyCost: sub.monthlyCost,
             yearlyCost: sub.yearlyCost,

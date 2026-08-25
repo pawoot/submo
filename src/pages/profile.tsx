@@ -98,10 +98,13 @@ export default function ProfilePage() {
 
   useEffect(() => {
     loadProfile();
-    loadStats();
     loadUserData();
     loadUnreadNotifications();
   }, []);
+
+  useEffect(() => {
+    loadStats();
+  }, [preferredCurrency]);
 
   const loadProfile = async () => {
     try {
@@ -127,7 +130,7 @@ export default function ProfilePage() {
 
   const loadStats = async () => {
     try {
-      const data = await profileService.getUserStats();
+      const data = await profileService.getUserStats(preferredCurrency);
       setStats(data);
     } catch (error) {
       console.error("Error loading stats:", error);

@@ -1,6 +1,7 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { useSubscriptionCosts, type SubscriptionCost } from "@/hooks/useSubscriptionCosts";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Bell, Lightbulb, AlertTriangle, Sparkles, X } from "lucide-react";
@@ -27,10 +28,15 @@ interface Insight {
 
 export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelProps) {
   const { language, t } = useLanguage();
-  const { preferredCurrency } = useCurrency();
+  const { preferredCurrency, formatCurrency } = useCurrency();
   const [dismissedInsights, setDismissedInsights] = useState<string[]>([]);
+  const { costs, isLoading } = useSubscriptionCosts(subscriptions);
 
-  const insights = generateInsights(subscriptions, preferredCurrency, language)
+  const insights = (isLoading ? [] : generateInsights(
+    costs,
+    language,
+    (amount) => formatCurrency(amount, preferredCurrency),
+  ))
     .filter(i => !dismissedInsights.includes(i.message));
 
   // Separate primary and secondary insights
@@ -146,20 +152,14 @@ export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelPr
 }
 
 function generateInsights(
-  subscriptions: Subscription[],
-  preferredCurrency: string,
-  language: "th" | "en"
+  costs: SubscriptionCost[],
+  language: "th" | "en",
+  formatMoney: (amount: number) => string,
 ): Insight[] {
   const insights: Insight[] = [];
 
   // Calculate total monthly spending
-  const totalMonthly = subscriptions.reduce((sum, sub) => {
-    // Amount is already converted in the parent component
-    const monthlyCost = sub.billing_cycle === "yearly" 
-      ? (sub.amount / 12)
-      : sub.amount;
-    return sum + monthlyCost;
-  }, 0);
+  const totalMonthly = costs.reduce((sum, subscription) => sum + subscription.monthlyCost, 0);
 
   // Calculate baseline (simple average for now - can be enhanced)
   const baseline = totalMonthly * 0.85; // Assume baseline is 85% of current
@@ -169,10 +169,10 @@ function generateInsights(
   const changePercent = ((totalMonthly - previousMonth) / previousMonth * 100).toFixed(0);
 
   // Check for subscriptions without reminders
-  const noReminderSubs = subscriptions.filter(s => !s.reminder_enabled);
+  const noReminderSubs = costs.filter(({ subscription }) => !subscription.reminder_enabled);
   if (noReminderSubs.length > 0) {
     // Pick the most expensive one without reminder
-    const expensiveNoReminder = [...noReminderSubs].sort((a, b) => b.amount - a.amount)[0];
+    const expensiveNoReminder = [...noReminderSubs].sort((a, b) => b.yearlyCost - a.yearlyCost)[0];
     
     insights.push({
       type: "reminder-suggestion",
@@ -180,9 +180,9 @@ function generateInsights(
       variant: "info",
       icon: <Bell className="w-5 h-5 text-blue-500" />,
       message: language === "th"
-        ? `คุณยังไม่ได้เปิดแจ้งเตือนสำหรับ ${expensiveNoReminder.name} ซึ่งมีค่าใช้จ่ายสูง`
-        : `You haven't enabled reminders for ${expensiveNoReminder.name}, which is a high cost item.`,
-      subscriptionId: expensiveNoReminder.id,
+        ? `คุณยังไม่ได้เปิดแจ้งเตือนสำหรับ ${expensiveNoReminder.subscription.name} ซึ่งมีค่าใช้จ่ายสูง`
+        : `You haven't enabled reminders for ${expensiveNoReminder.subscription.name}, which is a high cost item.`,
+      subscriptionId: expensiveNoReminder.subscription.id,
       action: "enable-reminder"
     });
   }
@@ -195,8 +195,8 @@ function generateInsights(
       variant: "warning",
       icon: <TrendingUp className="w-5 h-5 text-yellow-600" />,
       message: language === "th"
-        ? `คุณใช้จ่ายมากกว่าค่าเฉลี่ยปกติ (฿${baseline.toFixed(0)})`
-        : `You're spending more than your usual average (${preferredCurrency}${baseline.toFixed(0)})`
+        ? `คุณใช้จ่ายมากกว่าค่าเฉลี่ยปกติ (${formatMoney(baseline)})`
+        : `You're spending more than your usual average (${formatMoney(baseline)})`
     });
   } else if (Math.abs(parseFloat(changePercent)) >= 10) {
     const isIncrease = parseFloat(changePercent) > 0;
@@ -218,16 +218,16 @@ function generateInsights(
       variant: "default",
       icon: <Sparkles className="w-5 h-5 text-primary" />,
       message: language === "th"
-        ? `คุณใช้จ่าย ฿${totalMonthly.toFixed(0)} ต่อเดือนสำหรับ Subscriptions`
-        : `You spend ${preferredCurrency}${totalMonthly.toFixed(0)}/month on subscriptions`
+        ? `คุณใช้จ่าย ${formatMoney(totalMonthly)} ต่อเดือนสำหรับ Subscriptions`
+        : `You spend ${formatMoney(totalMonthly)}/month on subscriptions`
     });
   }
 
   // Priority 2: Upcoming renewals
   const now = new Date();
-  const upcomingSoon = subscriptions.filter(sub => {
-    if (!sub.next_billing_date) return false;
-    const nextDate = new Date(sub.next_billing_date);
+  const upcomingSoon = costs.filter(({ subscription }) => {
+    if (!subscription.next_billing_date) return false;
+    const nextDate = new Date(subscription.next_billing_date);
     const daysUntil = Math.ceil((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     return daysUntil <= 7 && daysUntil >= 0;
   });
@@ -245,14 +245,7 @@ function generateInsights(
   }
 
   // Priority 3: Savings opportunity (highest cost item)
-  const sortedByCost = [...subscriptions]
-    .map(sub => {
-      const yearlyCost = sub.billing_cycle === "yearly" 
-        ? sub.amount
-        : sub.amount * 12;
-      return { ...sub, yearlyCost };
-    })
-    .sort((a, b) => b.yearlyCost - a.yearlyCost);
+  const sortedByCost = [...costs].sort((a, b) => b.yearlyCost - a.yearlyCost);
 
   if (sortedByCost.length > 0 && sortedByCost[0].yearlyCost > 1000) {
     const topSub = sortedByCost[0];
@@ -262,16 +255,16 @@ function generateInsights(
       variant: "success",
       icon: <Lightbulb className="w-4 h-4 text-green-600" />,
       message: language === "th"
-        ? `ยกเลิก ${topSub.name} สามารถประหยัดได้ ฿${topSub.yearlyCost.toFixed(0)}/ปี`
-        : `Canceling ${topSub.name} could save you ${preferredCurrency}${topSub.yearlyCost.toFixed(0)}/year`
+        ? `ยกเลิก ${topSub.subscription.name} สามารถประหยัดได้ ${formatMoney(topSub.yearlyCost)}/ปี`
+        : `Canceling ${topSub.subscription.name} could save you ${formatMoney(topSub.yearlyCost)}/year`
     });
   }
 
   // Priority 3: Category duplicates
   const categoryCount = new Map<string, number>();
-  subscriptions.forEach(sub => {
-    if (sub.category) {
-      categoryCount.set(sub.category, (categoryCount.get(sub.category) || 0) + 1);
+  costs.forEach(({ subscription }) => {
+    if (subscription.category) {
+      categoryCount.set(subscription.category, (categoryCount.get(subscription.category) || 0) + 1);
     }
   });
 

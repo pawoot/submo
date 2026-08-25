@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Pencil, Trash2 } from "lucide-react";
 import type { MappedSubscription } from "@/services/importService";
 import { useLanguage } from "@/contexts/LanguageContext";
+import { formatCurrency } from "@/lib/utils";
 
 interface ImportReviewTableProps {
   subscriptions: MappedSubscription[];
@@ -187,7 +188,7 @@ export function ImportReviewTable({
                         className="max-w-24"
                       />
                     ) : (
-                      <span className="font-semibold">฿{sub.amount.toFixed(2)}</span>
+                      <span className="font-semibold">{formatCurrency(sub.amount, "THB")}</span>
                     )}
                   </TableCell>
                   <TableCell>{sub.next_billing_date}</TableCell>
