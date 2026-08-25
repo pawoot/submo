@@ -1,12 +1,11 @@
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, Clock } from "lucide-react";
 import { useRouter } from "next/router";
 import { SubscriptionIcon } from "./SubscriptionIcon";
-import { formatCurrency } from "@/lib/utils";
+import { ConvertedCurrencyAmount } from "./ConvertedCurrencyAmount";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
@@ -16,7 +15,6 @@ interface UpcomingRenewalsProps {
 
 export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
   const { t } = useLanguage();
-  const { formatCurrency } = useCurrency();
   const router = useRouter();
 
   const now = new Date();
@@ -105,7 +103,12 @@ export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
             </div>
 
             <div className="text-right flex-shrink-0">
-              <p className="font-bold text-sm">{formatCurrency(sub.amount, sub.currency)}</p>
+              <ConvertedCurrencyAmount
+                amount={sub.amount}
+                currency={sub.currency}
+                className="font-bold text-sm"
+                originalClassName="text-[11px] text-muted-foreground"
+              />
               <p className={`text-xs font-medium ${getUrgencyColor(sub.next_billing_date!)}`}>
                 {getDaysUntilText(sub.next_billing_date!)}
               </p>

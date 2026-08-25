@@ -19,9 +19,7 @@ import { AppShell } from "@/components/AppShell";
 import { subscriptionService } from "@/services/subscriptionService";
 import { authService } from "@/services/authService";
 import { supabase } from "@/integrations/supabase/client";
-import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { formatCurrency } from "@/lib/utils";
 import { 
   Plus, 
   Bell,
@@ -44,6 +42,7 @@ import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { UpcomingRenewals } from "@/components/UpcomingRenewals";
 import { TotalSpending } from "@/components/TotalSpending";
+import { ConvertedCurrencyAmount } from "@/components/ConvertedCurrencyAmount";
 import type { Database } from "@/integrations/supabase/types";
 import Link from "next/link";
 
@@ -52,7 +51,6 @@ type SortOption = 'default' | 'price-asc' | 'price-desc' | 'date-asc' | 'date-de
 
 export default function Dashboard() {
   const router = useRouter();
-  const { preferredCurrency, convertAmount, formatPrice } = useCurrency();
   const { language, t } = useLanguage();
 
   const [user, setUser] = useState<any>(null);
@@ -396,7 +394,11 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0 ml-4">
-                            <p className="font-bold">{formatCurrency(sub.amount, sub.currency)}</p>
+                            <ConvertedCurrencyAmount
+                              amount={sub.amount}
+                              currency={sub.currency}
+                              className="font-bold"
+                            />
                             <p className="text-sm text-muted-foreground">
                               {new Date(sub.next_billing_date).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                             </p>
