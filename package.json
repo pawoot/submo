@@ -3,7 +3,8 @@
   "version": "2.4.4",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack",
+    "dev": "next dev",
+    "local": "SUBMO_NEXT_DIST_DIR=.submo-production-local next build && SUBMO_NEXT_DIST_DIR=.submo-production-local next start -p 3000",
     "build": "next build",
     "start": "next start",
     "lint": "next lint"
