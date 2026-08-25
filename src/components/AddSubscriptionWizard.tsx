@@ -137,7 +137,7 @@ export function AddSubscriptionWizard({
     }
   });
 
-  const { register, control, watch, setValue, handleSubmit, formState: { errors, dirtyFields } } = form;
+  const { register, control, watch, getValues, setValue, handleSubmit, formState: { errors, dirtyFields } } = form;
   const watchedValues = watch();
 
   // Apply the account preference once, after it finishes loading.  Do not
@@ -249,10 +249,14 @@ export function AddSubscriptionWizard({
   };
 
   const handleFinalSubmit = async () => {
-    if (!canSubmitForm()) {
+    // Read directly from react-hook-form so the last selected value (such as
+    // currency) is what is persisted, even if React has not re-rendered yet.
+    const currentValues = getValues();
+    if (!currentValues.name || !currentValues.category_id || currentValues.amount <= 0 ||
+        !currentValues.payment_method_id || !currentValues.start_date || !currentValues.next_billing_date) {
       return;
     }
-    await onSubmitHandler(watchedValues);
+    await onSubmitHandler(currentValues);
   };
 
   return (

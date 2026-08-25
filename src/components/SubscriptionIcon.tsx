@@ -33,6 +33,8 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "notion": "notion.so",
   "chatgpt": "openai.com",
   "openai": "openai.com",
+  "claude": "claude.ai",
+  "anthropic": "anthropic.com",
   "midjourney": "midjourney.com",
   "zoom": "zoom.us",
   "microsoft": "microsoft.com",
@@ -52,7 +54,7 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "dtac": "dtac.co.th"
 };
 
-export function SubscriptionIcon({ name, websiteUrl, size = "md", className }: SubscriptionIconProps) {
+export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", className }: SubscriptionIconProps) {
   const [imageError, setImageError] = useState(false);
   
   // Determine the best URL to use for favicon fetching
@@ -68,9 +70,15 @@ export function SubscriptionIcon({ name, websiteUrl, size = "md", className }: S
     }
   }
   
-  const faviconUrl = targetUrl 
-    ? `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(targetUrl).hostname)}&sz=128`
-    : null;
+  let faviconUrl = iconUrl?.trim() || null;
+  if (!faviconUrl && targetUrl) {
+    try {
+      faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(targetUrl).hostname)}&sz=128`;
+    } catch {
+      // A malformed website URL should not prevent the subscription from rendering.
+      faviconUrl = null;
+    }
+  }
 
   const sizeClasses = {
     sm: "w-8 h-8 text-xs",

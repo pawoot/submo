@@ -71,6 +71,8 @@ export default function AddSubscription() {
         reminder_days: data.reminder_days,
         auto_renew: data.auto_renew,
         notes: data.notes,
+        icon_url: data.icon_url || null,
+        website_url: data.website_url || null,
       };
 
       await subscriptionService.createSubscription(newSubscription);
