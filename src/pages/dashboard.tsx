@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SEO } from "@/components/SEO";
@@ -192,10 +192,7 @@ export default function Dashboard() {
   }
 
   const activeSubscriptions = subscriptions.filter(s => s.is_active);
-  const categoryOptions = useMemo(
-    () => [...new Set(activeSubscriptions.map((subscription) => subscription.category).filter(Boolean))] as string[],
-    [activeSubscriptions]
-  );
+  const categoryOptions = [...new Set(activeSubscriptions.map((subscription) => subscription.category).filter(Boolean))] as string[];
   const filteredSubscriptions = activeSubscriptions.filter((subscription) => {
     const matchesSearch = subscription.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
     const matchesCategory = categoryFilter === "all" || subscription.category === categoryFilter;
