@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import * as z from "zod";
@@ -64,10 +64,11 @@ export function AddSubscriptionWizard({
   isSubmitting
 }: AddSubscriptionWizardProps) {
   const { t, language } = useLanguage();
-  const { preferredCurrency } = useCurrency();
+  const { preferredCurrency, isLoading: isCurrencyLoading } = useCurrency();
   const [step, setStep] = useState(1);
   const [selectedTemplate, setSelectedTemplate] = useState<SubscriptionTemplate | null>(null);
   const [showTemplateBrowser, setShowTemplateBrowser] = useState(false);
+  const hasInitializedCurrency = useRef(false);
 
   const createFormSchema = () => z.object({
     name: z.string()
@@ -136,15 +137,19 @@ export function AddSubscriptionWizard({
     }
   });
 
-  const { register, control, watch, setValue, handleSubmit, formState: { errors } } = form;
+  const { register, control, watch, setValue, handleSubmit, formState: { errors, dirtyFields } } = form;
   const watchedValues = watch();
 
-  // Update currency when preferred currency is loaded
+  // Apply the account preference once, after it finishes loading.  Do not
+  // overwrite a currency the user (or a selected template) has already chosen.
   useEffect(() => {
-    if (preferredCurrency && watchedValues.currency !== preferredCurrency) {
+    if (isCurrencyLoading || hasInitializedCurrency.current) return;
+
+    hasInitializedCurrency.current = true;
+    if (!dirtyFields.currency && preferredCurrency) {
       setValue("currency", preferredCurrency, { shouldValidate: false });
     }
-  }, [preferredCurrency, setValue, watchedValues.currency]);
+  }, [dirtyFields.currency, isCurrencyLoading, preferredCurrency, setValue]);
 
   // Scroll to top when step changes
   useEffect(() => {
@@ -187,6 +192,7 @@ export function AddSubscriptionWizard({
 
   // Handle template selection
   const handleTemplateSelect = async (template: SubscriptionTemplate) => {
+    hasInitializedCurrency.current = true;
     setValue("name", template.name);
     setValue("category_id", template.category_id);
     setValue("amount", template.amount ?? 0);
