@@ -38,6 +38,8 @@ export default function AdminUsers() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const [sortBy, setSortBy] = useState<string>("newest");
+  const [subscriptionFilter, setSubscriptionFilter] = useState<string>("all");
+  const [roleFilter, setRoleFilter] = useState<string>("all");
   
   const { toast } = useToast();
   const router = useRouter();
@@ -54,7 +56,7 @@ export default function AdminUsers() {
 
   useEffect(() => {
     filterAndSortUsers();
-  }, [users, searchQuery, sortBy]);
+  }, [users, searchQuery, sortBy, subscriptionFilter, roleFilter]);
 
   const checkAdminAccess = async () => {
     try {
@@ -107,6 +109,18 @@ export default function AdminUsers() {
         (user) =>
           user.full_name?.toLowerCase().includes(searchLower) ||
           user.email?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (subscriptionFilter === "with-subscriptions") {
+      filtered = filtered.filter((user) => user.subscription_count > 0);
+    } else if (subscriptionFilter === "without-subscriptions") {
+      filtered = filtered.filter((user) => user.subscription_count === 0);
+    }
+
+    if (roleFilter !== "all") {
+      filtered = filtered.filter((user) =>
+        roleFilter === "admin" ? user.is_admin || user.role === "admin" : !user.is_admin && user.role !== "admin"
       );
     }
 
@@ -239,9 +253,46 @@ export default function AdminUsers() {
           {/* Users List */}
           <Card>
             <CardHeader>
-              <CardTitle className="flex items-center justify-between">
-                <span>รายการผู้ใช้งาน ({filteredUsers.length})</span>
-              </CardTitle>
+              <div className="flex flex-col gap-4 lg:flex-row lg:items-center lg:justify-between">
+                <CardTitle>รายการผู้ใช้งาน ({filteredUsers.length})</CardTitle>
+                <div className="grid w-full grid-cols-1 gap-3 sm:grid-cols-2 lg:w-auto lg:grid-cols-4">
+                  <div className="relative min-w-0 lg:w-64">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="ค้นหาชื่อหรืออีเมล"
+                      className="pl-9"
+                    />
+                  </div>
+                  <Select value={subscriptionFilter} onValueChange={setSubscriptionFilter}>
+                    <SelectTrigger><SelectValue placeholder="รายการสมาชิก" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">สมาชิกทั้งหมด</SelectItem>
+                      <SelectItem value="with-subscriptions">มี Subscription</SelectItem>
+                      <SelectItem value="without-subscriptions">ยังไม่มี Subscription</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={roleFilter} onValueChange={setRoleFilter}>
+                    <SelectTrigger><SelectValue placeholder="สิทธิ์" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ทุกสิทธิ์</SelectItem>
+                      <SelectItem value="admin">ผู้ดูแลระบบ</SelectItem>
+                      <SelectItem value="user">ผู้ใช้ทั่วไป</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={sortBy} onValueChange={setSortBy}>
+                    <SelectTrigger><SelectValue placeholder="เรียงลำดับ" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="newest">สมัครใหม่ล่าสุด</SelectItem>
+                      <SelectItem value="oldest">สมัครเก่าที่สุด</SelectItem>
+                      <SelectItem value="name">ชื่อ A–Z</SelectItem>
+                      <SelectItem value="spending-high">ค่าใช้จ่ายสูงสุด</SelectItem>
+                      <SelectItem value="spending-low">ค่าใช้จ่ายต่ำสุด</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+              </div>
             </CardHeader>
             <CardContent>
               {isLoading ? (

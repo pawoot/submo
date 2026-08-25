@@ -97,7 +97,9 @@ export default function UserDetailPage() {
       const profile = await profileService.getCurrentProfile();
       if (!profile?.is_admin) {
         router.push("/dashboard");
+        return;
       }
+      setIsAdmin(true);
     } catch (error) {
       console.error("Error checking admin access:", error);
       router.push("/dashboard");
