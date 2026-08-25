@@ -5,7 +5,7 @@ import { useSubscriptionCosts, type SubscriptionCost } from "@/hooks/useSubscrip
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { TrendingUp, TrendingDown, Bell, Lightbulb, AlertTriangle, Sparkles, X } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
@@ -29,34 +29,55 @@ interface Insight {
 export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelProps) {
   const { language, t } = useLanguage();
   const { preferredCurrency, formatCurrency } = useCurrency();
-  const [dismissedInsights, setDismissedInsights] = useState<string[]>([]);
+  const [isDismissed, setIsDismissed] = useState(false);
   const { costs, isLoading } = useSubscriptionCosts(subscriptions);
 
-  const insights = (isLoading ? [] : generateInsights(
+  const insights = isLoading ? [] : generateInsights(
     costs,
     language,
     (amount) => formatCurrency(amount, preferredCurrency),
-  ))
-    .filter(i => !dismissedInsights.includes(i.message));
+  );
+  const insightSignature = useMemo(
+    () => insights.map((insight) => `${insight.type}:${insight.subscriptionId || ""}:${insight.message}`).join("|"),
+    [insights]
+  );
+
+  useEffect(() => {
+    if (!insightSignature) {
+      setIsDismissed(false);
+      return;
+    }
+
+    setIsDismissed(window.localStorage.getItem("submo-dismissed-insights") === insightSignature);
+  }, [insightSignature]);
 
   // Separate primary and secondary insights
   const primaryInsight = insights.find(i => i.priority === 1);
   const secondaryInsights = insights.filter(i => i.priority > 1).slice(0, 2);
 
-  const handleDismiss = (message: string) => {
-    setDismissedInsights(prev => [...prev, message]);
+  const handleDismiss = () => {
+    window.localStorage.setItem("submo-dismissed-insights", insightSignature);
+    setIsDismissed(true);
   };
 
-  if (insights.length === 0) return null;
+  if (insights.length === 0 || isDismissed) return null;
 
   return (
     <Card className="border-primary/20 bg-gradient-to-br from-primary/5 via-background to-background">
       <CardContent className="p-6">
-        <div className="flex items-center gap-2 mb-4">
-          <Sparkles className="w-5 h-5 text-primary" />
-          <h3 className="text-lg font-semibold text-foreground">
+        <div className="mb-4 flex items-center gap-2">
+          <Sparkles className="h-5 w-5 text-primary" />
+          <h3 className="flex-1 text-lg font-semibold text-foreground">
             {language === "th" ? "ข้อมูลเชิงลึก" : "Submo Insights"}
           </h3>
+          <button
+            onClick={handleDismiss}
+            className="rounded-md p-1 text-muted-foreground transition-colors hover:bg-muted hover:text-foreground"
+            aria-label={language === "th" ? "ปิดข้อมูลเชิงลึก" : "Dismiss insights"}
+            title={language === "th" ? "ปิดข้อมูลเชิงลึก" : "Dismiss insights"}
+          >
+            <X className="h-4 w-4" />
+          </button>
         </div>
 
         <div className="space-y-4">
@@ -69,13 +90,6 @@ export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelPr
               ${primaryInsight.variant === "info" ? "border-blue-500/50 bg-blue-500/5" : ""}
               ${primaryInsight.variant === "default" ? "border-primary/50 bg-primary/5" : ""}
             `}>
-              <button 
-                onClick={() => handleDismiss(primaryInsight.message)}
-                className="absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1"
-              >
-                <X className="w-3 h-3" />
-              </button>
-              
               <div className="flex items-start gap-3">
                 <div className="flex-shrink-0 mt-0.5">
                   {primaryInsight.icon}
@@ -100,7 +114,7 @@ export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelPr
                         size="sm" 
                         variant="ghost" 
                         className="h-8 text-xs"
-                        onClick={() => handleDismiss(primaryInsight.message)}
+                        onClick={handleDismiss}
                       >
                         {t("subscriptions.remindLater")}
                       </Button>
@@ -135,12 +149,6 @@ export function InsightPanel({ subscriptions, onToggleReminder }: InsightPanelPr
                       </Button>
                     )}
                   </div>
-                  <button 
-                    onClick={() => handleDismiss(insight.message)}
-                    className="opacity-0 group-hover:opacity-100 absolute top-2 right-2 text-muted-foreground hover:text-foreground p-1 transition-opacity"
-                  >
-                    <X className="w-3 h-3" />
-                  </button>
                 </div>
               ))}
             </div>

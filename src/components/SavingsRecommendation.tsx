@@ -1,4 +1,4 @@
-import { useState } from "react";
+import Link from "next/link";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
@@ -7,8 +7,7 @@ import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { Lightbulb, Eye, Clock, Bell } from "lucide-react";
-import { useRouter } from "next/router";
+import { Lightbulb, Bell } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
@@ -31,13 +30,10 @@ interface Recommendation {
 export function SavingsRecommendation({ subscriptions, onToggleReminder }: SavingsRecommendationProps) {
   const { language, t } = useLanguage();
   const { preferredCurrency, formatCurrency } = useCurrency();
-  const router = useRouter();
   const { toast } = useToast();
-  const [dismissedIds, setDismissedIds] = useState<string[]>([]);
 
   const { costs, isLoading } = useSubscriptionCosts(subscriptions);
   const recommendations = generateRecommendations(costs, language)
-    .filter(rec => !dismissedIds.includes(rec.subscription.id))
     .slice(0, 3); // Limit to top 3
 
   const handleEnableReminder = async (subId: string) => {
@@ -49,14 +45,6 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
         description: language === "th" ? "คุณจะได้รับการแจ้งเตือนก่อนวันต่ออายุ" : "You'll receive a notification before renewal",
       });
     }
-  };
-
-  const handleRemindLater = (subId: string) => {
-    setDismissedIds(prev => [...prev, subId]);
-    toast({
-      title: t("dashboard.remindedLater"),
-      description: language === "th" ? "เราจะแสดงคำแนะนำนี้อีกครั้งในภายหลัง" : "We'll show this recommendation again later",
-    });
   };
 
   if (isLoading || recommendations.length === 0) {
@@ -75,32 +63,33 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
         {recommendations.map((rec) => (
           <div
             key={rec.subscription.id}
-            className="p-4 border rounded-lg hover:border-primary/50 transition-colors bg-card"
+            className="group flex items-start gap-3 rounded-lg border bg-card p-4 transition-colors hover:border-primary/50"
           >
-            <div className="flex items-start gap-3">
-              <div className="flex-shrink-0">
-                <SubscriptionIcon
-                  name={rec.subscription.name}
-                  iconUrl={rec.subscription.icon_url || rec.subscription.logo_url}
-                  websiteUrl={rec.subscription.website_url}
-                  className="w-10 h-10"
-                />
-              </div>
+            <SubscriptionIcon
+              name={rec.subscription.name}
+              iconUrl={rec.subscription.icon_url || rec.subscription.logo_url}
+              websiteUrl={rec.subscription.website_url}
+              className="h-10 w-10 flex-shrink-0"
+            />
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <div className="flex items-start justify-between gap-2 mb-2">
-                  <h4 className="font-semibold text-foreground truncate">{rec.subscription.name}</h4>
+            <div className="min-w-0 flex-1">
+              <Link
+                href={`/edit-subscription/${rec.subscription.id}`}
+                className="block rounded-sm outline-none focus-visible:ring-2 focus-visible:ring-ring"
+                aria-label={`${t("dashboard.review")} ${rec.subscription.name}`}
+              >
+                <div className="mb-1 flex items-start justify-between gap-2">
+                  <h4 className="truncate font-semibold text-foreground transition-colors group-hover:text-primary">
+                    {rec.subscription.name}
+                  </h4>
                   <Badge variant="secondary" className="flex-shrink-0">
                     {getReasonBadgeText(rec.reason, language)}
                   </Badge>
                 </div>
 
-                <p className="text-sm text-muted-foreground mb-2">
-                  {rec.reasonText}
-                </p>
+                <p className="mb-2 text-sm text-muted-foreground">{rec.reasonText}</p>
 
-                <div className="flex items-center gap-2 text-sm mb-3">
+                <div className="flex items-center gap-2 text-sm">
                   <span className="font-medium text-foreground">
                     {formatCurrency(rec.monthlyCost, preferredCurrency)}/{t("dashboard.month")}
                   </span>
@@ -109,41 +98,23 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
                     {formatCurrency(rec.yearlyCost, preferredCurrency)}/{t("dashboard.year")}
                   </span>
                 </div>
+              </Link>
 
-                {/* Actions */}
-                <div className="flex flex-wrap gap-2">
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => router.push(`/edit-subscription/${rec.subscription.id}`)}
-                    className="gap-2"
-                  >
-                    <Eye className="w-3.5 h-3.5" />
-                    {t("dashboard.review")}
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="outline"
-                    onClick={() => handleEnableReminder(rec.subscription.id)}
-                    className="gap-2"
-                  >
-                    <Bell className="w-3.5 h-3.5" />
-                    {t("dashboard.enableReminder")}
-                  </Button>
-
-                  <Button
-                    size="sm"
-                    variant="ghost"
-                    onClick={() => handleRemindLater(rec.subscription.id)}
-                    className="gap-2"
-                  >
-                    <Clock className="w-3.5 h-3.5" />
-                    {t("dashboard.remindLater")}
-                  </Button>
-                </div>
-              </div>
+              <p className="mt-2 text-xs text-primary opacity-0 transition-opacity group-hover:opacity-100">
+                {t("dashboard.review")}
+              </p>
             </div>
+
+            <Button
+              size="icon"
+              variant="outline"
+              className="h-9 w-9 flex-shrink-0"
+              onClick={() => handleEnableReminder(rec.subscription.id)}
+              aria-label={t("dashboard.enableReminder")}
+              title={t("dashboard.enableReminder")}
+            >
+              <Bell className="h-4 w-4" />
+            </Button>
           </div>
         ))}
       </CardContent>
