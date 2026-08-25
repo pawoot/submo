@@ -1,6 +1,5 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/router";
-import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SEO } from "@/components/SEO";
 import { AuthGuard } from "@/components/AuthGuard";
@@ -16,13 +15,12 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import MobileHeader from "@/components/MobileHeader";
+import { AppShell } from "@/components/AppShell";
 import { subscriptionService } from "@/services/subscriptionService";
 import { authService } from "@/services/authService";
 import { supabase } from "@/integrations/supabase/client";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { getTranslation } from "@/lib/translations";
 import { formatCurrency } from "@/lib/utils";
 import { 
   Plus, 
@@ -55,8 +53,7 @@ type SortOption = 'default' | 'price-asc' | 'price-desc' | 'date-asc' | 'date-de
 export default function Dashboard() {
   const router = useRouter();
   const { preferredCurrency, convertAmount, formatPrice } = useCurrency();
-  const { language } = useLanguage();
-  const t = (key: string) => getTranslation(key as any, language);
+  const { language, t } = useLanguage();
 
   const [user, setUser] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<ServiceSubscription[]>([]);
@@ -85,7 +82,12 @@ export default function Dashboard() {
       console.error("Error loading data:", error);
       toast({
         title: t("common.error"),
-        description: t("common.errorOccurred"),
+        description:
+          error instanceof Error
+            ? error.message
+            : typeof error === "object" && error && "message" in error && typeof error.message === "string"
+              ? error.message
+              : t("common.error_occurred"),
         variant: "destructive"
       });
     } finally {
@@ -143,14 +145,14 @@ export default function Dashboard() {
       toast({
         title: t("common.success"),
         description: currentEnabled 
-          ? t("subscription.reminderDisabled")
-          : t("subscription.reminderEnabled")
+          ? t("subscriptions.reminderDisabled")
+          : t("subscriptions.reminderEnabled")
       });
     } catch (error) {
       console.error("Error toggling reminder:", error);
       toast({
         title: t("common.error"),
-        description: t("common.errorOccurred"),
+        description: t("common.error_occurred"),
         variant: "destructive"
       });
     }
@@ -223,21 +225,22 @@ export default function Dashboard() {
         title={t("nav.dashboard")}
         description="จัดการ Subscriptions ของคุณ"
       />
-      <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-purple-50">
-        {/* Mobile Header - Sticky */}
-        <div className="md:hidden sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
-          <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
-        </div>
-
-        {/* Desktop Header - Sticky */}
-        <div className="hidden md:block sticky top-0 z-50 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200 dark:border-slate-800">
+      <AppShell
+        user={user}
+        isAdmin={isAdmin}
+        unreadCount={unreadCount}
+        desktopHeader={
           <div className="container mx-auto px-4 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-3">
-                <h1 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                  {t("dashboard.title")}
-                </h1>
-                <ThemeSwitch />
+                <Link href="/" className="flex items-center gap-2.5" aria-label="Submo home">
+                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg font-black text-white shadow-sm">
+                    S
+                  </span>
+                  <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
+                    Submo<span className="text-base">.ai</span>
+                  </span>
+                </Link>
                 <LanguageSwitcher />
               </div>
               <div className="flex items-center gap-3">
@@ -268,7 +271,8 @@ export default function Dashboard() {
               </div>
             </div>
           </div>
-        </div>
+        }
+      >
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
@@ -356,10 +360,10 @@ export default function Dashboard() {
                 <div className="space-y-4">
                   {sortedSubscriptions.length === 0 ? (
                     <div className="py-12 text-center">
-                      <p className="text-muted-foreground mb-4">{t("subscription.noSubscriptions")}</p>
+                      <p className="text-muted-foreground mb-4">{t("subscriptions.empty")}</p>
                       <Button onClick={() => router.push("/add-subscription")}>
                         <Plus className="w-4 h-4 mr-2" />
-                        {t("subscription.addFirst")}
+                        {t("subscription.add")}
                       </Button>
                     </div>
                   ) : (
@@ -386,7 +390,7 @@ export default function Dashboard() {
                                   </Badge>
                                 )}
                                 <span className="text-sm text-muted-foreground">
-                                  {t(`subscription.${sub.billing_cycle}`)}
+                                  {t(sub.billing_cycle === "yearly" ? "subscription.yearly" : "subscription.monthly")}
                                 </span>
                               </div>
                             </div>
@@ -406,7 +410,7 @@ export default function Dashboard() {
             </Card>
           </div>
         </main>
-      </div>
+      </AppShell>
     </AuthGuard>
   );
 }

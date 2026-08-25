@@ -1,7 +1,8 @@
-import React, { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState, ReactNode } from "react";
 import { getTranslation, TranslationKey, Language as LangType } from "@/lib/translations";
 
 type Language = LangType;
+export const LANGUAGE_STORAGE_KEY = "submo-language";
 
 interface LanguageContextType {
   language: Language;
@@ -20,23 +21,22 @@ export function LanguageProvider({ children }: LanguageProviderProps) {
 
   useEffect(() => {
     // Load language from localStorage
-    const savedLanguage = localStorage.getItem("submo-language") as Language;
+    const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY) as Language;
     if (savedLanguage && (savedLanguage === "th" || savedLanguage === "en")) {
       setLanguageState(savedLanguage);
     }
   }, []);
 
-  const setLanguage = (lang: Language) => {
+  const setLanguage = useCallback((lang: Language) => {
     setLanguageState(lang);
-    localStorage.setItem("submo-language", lang);
-  };
+    localStorage.setItem(LANGUAGE_STORAGE_KEY, lang);
+  }, []);
 
-  const t = (key: TranslationKey): string => {
-    return getTranslation(key, language);
-  };
+  const t = useCallback((key: TranslationKey): string => getTranslation(key, language), [language]);
+  const value = useMemo(() => ({ language, setLanguage, t }), [language, setLanguage, t]);
 
   return (
-    <LanguageContext.Provider value={{ language, setLanguage, t }}>
+    <LanguageContext.Provider value={value}>
       {children}
     </LanguageContext.Provider>
   );

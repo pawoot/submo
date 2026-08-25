@@ -83,32 +83,10 @@ export const profileService = {
    * Upload avatar image
    */
   async uploadAvatar(file: File): Promise<string> {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      throw new Error("User not authenticated");
-    }
-
-    const fileExt = file.name.split(".").pop();
-    const fileName = `${user.id}-${Math.random()}.${fileExt}`;
-    const filePath = `avatars/${fileName}`;
-
-    // Upload file to Supabase Storage
-    const { error: uploadError } = await supabase.storage
-      .from("avatars")
-      .upload(filePath, file, {
-        cacheControl: "3600",
-        upsert: true,
-      });
-
-    if (uploadError) throw uploadError;
-
-    // Get public URL
-    const { data } = supabase.storage
-      .from("avatars")
-      .getPublicUrl(filePath);
-
-    return data.publicUrl;
+    void file;
+    // Neon replaces the database and authentication layers, not object
+    // storage. Keep the UI safe until an object-storage provider is chosen.
+    throw new Error("การอัปโหลดรูปโปรไฟล์ยังไม่พร้อมใช้งานระหว่างย้ายไป Neon");
   },
 
   /**

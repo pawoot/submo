@@ -4,7 +4,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, PieChart, Pie, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { BarChart, Bar, Cell, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { BarChart3, PieChart as PieChartIcon, Search, Filter, PackagePlus, TrendingUp, Sparkles, CreditCard, Building2 } from "lucide-react";
 import Link from "next/link";
 import { formatCurrency } from "@/lib/utils";
@@ -263,9 +263,9 @@ export function SubscriptionCharts() {
         <>
           {/* Charts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card className="shadow-lg border-2 border-gray-100">
-              <CardHeader className="bg-gradient-to-r from-indigo-50 to-white">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800">
+            <Card className="shadow-lg border-2 border-gray-100 bg-card dark:border-slate-800">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-slate-100">
                   <BarChart3 className="w-6 h-6 text-indigo-600" />
                   {t("charts.monthlyByCategory")}
                 </CardTitle>
@@ -277,19 +277,19 @@ export function SubscriptionCharts() {
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={categoryChartData}>
-                        <CartesianGrid strokeDasharray="3 3" stroke="#e2e8f0" vertical={false} />
+                        <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                         <XAxis 
                           dataKey="name" 
                           angle={-45} 
                           textAnchor="end" 
                           height={80} 
-                          tick={{ fontSize: 11 }} 
+                          tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }}
                           interval={0}
                         />
-                        <YAxis tick={{ fontSize: 11 }} />
+                        <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                         <Tooltip 
                           formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
-                          contentStyle={{ backgroundColor: "rgba(255, 255, 255, 0.98)", borderRadius: "12px", border: "2px solid #e2e8f0", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
+                          contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderRadius: "12px", border: "1px solid hsl(var(--border))", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                         />
                         <Bar dataKey="amount" fill="#6366f1" radius={[6, 6, 0, 0]}>
                           {categoryChartData.map((entry, index) => (
@@ -303,74 +303,35 @@ export function SubscriptionCharts() {
               </CardContent>
             </Card>
 
-            {/* Payment Method Distribution */}
-            <Card>
+            {/* Payment Method Cost */}
+            <Card className="bg-card dark:border-slate-800">
               <CardHeader>
                 <CardTitle className="text-base font-medium flex items-center gap-2">
                   <CreditCard className="h-4 w-4" />
-                  {t("charts.paymentMethodDistribution")}
+                  {t("charts.paymentMethodCost")}
                 </CardTitle>
               </CardHeader>
               <CardContent>
-                <div className="flex flex-col md:flex-row items-center justify-center gap-6">
-                  <div className="w-full md:w-1/2 max-w-[240px]">
-                    <ResponsiveContainer width="100%" height={240}>
-                      <PieChart>
-                        <Pie
-                          data={paymentChartData}
-                          cx="50%"
-                          cy="50%"
-                          innerRadius={60}
-                          outerRadius={90}
-                          paddingAngle={2}
-                          dataKey="amount"
-                        >
-                          {paymentChartData.map((entry, index) => (
-                            <Cell key={`cell-${index}`} fill={entry.color} />
-                          ))}
-                        </Pie>
-                        <Tooltip
-                          content={({ active, payload }) => {
-                            if (active && payload && payload.length) {
-                              return (
-                                <div className="bg-background border border-border rounded-lg shadow-lg p-3">
-                                  <p className="font-medium">{payload[0].name}</p>
-                                  <p className="text-sm text-muted-foreground">
-                                    {formatCurrency(payload[0].value as number, preferredCurrency)} ({payload[0].payload.percentage}%)
-                                  </p>
-                                </div>
-                              );
-                            }
-                            return null;
-                          }}
-                        />
-                        <text
-                          x="50%"
-                          y="50%"
-                          textAnchor="middle"
-                          dominantBaseline="middle"
-                          className="fill-muted-foreground text-sm"
-                        >
-                          Methods
-                        </text>
-                      </PieChart>
-                    </ResponsiveContainer>
-                  </div>
-                  
-                  {/* Legend - Side by side with proper alignment */}
-                  <div className="flex flex-col gap-3 w-full md:w-1/2">
-                    {paymentChartData.map((item, index) => (
-                      <div key={index} className="flex items-center gap-3">
-                        <div
-                          className="w-4 h-4 rounded-sm flex-shrink-0"
-                          style={{ backgroundColor: item.color }}
-                        />
-                        <span className="text-sm text-foreground leading-none">
-                          {item.name} ({item.percentage}%)
-                        </span>
-                      </div>
-                    ))}
-                  </div>
+                <div className="h-[300px] w-full">
+                  <ResponsiveContainer width="100%" height="100%">
+                    <BarChart data={paymentChartData} layout="vertical" margin={{ top: 4, right: 20, bottom: 4, left: 16 }}>
+                      <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
+                      <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
+                      <YAxis type="category" dataKey="name" width={105} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
+                      <Tooltip
+                        formatter={(value: number, _name, item) => [
+                          `${formatCurrency(value, preferredCurrency)} (${item.payload.percentage}%)`,
+                          "ค่าใช้จ่าย",
+                        ]}
+                        contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderRadius: "12px", border: "1px solid hsl(var(--border))" }}
+                      />
+                      <Bar dataKey="amount" radius={[0, 6, 6, 0]}>
+                        {paymentChartData.map((entry, index) => (
+                          <Cell key={`payment-cell-${index}`} fill={entry.color || "#2563eb"} />
+                        ))}
+                      </Bar>
+                    </BarChart>
+                  </ResponsiveContainer>
                 </div>
               </CardContent>
             </Card>

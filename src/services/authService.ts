@@ -1,5 +1,4 @@
 import { supabase } from "@/integrations/supabase/client";
-import type { User, Session } from "@supabase/supabase-js";
 
 export interface AuthUser {
   id: string;
@@ -11,6 +10,11 @@ export interface AuthUser {
 export interface AuthError {
   message: string;
   code?: string;
+}
+
+export interface AuthSession {
+  user: AuthUser;
+  [key: string]: unknown;
 }
 
 // Dynamic URL Helper
@@ -46,9 +50,9 @@ export const authService = {
   },
 
   // Get current session
-  async getCurrentSession(): Promise<Session | null> {
+  async getCurrentSession(): Promise<AuthSession | null> {
     const { data: { session } } = await supabase.auth.getSession();
-    return session;
+    return session as unknown as AuthSession | null;
   },
 
   // Sign up with email and password
@@ -220,7 +224,7 @@ export const authService = {
   },
 
   // Listen to auth state changes
-  onAuthStateChange(callback: (event: string, session: Session | null) => void) {
-    return supabase.auth.onAuthStateChange(callback);
+  onAuthStateChange(callback: (event: string, session: AuthSession | null) => void) {
+    return supabase.auth.onAuthStateChange(callback as never);
   }
 };

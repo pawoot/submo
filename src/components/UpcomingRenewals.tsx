@@ -15,20 +15,9 @@ interface UpcomingRenewalsProps {
 }
 
 export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const { formatCurrency } = useCurrency();
   const router = useRouter();
-
-  const t = (key: string) => {
-    const translations: Record<string, { th: string; en: string }> = {
-      title: { th: "📅 ต่ออายุเร็วๆ นี้", en: "📅 Upcoming Renewals" },
-      days: { th: "วัน", en: "days" },
-      today: { th: "วันนี้", en: "Today" },
-      tomorrow: { th: "พรุ่งนี้", en: "Tomorrow" },
-      noUpcoming: { th: "ไม่มีรายการต่ออายุในเร็วๆ นี้", en: "No upcoming renewals" },
-    };
-    return translations[key]?.[language] || key;
-  };
 
   const now = new Date();
   const upcomingSubscriptions = subscriptions
@@ -49,9 +38,9 @@ export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
     const nextDate = new Date(nextBillingDate);
     const daysUntil = Math.ceil((nextDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
     
-    if (daysUntil === 0) return t("today");
-    if (daysUntil === 1) return t("tomorrow");
-    return `${daysUntil} ${t("days")}`;
+    if (daysUntil === 0) return t("dashboard.today");
+    if (daysUntil === 1) return t("dashboard.tomorrow");
+    return `${daysUntil} ${t("dashboard.days")}`;
   };
 
   const getUrgencyColor = (nextBillingDate: string) => {
@@ -69,13 +58,13 @@ export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
         <CardHeader className="pb-3">
           <CardTitle className="text-lg flex items-center gap-2">
             <Calendar className="w-5 h-5 text-blue-600" />
-            {t("title")}
+            {t("dashboard.upcomingTitle")}
           </CardTitle>
         </CardHeader>
         <CardContent>
           <div className="py-8 text-center">
             <Clock className="w-12 h-12 mx-auto mb-3 text-muted-foreground opacity-50" />
-            <p className="text-sm text-muted-foreground">{t("noUpcoming")}</p>
+            <p className="text-sm text-muted-foreground">{t("dashboard.noUpcoming")}</p>
           </div>
         </CardContent>
       </Card>
@@ -87,7 +76,7 @@ export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Calendar className="w-5 h-5 text-blue-600" />
-          {t("title")}
+          {t("dashboard.upcomingTitle")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">

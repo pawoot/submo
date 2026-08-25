@@ -12,6 +12,7 @@ export const translations = {
   "nav.stats": { th: "สถิติ", en: "Statistics" },
   "nav.login": { th: "เข้าสู่ระบบ", en: "Login" },
   "nav.signup": { th: "สมัครสมาชิก", en: "Sign Up" },
+  "nav.dashboard": { th: "แดชบอร์ด", en: "Dashboard" },
 
   // Dialogs
   "dialog.logoutTitle": { th: "ยืนยันการออกจากระบบ", en: "Confirm Logout" },
@@ -29,12 +30,35 @@ export const translations = {
 
   // Dashboard
   "dashboard.totalCost": { th: "ค่าใช้จ่ายทั้งหมด", en: "Total Cost" },
+  "dashboard.title": { th: "แดชบอร์ด", en: "Dashboard" },
   "dashboard.activeSubscriptions": { th: "Subscription ที่ใช้งาน", en: "Active Subscriptions" },
   "dashboard.upcomingRenewals": { th: "ต่ออายุเร็วๆ นี้", en: "Upcoming Renewals" },
   "dashboard.perMonth": { th: "/เดือน", en: "/month" },
   "dashboard.perYear": { th: "/ปี", en: "/year" },
   "dashboard.items": { th: "รายการ", en: "items" },
   "dashboard.within30Days": { th: "ใน 30 วันนี้", en: "within 30 days" },
+  "dashboard.spendingTitle": { th: "รวมค่าใช้จ่าย", en: "Total Spending" },
+  "dashboard.monthly": { th: "รายเดือน", en: "Monthly" },
+  "dashboard.yearly": { th: "รายปี", en: "Yearly" },
+  "dashboard.activeSubscriptionsLabel": { th: "รายการที่ใช้งาน", en: "Active Subscriptions" },
+  "dashboard.comparisonLastMonth": { th: "เทียบกับเดือนที่แล้ว", en: "vs last month" },
+  "dashboard.upcomingTitle": { th: "📅 ต่ออายุเร็วๆ นี้", en: "📅 Upcoming Renewals" },
+  "dashboard.days": { th: "วัน", en: "days" },
+  "dashboard.today": { th: "วันนี้", en: "Today" },
+  "dashboard.tomorrow": { th: "พรุ่งนี้", en: "Tomorrow" },
+  "dashboard.noUpcoming": { th: "ไม่มีรายการต่ออายุในเร็วๆ นี้", en: "No upcoming renewals" },
+  "dashboard.savingsTitle": { th: "💡 วิธีประหยัดเงิน", en: "💡 Ways to Save Money" },
+  "dashboard.highCost": { th: "ค่าใช้จ่ายสูง", en: "High Cost" },
+  "dashboard.duplicateCategory": { th: "หมวดหมู่ซ้ำ", en: "Duplicate Category" },
+  "dashboard.rarelyUsed": { th: "ใช้ไม่บ่อย", en: "Rarely Used" },
+  "dashboard.review": { th: "ดูรายละเอียด", en: "Review" },
+  "dashboard.remindLater": { th: "เตือนภายหลัง", en: "Remind Later" },
+  "dashboard.enableReminder": { th: "เปิดการแจ้งเตือน", en: "Enable Reminder" },
+  "dashboard.noRecommendations": { th: "ไม่มีคำแนะนำในขณะนี้", en: "No recommendations at this time" },
+  "dashboard.reminderEnabled": { th: "เปิดการแจ้งเตือนแล้ว", en: "Reminder enabled" },
+  "dashboard.remindedLater": { th: "จะเตือนคุณในภายหลัง", en: "Will remind you later" },
+  "dashboard.month": { th: "เดือน", en: "month" },
+  "dashboard.year": { th: "ปี", en: "year" },
 
   // Subscriptions List
   "subscriptions.title": { th: "รายการ Subscription", en: "Subscription List" },
@@ -175,6 +199,7 @@ export const translations = {
   // Auth
   "auth.loginError": { th: "เข้าสู่ระบบไม่สำเร็จ", en: "Login failed" },
   "auth.loginSuccess": { th: "เข้าสู่ระบบสำเร็จ", en: "Login successful" },
+  "auth.signOut": { th: "ออกจากระบบ", en: "Sign out" },
   "auth.email": { th: "อีเมล", en: "Email" },
   "auth.password": { th: "รหัสผ่าน", en: "Password" },
   "auth.emailPlaceholder": { th: "กรอกอีเมล", en: "Enter email" },

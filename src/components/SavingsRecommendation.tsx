@@ -27,29 +27,11 @@ interface Recommendation {
 }
 
 export function SavingsRecommendation({ subscriptions, onToggleReminder }: SavingsRecommendationProps) {
-  const { language } = useLanguage();
+  const { language, t } = useLanguage();
   const { preferredCurrency } = useCurrency();
   const router = useRouter();
   const { toast } = useToast();
   const [dismissedIds, setDismissedIds] = useState<string[]>([]);
-
-  const t = (key: string) => {
-    const translations: Record<string, { th: string; en: string }> = {
-      title: { th: "💡 วิธีประหยัดเงิน", en: "💡 Ways to Save Money" },
-      highCost: { th: "ค่าใช้จ่ายสูง", en: "High Cost" },
-      duplicate: { th: "หมวดหมู่ซ้ำ", en: "Duplicate Category" },
-      rarelyUsed: { th: "ใช้ไม่บ่อย", en: "Rarely Used" },
-      review: { th: "ดูรายละเอียด", en: "Review" },
-      remindLater: { th: "เตือนภายหลัง", en: "Remind Later" },
-      enableReminder: { th: "เปิดการแจ้งเตือน", en: "Enable Reminder" },
-      month: { th: "เดือน", en: "month" },
-      year: { th: "ปี", en: "year" },
-      noRecommendations: { th: "ไม่มีคำแนะนำในขณะนี้", en: "No recommendations at this time" },
-      reminderEnabled: { th: "เปิดการแจ้งเตือนแล้ว", en: "Reminder enabled" },
-      remindedLater: { th: "จะเตือนคุณในภายหลัง", en: "Will remind you later" }
-    };
-    return translations[key]?.[language] || key;
-  };
 
   const recommendations = generateRecommendations(subscriptions, preferredCurrency, language)
     .filter(rec => !dismissedIds.includes(rec.subscription.id))
@@ -60,7 +42,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
       await onToggleReminder(subId, false);
     } else {
       toast({
-        title: t("reminderEnabled"),
+        title: t("dashboard.reminderEnabled"),
         description: language === "th" ? "คุณจะได้รับการแจ้งเตือนก่อนวันต่ออายุ" : "You'll receive a notification before renewal",
       });
     }
@@ -69,7 +51,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
   const handleRemindLater = (subId: string) => {
     setDismissedIds(prev => [...prev, subId]);
     toast({
-      title: t("remindedLater"),
+      title: t("dashboard.remindedLater"),
       description: language === "th" ? "เราจะแสดงคำแนะนำนี้อีกครั้งในภายหลัง" : "We'll show this recommendation again later",
     });
   };
@@ -83,7 +65,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
       <CardHeader className="pb-3">
         <CardTitle className="text-lg flex items-center gap-2">
           <Lightbulb className="w-5 h-5 text-green-600" />
-          {t("title")}
+          {t("dashboard.savingsTitle")}
         </CardTitle>
       </CardHeader>
       <CardContent className="space-y-3">
@@ -123,11 +105,11 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
 
                 <div className="flex items-center gap-2 text-sm mb-3">
                   <span className="font-medium text-foreground">
-                    {preferredCurrency}{rec.monthlyCost.toFixed(0)}/{t("month")}
+                    {preferredCurrency}{rec.monthlyCost.toFixed(0)}/{t("dashboard.month")}
                   </span>
                   <span className="text-muted-foreground">·</span>
                   <span className="text-muted-foreground">
-                    {preferredCurrency}{rec.yearlyCost.toFixed(0)}/{t("year")}
+                    {preferredCurrency}{rec.yearlyCost.toFixed(0)}/{t("dashboard.year")}
                   </span>
                 </div>
 
@@ -140,7 +122,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
                     className="gap-2"
                   >
                     <Eye className="w-3.5 h-3.5" />
-                    {t("review")}
+                    {t("dashboard.review")}
                   </Button>
 
                   <Button
@@ -150,7 +132,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
                     className="gap-2"
                   >
                     <Bell className="w-3.5 h-3.5" />
-                    {t("enableReminder")}
+                    {t("dashboard.enableReminder")}
                   </Button>
 
                   <Button
@@ -160,7 +142,7 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
                     className="gap-2"
                   >
                     <Clock className="w-3.5 h-3.5" />
-                    {t("remindLater")}
+                    {t("dashboard.remindLater")}
                   </Button>
                 </div>
               </div>

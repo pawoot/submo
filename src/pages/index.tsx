@@ -19,15 +19,14 @@ import {
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
-import { getTranslation } from "@/lib/translations";
+import { LANGUAGE_STORAGE_KEY, useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
 export default function LandingPage() {
   const router = useRouter();
   const [scrollY, setScrollY] = useState(0);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
-  const { language, setLanguage } = useLanguage();
+  const { language, setLanguage, t } = useLanguage();
   const [detectingLanguage, setDetectingLanguage] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
 
@@ -65,7 +64,7 @@ export default function LandingPage() {
     const detectLanguage = async () => {
       try {
         // Check if language is already set in localStorage
-        const savedLanguage = localStorage.getItem("preferredLanguage");
+        const savedLanguage = localStorage.getItem(LANGUAGE_STORAGE_KEY);
         if (savedLanguage) {
           setLanguage(savedLanguage as "th" | "en");
           setDetectingLanguage(false);
@@ -97,15 +96,12 @@ export default function LandingPage() {
   const toggleLanguage = () => {
     const newLanguage = language === "th" ? "en" : "th";
     setLanguage(newLanguage);
-    localStorage.setItem("preferredLanguage", newLanguage);
   };
 
   // Close mobile menu when clicking outside or on a link
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
   };
-
-  const t = (key: string) => getTranslation(key as any, language);
 
   const features = [
     {

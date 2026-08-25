@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { useRouter } from "next/router";
 import Link from "next/link";
 import { SEO } from "@/components/SEO";
-import MobileHeader from "@/components/MobileHeader";
+import { AppShell } from "@/components/AppShell";
+import { ThemeSwitch } from "@/components/ThemeSwitch";
 import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -51,7 +52,8 @@ import {
   Package,
   Lock,
   Eye,
-  EyeOff
+  EyeOff,
+  Sun
 } from "lucide-react";
 
 export default function ProfilePage() {
@@ -329,7 +331,7 @@ export default function ProfilePage() {
         <div className="flex items-center justify-center min-h-screen">
           <div className="text-center">
             <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-600 mx-auto mb-4"></div>
-            <p className="text-gray-600">{t("common.loading")}</p>
+            <p className="text-gray-600 dark:text-slate-400">{t("common.loading")}</p>
           </div>
         </div>
       </AuthGuard>
@@ -340,12 +342,11 @@ export default function ProfilePage() {
     <AuthGuard>
       <SEO title={t("profile.title") + " - Submo.ai"} description={t("profile.manageAccount")} />
       
-      {/* Mobile Header */}
-      <MobileHeader user={user} isAdmin={isAdmin} unreadCount={unreadCount} />
-      
-      <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-indigo-50">
-        {/* Desktop Header - Hidden on mobile */}
-        <header className="hidden lg:block bg-white/80 backdrop-blur-sm border-b border-gray-200 sticky top-0 z-10">
+      <AppShell
+        user={user}
+        isAdmin={isAdmin}
+        unreadCount={unreadCount}
+        desktopHeader={
           <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
@@ -356,8 +357,8 @@ export default function ProfilePage() {
                   </Button>
                 </Link>
                 <div>
-                  <h1 className="text-2xl font-bold text-gray-900">{t("profile.myProfile")}</h1>
-                  <p className="text-sm text-gray-600">{t("profile.manageAccount")}</p>
+                  <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">{t("profile.myProfile")}</h1>
+                  <p className="text-sm text-gray-600 dark:text-slate-400">{t("profile.manageAccount")}</p>
                 </div>
               </div>
 
@@ -383,7 +384,8 @@ export default function ProfilePage() {
               </Button>
             </div>
           </div>
-        </header>
+        }
+      >
 
         {/* Main Content */}
         <main className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -391,11 +393,11 @@ export default function ProfilePage() {
             {/* Left Column - Profile Card & Stats */}
             <div className="space-y-6">
               {/* Profile Card */}
-              <Card className="border-2 border-indigo-100">
+              <Card className="border-2 border-indigo-100 dark:border-indigo-900/60">
                 <CardContent className="pt-6">
                   <div className="flex flex-col items-center text-center">
                     <div className="relative mb-4">
-                      <Avatar className="h-24 w-24 border-4 border-white shadow-lg">
+                      <Avatar className="h-24 w-24 border-4 border-white shadow-lg dark:border-slate-700">
                         <AvatarImage src={profile?.avatar_url || undefined} alt={profile?.full_name || "User"} />
                         <AvatarFallback className="bg-gradient-to-br from-indigo-500 to-purple-600 text-white text-2xl font-bold">
                           {profile?.full_name?.[0]?.toUpperCase() || profile?.email?.[0]?.toUpperCase() || "U"}
@@ -414,10 +416,10 @@ export default function ProfilePage() {
                       </label>
                     </div>
 
-                    <h2 className="text-xl font-bold text-gray-900 mb-1">
+                    <h2 className="text-xl font-bold text-gray-900 mb-1 dark:text-slate-100">
                       {profile?.full_name || t("profile.noName")}
                     </h2>
-                    <p className="text-sm text-gray-600 mb-3">{profile?.email}</p>
+                    <p className="text-sm text-gray-600 mb-3 dark:text-slate-400">{profile?.email}</p>
 
                     <Badge variant="secondary" className="mb-4">
                       <Calendar className="h-3 w-3 mr-1" />
@@ -428,30 +430,30 @@ export default function ProfilePage() {
               </Card>
 
               {/* Stats Cards */}
-              <Card className="border-2 border-green-100">
+              <Card className="border-2 border-green-100 dark:border-emerald-900/60">
                 <CardHeader className="pb-3">
-                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2">
+                  <CardTitle className="text-sm font-medium text-gray-600 flex items-center gap-2 dark:text-slate-300">
                     <Package className="h-4 w-4" />
                     {t("profile.usageStats")}
                   </CardTitle>
                 </CardHeader>
                 <CardContent className="space-y-4">
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{t("profile.totalSubs")}</span>
-                    <span className="text-2xl font-bold text-gray-900">{stats.totalSubscriptions}</span>
+                    <span className="text-sm text-gray-600 dark:text-slate-400">{t("profile.totalSubs")}</span>
+                    <span className="text-2xl font-bold text-gray-900 dark:text-slate-100">{stats.totalSubscriptions}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{t("profile.activeSubs")}</span>
+                    <span className="text-sm text-gray-600 dark:text-slate-400">{t("profile.activeSubs")}</span>
                     <span className="text-2xl font-bold text-green-600">{stats.activeSubscriptions}</span>
                   </div>
                   <Separator />
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{t("profile.monthlyCost")}</span>
+                    <span className="text-sm text-gray-600 dark:text-slate-400">{t("profile.monthlyCost")}</span>
                     <span className="text-xl font-bold text-indigo-600">{formatCurrency(stats.totalMonthlySpend, preferredCurrency)}</span>
                   </div>
                   <div className="flex items-center justify-between">
-                    <span className="text-sm text-gray-600">{t("profile.yearlyCost")}</span>
+                    <span className="text-sm text-gray-600 dark:text-slate-400">{t("profile.yearlyCost")}</span>
                     <span className="text-xl font-bold text-purple-600">{formatCurrency(stats.totalYearlySpend, preferredCurrency)}</span>
                   </div>
                 </CardContent>
@@ -481,9 +483,9 @@ export default function ProfilePage() {
                         type="email"
                         value={profile?.email || ""}
                         disabled
-                        className="bg-gray-50"
+                        className="bg-gray-50 dark:bg-slate-900"
                       />
-                      <p className="text-xs text-gray-500">{t("profile.cannotUndo")}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{t("profile.cannotUndo")}</p>
                     </div>
 
                     <div className="space-y-2">
@@ -509,7 +511,7 @@ export default function ProfilePage() {
                         value={formData.avatar_url}
                         onChange={(e) => setFormData(prev => ({ ...prev, avatar_url: e.target.value }))}
                       />
-                      <p className="text-xs text-gray-500">{t("profile.avatarUploadDesc")}</p>
+                      <p className="text-xs text-gray-500 dark:text-slate-400">{t("profile.avatarUploadDesc")}</p>
                     </div>
 
                     <Button type="submit" disabled={saving} className="w-full">
@@ -552,7 +554,7 @@ export default function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => setShowPassword(!showPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
                           >
                             {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
@@ -574,7 +576,7 @@ export default function ProfilePage() {
                           <button
                             type="button"
                             onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700"
+                            className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-500 hover:text-gray-700 dark:text-slate-400 dark:hover:text-slate-200"
                           >
                             {showConfirmPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
                           </button>
@@ -599,6 +601,28 @@ export default function ProfilePage() {
                       </div>
                     </form>
                   )}
+                </CardContent>
+              </Card>
+
+              {/* Currency Settings */}
+              <Card>
+                <CardHeader>
+                  <CardTitle className="flex items-center gap-2">
+                    <Sun className="h-5 w-5" />
+                    {language === "th" ? "การแสดงผล" : "Appearance"}
+                  </CardTitle>
+                  <CardDescription>
+                    {language === "th" ? "เลือกธีมสว่างหรือธีมมืดสำหรับแอป" : "Choose the light or dark theme for the app."}
+                  </CardDescription>
+                </CardHeader>
+                <CardContent className="flex items-center justify-between gap-4">
+                  <div>
+                    <p className="font-medium">{language === "th" ? "ธีมหน้าจอ" : "Color theme"}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {language === "th" ? "กดปุ่มเพื่อสลับระหว่างสว่างและมืด" : "Press the button to switch between light and dark."}
+                    </p>
+                  </div>
+                  <ThemeSwitch />
                 </CardContent>
               </Card>
 
@@ -651,22 +675,22 @@ export default function ProfilePage() {
                         ))}
                       </SelectContent>
                     </Select>
-                    <p className="text-xs text-gray-500">
+                    <p className="text-xs text-gray-500 dark:text-slate-400">
                       {t("profile.currencyAutoConvert")}
                     </p>
                   </div>
 
-                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200">
+                  <div className="p-4 bg-blue-50 rounded-lg border border-blue-200 dark:bg-blue-950/30 dark:border-blue-900">
                     <div className="flex items-start gap-3">
                       <div className="text-2xl">{SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.flag}</div>
                       <div>
-                        <p className="font-semibold text-blue-900">
+                        <p className="font-semibold text-blue-900 dark:text-blue-100">
                           {t("profile.currentCurrency")}: {preferredCurrency}
                         </p>
-                        <p className="text-sm text-blue-700">
+                        <p className="text-sm text-blue-700 dark:text-blue-300">
                           {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.name}
                         </p>
-                        <p className="text-xs text-blue-600 mt-1">
+                        <p className="text-xs text-blue-600 mt-1 dark:text-blue-400">
                           Example: {SUPPORTED_CURRENCIES.find(c => c.code === preferredCurrency)?.symbol}1,000.00
                         </p>
                       </div>
@@ -676,7 +700,7 @@ export default function ProfilePage() {
               </Card>
 
               {/* Danger Zone */}
-              <Card className="border-2 border-red-200 bg-red-50">
+              <Card className="border-2 border-red-200 bg-red-50 dark:border-red-900 dark:bg-red-950/20">
                 <CardHeader>
                   <CardTitle className="text-red-600 flex items-center gap-2">
                     <Trash2 className="h-5 w-5" />
@@ -698,7 +722,7 @@ export default function ProfilePage() {
             </div>
           </div>
         </main>
-      </div>
+      </AppShell>
 
       {/* Delete Account Confirmation Dialog */}
       <AlertDialog open={showDeleteDialog} onOpenChange={setShowDeleteDialog}>

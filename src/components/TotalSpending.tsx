@@ -14,22 +14,9 @@ interface TotalSpendingProps {
 }
 
 export function TotalSpending({ subscriptions }: TotalSpendingProps) {
-  const { language } = useLanguage();
+  const { t } = useLanguage();
   const { preferredCurrency } = useCurrency();
   const [viewMode, setViewMode] = useState<"monthly" | "yearly">("monthly");
-
-  const t = (key: string) => {
-    const translations: Record<string, { th: string; en: string }> = {
-      title: { th: "รวมค่าใช้จ่าย", en: "Total Spending" },
-      monthly: { th: "รายเดือน", en: "Monthly" },
-      yearly: { th: "รายปี", en: "Yearly" },
-      perMonth: { th: "/เดือน", en: "/month" },
-      perYear: { th: "/ปี", en: "/year" },
-      activeSubscriptions: { th: "รายการที่ใช้งาน", en: "Active Subscriptions" },
-      comparison: { th: "เทียบกับเดือนที่แล้ว", en: "vs last month" },
-    };
-    return translations[key]?.[language] || key;
-  };
 
   const activeSubscriptions = subscriptions.filter(s => s.is_active);
 
@@ -55,7 +42,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
   const isIncrease = changePercent > 0;
 
   const displayAmount = viewMode === "monthly" ? monthlyTotal : yearlyTotal;
-  const displayUnit = viewMode === "monthly" ? t("perMonth") : t("perYear");
+  const displayUnit = viewMode === "monthly" ? t("dashboard.perMonth") : t("dashboard.perYear");
 
   return (
     <Card className="border-primary/20">
@@ -63,7 +50,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
         <div className="flex items-center justify-between">
           <CardTitle className="text-lg flex items-center gap-2">
             <DollarSign className="w-5 h-5 text-primary" />
-            {t("title")}
+            {t("dashboard.spendingTitle")}
           </CardTitle>
           <div className="flex gap-1 bg-muted rounded-lg p-1">
             <Button
@@ -72,7 +59,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
               onClick={() => setViewMode("monthly")}
               className="h-7 text-xs"
             >
-              {t("monthly")}
+              {t("dashboard.monthly")}
             </Button>
             <Button
               size="sm"
@@ -80,7 +67,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
               onClick={() => setViewMode("yearly")}
               className="h-7 text-xs"
             >
-              {t("yearly")}
+              {t("dashboard.yearly")}
             </Button>
           </div>
         </div>
@@ -100,13 +87,13 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
           {/* Stats Row */}
           <div className="flex items-center justify-between pt-3 border-t">
             <div>
-              <p className="text-xs text-muted-foreground">{t("activeSubscriptions")}</p>
+              <p className="text-xs text-muted-foreground">{t("dashboard.activeSubscriptionsLabel")}</p>
               <p className="text-lg font-semibold text-foreground">{activeSubscriptions.length}</p>
             </div>
 
             {viewMode === "monthly" && (
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">{t("comparison")}</p>
+                <p className="text-xs text-muted-foreground">{t("dashboard.comparisonLastMonth")}</p>
                 <div className="flex items-center gap-1 justify-end">
                   {isIncrease ? (
                     <TrendingUp className="w-4 h-4 text-red-500" />

@@ -3,13 +3,13 @@ import { Bell, User, Plus, Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import MobileNav from "@/components/MobileNav";
-import type { User as SupabaseUser } from "@supabase/supabase-js";
+import type { AuthUser } from "@/services/authService";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { useRouter } from "next/navigation";
 
 interface MobileHeaderProps {
-  user: SupabaseUser | null;
+  user: AuthUser | null;
   isAdmin?: boolean;
   unreadCount?: number;
 }
