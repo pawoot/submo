@@ -375,7 +375,7 @@ export default function Dashboard() {
                           <div className="flex items-center gap-4 flex-1 min-w-0">
                             <SubscriptionIcon
                               name={sub.name}
-                              iconUrl={sub.icon_url}
+                              iconUrl={sub.icon_url || sub.logo_url}
                               websiteUrl={sub.website_url}
                               size="md"
                             />

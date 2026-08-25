@@ -446,6 +446,7 @@ export default function EditSubscription() {
                   <div className="flex items-start gap-4">
                     <SubscriptionIcon
                       name={subscription.name}
+                      iconUrl={subscription.icon_url || subscription.logo_url}
                       websiteUrl={subscription.website_url}
                       size="lg"
                     />

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { cn } from "@/lib/utils";
 
 interface SubscriptionIconProps {
@@ -12,6 +12,7 @@ interface SubscriptionIconProps {
 // Known domains map to ensure correct favicons
 const KNOWN_DOMAINS: Record<string, string> = {
   "google one": "one.google.com",
+  "1password": "1password.com",
   "google": "google.com",
   "youtube": "youtube.com",
   "youtube premium": "youtube.com",
@@ -35,6 +36,8 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "openai": "openai.com",
   "claude": "claude.ai",
   "anthropic": "anthropic.com",
+  "myfitness pal": "myfitnesspal.com",
+  "myfitnesspal": "myfitnesspal.com",
   "midjourney": "midjourney.com",
   "zoom": "zoom.us",
   "microsoft": "microsoft.com",
@@ -46,6 +49,10 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "gitlab": "gitlab.com",
   "vercel": "vercel.com",
   "digitalocean": "digitalocean.com",
+  "telegram": "telegram.org",
+  "tradingview": "tradingview.com",
+  "tldv": "tldv.io",
+  "whoscall": "whoscall.com",
   "lineman": "lineman.line.me",
   "grab": "grab.com",
   "foodpanda": "foodpanda.co.th",
@@ -54,15 +61,19 @@ const KNOWN_DOMAINS: Record<string, string> = {
   "dtac": "dtac.co.th"
 };
 
+const KNOWN_ICON_URLS: Record<string, string> = {
+  myxd: "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/dc/d5/6e/dcd56e24-a411-0f7e-d52e-346cb84c1275/AppIcon-0-1x_U007emarketing-0-7-0-sRGB-85-220.png/1200x630wa.jpg",
+};
+
 export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", className }: SubscriptionIconProps) {
   const [imageError, setImageError] = useState(false);
+  const lowerName = name.toLowerCase().trim();
   
   // Determine the best URL to use for favicon fetching
   let targetUrl = websiteUrl;
   
   // If no URL provided, or if we have a better known domain for this service name
   if (!targetUrl) {
-    const lowerName = name.toLowerCase().trim();
     // Check exact match or partial match
     const knownKey = Object.keys(KNOWN_DOMAINS).find(key => lowerName.includes(key));
     if (knownKey) {
@@ -70,7 +81,7 @@ export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", class
     }
   }
   
-  let faviconUrl = iconUrl?.trim() || null;
+  let faviconUrl = iconUrl?.trim() || KNOWN_ICON_URLS[lowerName] || null;
   if (!faviconUrl && targetUrl) {
     try {
       faviconUrl = `https://www.google.com/s2/favicons?domain=${encodeURIComponent(new URL(targetUrl).hostname)}&sz=128`;
@@ -79,6 +90,10 @@ export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", class
       faviconUrl = null;
     }
   }
+
+  useEffect(() => {
+    setImageError(false);
+  }, [faviconUrl]);
 
   const sizeClasses = {
     sm: "w-8 h-8 text-xs",

@@ -2,6 +2,7 @@ import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -75,19 +76,13 @@ export function SavingsRecommendation({ subscriptions, onToggleReminder }: Savin
             className="p-4 border rounded-lg hover:border-primary/50 transition-colors bg-card"
           >
             <div className="flex items-start gap-3">
-              {/* Icon or Logo */}
               <div className="flex-shrink-0">
-                {rec.subscription.icon_url ? (
-                  <img
-                    src={rec.subscription.icon_url}
-                    alt={rec.subscription.name}
-                    className="w-10 h-10 rounded-lg object-cover"
-                  />
-                ) : (
-                  <div className="w-10 h-10 rounded-lg bg-primary/10 flex items-center justify-center">
-                    <span className="text-xl">{getReasonIcon(rec.reason)}</span>
-                  </div>
-                )}
+                <SubscriptionIcon
+                  name={rec.subscription.name}
+                  iconUrl={rec.subscription.icon_url || rec.subscription.logo_url}
+                  websiteUrl={rec.subscription.website_url}
+                  className="w-10 h-10"
+                />
               </div>
 
               {/* Content */}
@@ -236,17 +231,4 @@ function getReasonBadgeText(reason: RecommendationType, language: "th" | "en"): 
     "rarely-used": { th: "ใช้ไม่บ่อย", en: "Rarely Used" }
   };
   return badges[reason][language];
-}
-
-function getReasonIcon(reason: RecommendationType): string {
-  switch (reason) {
-    case "high-cost":
-      return "🟡";
-    case "duplicate-category":
-      return "⚠️";
-    case "rarely-used":
-      return "💤";
-    default:
-      return "ℹ️";
-  }
 }
