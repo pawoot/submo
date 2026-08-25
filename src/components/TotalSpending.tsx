@@ -4,7 +4,7 @@ import { Database } from "@/integrations/supabase/types";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { DollarSign, TrendingUp, TrendingDown } from "lucide-react";
+import { DollarSign } from "lucide-react";
 import { useSubscriptionCosts } from "@/hooks/useSubscriptionCosts";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
@@ -21,10 +21,7 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
   const monthlyTotal = costs.reduce((sum, subscription) => sum + subscription.monthlyCost, 0);
   const yearlyTotal = costs.reduce((sum, subscription) => sum + subscription.yearlyCost, 0);
 
-  // Mock comparison (in real app, would come from historical data)
-  const previousMonthTotal = monthlyTotal * 0.92; // Mock: 8% increase
-  const changePercent = ((monthlyTotal - previousMonthTotal) / previousMonthTotal * 100);
-  const isIncrease = changePercent > 0;
+  const highestCostSubscription = [...costs].sort((a, b) => b.monthlyCost - a.monthlyCost)[0];
 
   const displayAmount = viewMode === "monthly" ? monthlyTotal : yearlyTotal;
   const displayUnit = viewMode === "monthly" ? t("dashboard.perMonth") : t("dashboard.perYear");
@@ -76,19 +73,12 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
               <p className="text-lg font-semibold text-foreground">{costs.length}</p>
             </div>
 
-            {viewMode === "monthly" && (
+            {viewMode === "monthly" && highestCostSubscription && (
               <div className="text-right">
-                <p className="text-xs text-muted-foreground">{t("dashboard.comparisonLastMonth")}</p>
-                <div className="flex items-center gap-1 justify-end">
-                  {isIncrease ? (
-                    <TrendingUp className="w-4 h-4 text-red-500" />
-                  ) : (
-                    <TrendingDown className="w-4 h-4 text-green-500" />
-                  )}
-                  <p className={`text-sm font-semibold ${isIncrease ? "text-red-500" : "text-green-500"}`}>
-                    {isIncrease ? "+" : ""}{changePercent.toFixed(1)}%
-                  </p>
-                </div>
+                <p className="text-xs text-muted-foreground">ค่าใช้จ่ายหลัก</p>
+                <p className="max-w-36 truncate text-sm font-semibold text-foreground">
+                  {highestCostSubscription.subscription.name}
+                </p>
               </div>
             )}
           </div>

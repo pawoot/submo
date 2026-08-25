@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
 import { LanguageSwitcher } from "@/components/LanguageSwitcher";
 import { SEO } from "@/components/SEO";
@@ -6,6 +6,8 @@ import { AuthGuard } from "@/components/AuthGuard";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
+import { Input } from "@/components/ui/input";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import {
   DropdownMenu,
@@ -33,7 +35,8 @@ import {
   Calendar as CalendarIcon,
   DollarSign,
   ArrowUp,
-  ArrowDown
+  ArrowDown,
+  Search
 } from "lucide-react";
 import { toast } from "@/hooks/use-toast";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
@@ -42,6 +45,7 @@ import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { UpcomingRenewals } from "@/components/UpcomingRenewals";
 import { TotalSpending } from "@/components/TotalSpending";
+import { DashboardActionCenter } from "@/components/DashboardActionCenter";
 import { ConvertedCurrencyAmount } from "@/components/ConvertedCurrencyAmount";
 import type { Database } from "@/integrations/supabase/types";
 import Link from "next/link";
@@ -59,6 +63,10 @@ export default function Dashboard() {
   const [isAdmin, setIsAdmin] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
   const [sortOption, setSortOption] = useState<SortOption>('default');
+  const [searchQuery, setSearchQuery] = useState("");
+  const [categoryFilter, setCategoryFilter] = useState("all");
+  const [renewalFilter, setRenewalFilter] = useState("all");
+  const [reminderFilter, setReminderFilter] = useState("all");
 
   useEffect(() => {
     loadData();
@@ -184,9 +192,27 @@ export default function Dashboard() {
   }
 
   const activeSubscriptions = subscriptions.filter(s => s.is_active);
+  const categoryOptions = useMemo(
+    () => [...new Set(activeSubscriptions.map((subscription) => subscription.category).filter(Boolean))] as string[],
+    [activeSubscriptions]
+  );
+  const filteredSubscriptions = activeSubscriptions.filter((subscription) => {
+    const matchesSearch = subscription.name.toLowerCase().includes(searchQuery.trim().toLowerCase());
+    const matchesCategory = categoryFilter === "all" || subscription.category === categoryFilter;
+    const days = subscription.next_billing_date
+      ? Math.ceil((new Date(subscription.next_billing_date).getTime() - Date.now()) / 86_400_000)
+      : Number.POSITIVE_INFINITY;
+    const matchesRenewal = renewalFilter === "all"
+      || (renewalFilter === "7-days" && days >= 0 && days <= 7)
+      || (renewalFilter === "30-days" && days >= 0 && days <= 30);
+    const matchesReminder = reminderFilter === "all"
+      || (reminderFilter === "enabled" && subscription.reminder_enabled)
+      || (reminderFilter === "missing" && !subscription.reminder_enabled);
+    return matchesSearch && matchesCategory && matchesRenewal && matchesReminder;
+  });
 
   // Sorting Logic
-  const sortedSubscriptions = [...activeSubscriptions].sort((a, b) => {
+  const sortedSubscriptions = [...filteredSubscriptions].sort((a, b) => {
     switch (sortOption) {
       case 'price-desc':
         return (b.amount || 0) - (a.amount || 0);
@@ -284,6 +310,11 @@ export default function Dashboard() {
                   subscriptions={subscriptions}
                   onToggleReminder={handleToggleReminder}
                 />
+
+                <DashboardActionCenter
+                  subscriptions={subscriptions}
+                  onToggleReminder={handleToggleReminder}
+                />
                 
                 {/* Total Spending */}
                 <TotalSpending subscriptions={subscriptions} />
@@ -310,7 +341,7 @@ export default function Dashboard() {
               <CardContent className="pt-6">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 mb-6">
                   <h2 className="text-xl font-bold">
-                    {t("subscription.all")} ({activeSubscriptions.length})
+                    {t("subscription.all")} ({sortedSubscriptions.length}/{activeSubscriptions.length})
                   </h2>
                   
                   <div className="flex items-center gap-2">
@@ -353,6 +384,41 @@ export default function Dashboard() {
                       {t("subscription.add")}
                     </Button>
                   </div>
+                </div>
+
+                <div className="mb-5 grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-4">
+                  <div className="relative lg:col-span-1">
+                    <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
+                    <Input
+                      value={searchQuery}
+                      onChange={(event) => setSearchQuery(event.target.value)}
+                      placeholder="ค้นหาบริการ"
+                      className="pl-9"
+                    />
+                  </div>
+                  <Select value={categoryFilter} onValueChange={setCategoryFilter}>
+                    <SelectTrigger><SelectValue placeholder="ทุกหมวดหมู่" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ทุกหมวดหมู่</SelectItem>
+                      {categoryOptions.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}
+                    </SelectContent>
+                  </Select>
+                  <Select value={renewalFilter} onValueChange={setRenewalFilter}>
+                    <SelectTrigger><SelectValue placeholder="วันต่ออายุ" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">ทุกวันต่ออายุ</SelectItem>
+                      <SelectItem value="7-days">ต่ออายุภายใน 7 วัน</SelectItem>
+                      <SelectItem value="30-days">ต่ออายุภายใน 30 วัน</SelectItem>
+                    </SelectContent>
+                  </Select>
+                  <Select value={reminderFilter} onValueChange={setReminderFilter}>
+                    <SelectTrigger><SelectValue placeholder="สถานะแจ้งเตือน" /></SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="all">สถานะแจ้งเตือนทั้งหมด</SelectItem>
+                      <SelectItem value="missing">ยังไม่เปิดแจ้งเตือน</SelectItem>
+                      <SelectItem value="enabled">เปิดแจ้งเตือนแล้ว</SelectItem>
+                    </SelectContent>
+                  </Select>
                 </div>
 
                 <div className="space-y-4">
