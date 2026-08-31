@@ -1,5 +1,6 @@
 import Link from "next/link";
-import { Bell, CalendarClock, ChevronRight } from "lucide-react";
+import { Bell, CalendarClock, ChevronRight, X } from "lucide-react";
+import { useEffect, useMemo, useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -24,8 +25,22 @@ export function DashboardActionCenter({ subscriptions, onToggleReminder }: Dashb
     .filter(({ subscription }) => subscription.next_billing_date && daysUntil(subscription.next_billing_date) >= 0 && daysUntil(subscription.next_billing_date) <= 7)
     .sort((a, b) => daysUntil(a.subscription.next_billing_date!) - daysUntil(b.subscription.next_billing_date!))
     .slice(0, 3);
+  const urgentSignature = useMemo(
+    () => urgent.map(({ subscription }) => `${subscription.id}:${subscription.next_billing_date}`).join("|"),
+    [urgent]
+  );
+  const [dismissed, setDismissed] = useState(false);
 
-  if (isLoading || urgent.length === 0) return null;
+  useEffect(() => {
+    setDismissed(localStorage.getItem("submo-dismissed-action-center") === urgentSignature);
+  }, [urgentSignature]);
+
+  const dismiss = () => {
+    localStorage.setItem("submo-dismissed-action-center", urgentSignature);
+    setDismissed(true);
+  };
+
+  if (isLoading || urgent.length === 0 || dismissed) return null;
 
   return (
     <Card className="border-orange-500/25 bg-gradient-to-br from-orange-500/10 via-background to-background">
@@ -35,7 +50,12 @@ export function DashboardActionCenter({ subscriptions, onToggleReminder }: Dashb
             <CalendarClock className="h-5 w-5 text-orange-500" />
             {t("dashboard.actionRequired")}
           </CardTitle>
-          <Badge variant="secondary">{t("dashboard.within7Days")}</Badge>
+          <div className="flex items-center gap-1">
+            <Badge variant="secondary">{t("dashboard.within7Days")}</Badge>
+            <Button variant="ghost" size="icon" className="-mr-2 h-8 w-8" onClick={dismiss} aria-label="Close">
+              <X className="h-4 w-4" />
+            </Button>
+          </div>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">

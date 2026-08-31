@@ -32,6 +32,10 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
             <DollarSign className="w-5 h-5 text-primary" />
             {t("dashboard.spendingTitle")}
           </CardTitle>
+          <div className="flex items-center gap-1.5 text-xs font-semibold tracking-tight text-muted-foreground" aria-label="Submo.ai">
+            <span className="flex h-5 w-5 items-center justify-center rounded-md bg-gradient-to-br from-blue-500 to-violet-600 text-[11px] font-black text-white">S</span>
+            <span>Submo.ai</span>
+          </div>
         </div>
       </CardHeader>
       <CardContent>

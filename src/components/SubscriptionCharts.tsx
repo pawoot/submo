@@ -304,10 +304,10 @@ export function SubscriptionCharts() {
             </Card>
 
             {/* Payment Method Cost */}
-            <Card className="bg-card dark:border-slate-800">
-              <CardHeader>
-                <CardTitle className="text-base font-medium flex items-center gap-2">
-                  <CreditCard className="h-4 w-4" />
+            <Card className="shadow-lg border-2 border-gray-100 bg-card dark:border-slate-800">
+              <CardHeader className="bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950">
+                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-slate-100">
+                  <CreditCard className="w-6 h-6 text-indigo-600" />
                   {t("charts.paymentMethodCost")}
                 </CardTitle>
               </CardHeader>

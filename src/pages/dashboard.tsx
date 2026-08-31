@@ -41,7 +41,6 @@ import {
 import { toast } from "@/hooks/use-toast";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { InsightPanel } from "@/components/InsightPanel";
-import { SavingsRecommendation } from "@/components/SavingsRecommendation";
 import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { UpcomingRenewals } from "@/components/UpcomingRenewals";
 import { TotalSpending } from "@/components/TotalSpending";
@@ -280,12 +279,6 @@ export default function Dashboard() {
 
               {/* Right Column (1/3 width) */}
               <div className="space-y-6">
-                {/* Savings Recommendation */}
-                <SavingsRecommendation 
-                  subscriptions={subscriptions}
-                  onToggleReminder={handleToggleReminder}
-                />
-                
                 {/* Upcoming Renewals */}
                 <UpcomingRenewals subscriptions={subscriptions} />
                 <FriendsDashboardWidget />
