@@ -30,10 +30,8 @@ function getTurboRules() {
 const nextConfig = {
   distDir: process.env.SUBMO_NEXT_DIST_DIR || ".next",
   reactStrictMode: true,
-  experimental: {
-    turbo: {
-      rules: getTurboRules(),
-    },
+  turbopack: {
+    rules: getTurboRules(),
   },
   images: {
     remotePatterns: [
