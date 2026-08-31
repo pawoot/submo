@@ -73,7 +73,7 @@ export default function MobileNav({ user, isAdmin = false }: MobileNavProps) {
       });
 
       setOpen(false);
-      router.push("/auth/login");
+      router.push("/");
     } catch (error) {
       console.error("Error logging out:", error);
       toast({

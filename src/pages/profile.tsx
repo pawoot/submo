@@ -314,7 +314,7 @@ export default function ProfilePage() {
       
       // Sign out and redirect
       await authService.signOut();
-      router.push("/auth/login");
+      router.push("/");
     } catch (error) {
       console.error("Error deleting account:", error);
       toast({

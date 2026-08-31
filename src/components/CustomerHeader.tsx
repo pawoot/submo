@@ -39,7 +39,7 @@ export function CustomerHeader({ user: suppliedUser, unreadCount: suppliedUnread
 
   const signOut = async () => {
     await authService.signOut();
-    router.push("/auth/login");
+    router.push("/");
   };
 
   return (

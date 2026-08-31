@@ -56,7 +56,7 @@ export function AdminLayout({ children }: AdminLayoutProps) {
 
   const handleLogout = async () => {
     await authService.signOut();
-    router.push("/auth/login");
+    router.push("/");
   };
 
   const NavLinks = () => (
