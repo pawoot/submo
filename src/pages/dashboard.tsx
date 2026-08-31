@@ -46,6 +46,7 @@ import { SubscriptionCharts } from "@/components/SubscriptionCharts";
 import { UpcomingRenewals } from "@/components/UpcomingRenewals";
 import { TotalSpending } from "@/components/TotalSpending";
 import { DashboardActionCenter } from "@/components/DashboardActionCenter";
+import { FriendsDashboardWidget } from "@/components/FriendsDashboardWidget";
 import { ConvertedCurrencyAmount } from "@/components/ConvertedCurrencyAmount";
 import type { Database } from "@/integrations/supabase/types";
 import Link from "next/link";
@@ -287,6 +288,7 @@ export default function Dashboard() {
                 
                 {/* Upcoming Renewals */}
                 <UpcomingRenewals subscriptions={subscriptions} />
+                <FriendsDashboardWidget />
               </div>
             </div>
 

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/router";
-import { Bell, Check, Globe, LogOut, Plus, UserRound } from "lucide-react";
+import { Bell, Check, Globe, LogOut, Plus, UserRound, Users } from "lucide-react";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -79,6 +79,7 @@ export function CustomerHeader({ user: suppliedUser, unreadCount: suppliedUnread
               <DropdownMenuLabel className="truncate">{displayName}</DropdownMenuLabel>
               <DropdownMenuSeparator />
               <DropdownMenuItem onSelect={() => router.push("/profile")} className="cursor-pointer"><UserRound className="mr-2 h-4 w-4" />{t("dashboard.profile")}</DropdownMenuItem>
+              <DropdownMenuItem onSelect={() => router.push("/friends")} className="cursor-pointer"><Users className="mr-2 h-4 w-4" />{language === "th" ? "เพื่อน" : "Friends"}</DropdownMenuItem>
               <DropdownMenuSub>
                 <DropdownMenuSubTrigger className="cursor-pointer"><Globe className="mr-2 h-4 w-4" />{t("dashboard.language")}</DropdownMenuSubTrigger>
                 <DropdownMenuSubContent className="w-40">
