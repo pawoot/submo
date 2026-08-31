@@ -143,7 +143,7 @@ export default function LandingPage() {
     if (draft) {
       localStorage.setItem("submo-onboarding-draft", draft);
     }
-    router.push("/auth/signup");
+    router.push("/confirm-subscriptions");
   };
 
   const toggleVoiceCapture = () => {

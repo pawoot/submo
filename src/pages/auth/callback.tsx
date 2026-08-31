@@ -10,6 +10,8 @@ export default function AuthCallback() {
     // Handle OAuth callback
     const handleCallback = async () => {
       try {
+        const requestedNext = new URLSearchParams(window.location.search).get("next");
+        const nextPath = requestedNext?.startsWith("/") ? requestedNext : "/dashboard";
         console.log("🔄 Starting OAuth callback handling...");
         
         // Get the current session
@@ -108,8 +110,8 @@ export default function AuthCallback() {
         // Verify session one more time before redirect
         const { data: { session: finalSession } } = await supabase.auth.getSession();
         if (finalSession?.user) {
-          console.log("✅ Final session verified, redirecting to dashboard...");
-          router.push("/dashboard");
+          console.log("✅ Final session verified, redirecting to requested page...");
+          router.push(nextPath);
         } else {
           console.error("❌ Final session check failed");
           router.push("/auth/login");

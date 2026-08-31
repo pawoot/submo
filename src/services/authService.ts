@@ -121,12 +121,13 @@ export const authService = {
   },
 
   // Sign in with Google OAuth
-  async signInWithGoogle(): Promise<{ error: AuthError | null }> {
+  async signInWithGoogle(nextPath?: string): Promise<{ error: AuthError | null }> {
     try {
+      const safeNextPath = nextPath?.startsWith('/') ? nextPath : '';
       const { error } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: `${getURL()}auth/callback`,
+          redirectTo: `${getURL()}auth/callback${safeNextPath ? `?next=${encodeURIComponent(safeNextPath)}` : ''}`,
           queryParams: {
             access_type: 'offline',
             prompt: 'consent',

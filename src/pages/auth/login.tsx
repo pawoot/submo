@@ -43,7 +43,8 @@ export default function LoginPage() {
           title: t("auth.loginSuccess"),
           description: `${t("home.welcome")} ${user.email}`,
         });
-        router.push("/dashboard");
+        const nextPath = typeof router.query.next === "string" && router.query.next.startsWith("/") ? router.query.next : "/dashboard";
+        router.push(nextPath);
       }
     } catch (err) {
       setError(t("auth.loginError"));
@@ -57,7 +58,8 @@ export default function LoginPage() {
     setGoogleLoading(true);
 
     try {
-      const { error } = await authService.signInWithGoogle();
+      const nextPath = typeof router.query.next === "string" && router.query.next.startsWith("/") ? router.query.next : undefined;
+      const { error } = await authService.signInWithGoogle(nextPath);
 
       if (error) {
         setError(error.message);

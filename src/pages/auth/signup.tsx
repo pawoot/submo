@@ -168,7 +168,8 @@ export default function SignUpPage() {
     setGoogleLoading(true);
 
     try {
-      const { error } = await authService.signInWithGoogle();
+      const nextPath = typeof router.query.next === "string" && router.query.next.startsWith("/") ? router.query.next : undefined;
+      const { error } = await authService.signInWithGoogle(nextPath);
 
       if (error) {
         setError(error.message);
