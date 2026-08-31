@@ -71,6 +71,7 @@ export const translations = {
   "dashboard.primaryExpense": { th: "ค่าใช้จ่ายสูงสุด", en: "Highest expense" },
   "dashboard.monthlyTotal": { th: "รวมต่อเดือน", en: "Monthly total" },
   "dashboard.yearlyTotal": { th: "รวมต่อปี", en: "Yearly total" },
+  "dashboard.accountSummary": { th: "สรุปรวมทั้งหมด", en: "All active services" },
   "dashboard.searchServices": { th: "ค้นหาบริการ", en: "Search services" },
   "dashboard.allCategories": { th: "ทุกหมวดหมู่", en: "All categories" },
   "dashboard.renewalDate": { th: "วันต่ออายุ", en: "Renewal date" },

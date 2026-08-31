@@ -46,7 +46,8 @@ import { UpcomingRenewals } from "@/components/UpcomingRenewals";
 import { TotalSpending } from "@/components/TotalSpending";
 import { DashboardActionCenter } from "@/components/DashboardActionCenter";
 import { FriendsDashboardWidget } from "@/components/FriendsDashboardWidget";
-import { ConvertedCurrencyAmount } from "@/components/ConvertedCurrencyAmount";
+import { useSubscriptionCosts } from "@/hooks/useSubscriptionCosts";
+import { useCurrency } from "@/contexts/CurrencyContext";
 import type { Database } from "@/integrations/supabase/types";
 import Link from "next/link";
 
@@ -56,6 +57,7 @@ type SortOption = 'default' | 'price-asc' | 'price-desc' | 'date-asc' | 'date-de
 export default function Dashboard() {
   const router = useRouter();
   const { language, t } = useLanguage();
+  const { preferredCurrency, formatCurrency } = useCurrency();
 
   const [user, setUser] = useState<any>(null);
   const [subscriptions, setSubscriptions] = useState<ServiceSubscription[]>([]);
@@ -67,6 +69,7 @@ export default function Dashboard() {
   const [categoryFilter, setCategoryFilter] = useState("all");
   const [renewalFilter, setRenewalFilter] = useState("all");
   const [reminderFilter, setReminderFilter] = useState("all");
+  const { costs: convertedCosts, isLoading: costsLoading } = useSubscriptionCosts(subscriptions);
 
   useEffect(() => {
     loadData();
@@ -228,6 +231,13 @@ export default function Dashboard() {
         return 0;
     }
   });
+
+  const sumCosts = (costs: typeof convertedCosts) => costs.reduce(
+    (totals, cost) => ({ monthly: totals.monthly + cost.monthlyCost, yearly: totals.yearly + cost.yearlyCost }),
+    { monthly: 0, yearly: 0 },
+  );
+  const accountTotals = sumCosts(convertedCosts);
+  const costsBySubscriptionId = new Map(convertedCosts.map((cost) => [cost.subscription.id, cost]));
 
   const getSortLabel = () => {
     switch (sortOption) {
@@ -409,11 +419,12 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div className="text-right flex-shrink-0 ml-4">
-                            <ConvertedCurrencyAmount
-                              amount={sub.amount}
-                              currency={sub.currency}
-                              className="font-bold"
-                            />
+                            <p className="font-bold">
+                              {costsLoading ? "…" : `${formatCurrency(costsBySubscriptionId.get(sub.id)?.monthlyCost || 0, preferredCurrency)}${t("dashboard.perMonth")}`}
+                            </p>
+                            <p className="mt-0.5 text-xs text-muted-foreground">
+                              {costsLoading ? "" : `${formatCurrency(costsBySubscriptionId.get(sub.id)?.yearlyCost || 0, preferredCurrency)}${t("dashboard.perYear")}`}
+                            </p>
                             <p className="text-sm text-muted-foreground">
                               {new Date(sub.next_billing_date).toLocaleDateString(language === "th" ? "th-TH" : "en-US")}
                             </p>
@@ -423,6 +434,21 @@ export default function Dashboard() {
                     </div>
                   )}
                 </div>
+                <div className="mt-6 border-t pt-5">
+                  <SubscriptionListSummary
+                    label={t("dashboard.accountSummary")}
+                    count={convertedCosts.length}
+                    monthly={accountTotals.monthly}
+                    yearly={accountTotals.yearly}
+                    loading={costsLoading}
+                    preferredCurrency={preferredCurrency}
+                    formatCurrency={formatCurrency}
+                    itemLabel={t("dashboard.items")}
+                    monthlyLabel={t("dashboard.monthlyTotal")}
+                    yearlyLabel={t("dashboard.yearlyTotal")}
+                    muted
+                  />
+                </div>
               </CardContent>
             </Card>
           </div>
@@ -430,4 +456,18 @@ export default function Dashboard() {
       </AppShell>
     </AuthGuard>
   );
+}
+
+function SubscriptionListSummary({ label, count, monthly, yearly, loading, preferredCurrency, formatCurrency, itemLabel, monthlyLabel, yearlyLabel, muted = false }: {
+  label: string; count: number; monthly: number; yearly: number; loading: boolean; preferredCurrency: string;
+  formatCurrency: (amount: number, currency: string) => string; itemLabel: string; monthlyLabel: string; yearlyLabel: string; muted?: boolean;
+}) {
+  return <div className={`rounded-xl border p-5 ${muted ? "bg-muted/35" : "bg-primary/5 border-primary/20"}`}>
+    <p className="text-base font-semibold">{label}</p>
+    <div className="mt-4 grid grid-cols-3 gap-2">
+      <div><p className="text-sm text-muted-foreground">{itemLabel}</p><p className="mt-1 text-lg font-bold">{count}</p></div>
+      <div><p className="text-sm text-muted-foreground">{monthlyLabel}</p><p className="mt-1 text-lg font-bold">{loading ? "…" : formatCurrency(monthly, preferredCurrency)}</p></div>
+      <div><p className="text-sm text-muted-foreground">{yearlyLabel}</p><p className="mt-1 text-lg font-bold">{loading ? "…" : formatCurrency(yearly, preferredCurrency)}</p></div>
+    </div>
+  </div>;
 }
