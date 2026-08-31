@@ -11,6 +11,7 @@ import { formatCurrency } from "@/lib/utils";
 import { useCurrency } from "@/contexts/CurrencyContext";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { subscriptionService } from "@/services/subscriptionService";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import type { Database } from "@/integrations/supabase/types";
 
 // Types
@@ -42,7 +43,158 @@ interface ChartDataPoint {
   icon: string;
   color: string;
   percentage?: string;
+  services?: CategoryChartService[];
   [key: string]: any;
+}
+
+interface CategoryChartService {
+  id: string;
+  name: string;
+  websiteUrl: string | null;
+  iconUrl: string | null;
+  monthlyAmount: number;
+}
+
+function chartColor(color: string | null | undefined, fallback: string) {
+  const hex = color?.trim().replace("#", "");
+  if (!hex || !/^[0-9a-f]{3}([0-9a-f]{3})?$/i.test(hex)) return color || fallback;
+
+  const expanded = hex.length === 3 ? hex.split("").map((value) => value + value).join("") : hex;
+  const red = Number.parseInt(expanded.slice(0, 2), 16);
+  const green = Number.parseInt(expanded.slice(2, 4), 16);
+  const blue = Number.parseInt(expanded.slice(4, 6), 16);
+  const luminance = (red * 0.2126 + green * 0.7152 + blue * 0.0722) / 255;
+
+  return luminance < 0.18 ? fallback : `#${expanded}`;
+}
+
+function ServicesTooltip({ active, payload, preferredCurrency, formatCurrency, totalLabel }: any) {
+  if (!active || !payload?.length) return null;
+
+  const point = payload[0]?.payload as ChartDataPoint | undefined;
+  if (!point) return null;
+
+  return (
+    <div className="min-w-52 rounded-xl border border-border bg-popover p-3 text-popover-foreground shadow-lg">
+      <div className="flex items-baseline justify-between gap-4">
+        <p className="font-semibold">{point.name}</p>
+        <p className="text-xs text-muted-foreground">{formatCurrency(point.amount, preferredCurrency)}</p>
+      </div>
+      <p className="mt-1 text-xs text-muted-foreground">{totalLabel}</p>
+      {point.services?.length ? (
+        <div className="mt-3 space-y-2 border-t border-border/70 pt-2">
+          {point.services.map((service) => (
+            <div key={service.id} className="flex items-center gap-2">
+              <SubscriptionIcon
+                name={service.name}
+                websiteUrl={service.websiteUrl}
+                iconUrl={service.iconUrl}
+                size="sm"
+                bare
+                className="h-5 w-5 shrink-0"
+              />
+              <span className="min-w-0 flex-1 truncate text-xs font-medium">{service.name}</span>
+              <span className="text-xs text-muted-foreground">{formatCurrency(service.monthlyAmount, preferredCurrency)}</span>
+            </div>
+          ))}
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
+function CategoryBarWithServices(props: any) {
+  const { x, y, width, height, fill, payload } = props;
+  const services: CategoryChartService[] = payload?.services || [];
+  const visibleServices = services.slice(0, 3);
+  const hiddenServiceCount = Math.max(0, services.length - visibleServices.length);
+  const itemCount = visibleServices.length + (hiddenServiceCount > 0 ? 1 : 0);
+
+  if (![x, y, width, height].every((value) => Number.isFinite(Number(value)))) return null;
+
+  const iconSize = 24;
+  const gap = 3;
+  const stackHeight = itemCount ? itemCount * iconSize + (itemCount - 1) * gap : 0;
+  const stackFitsInsideBar = height >= stackHeight + 18;
+  const stackY = stackFitsInsideBar
+    ? y + 10
+    : Math.max(6, y - stackHeight + Math.min(height, iconSize));
+  const stackX = x + width / 2 - iconSize / 2;
+
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} rx={6} ry={6} fill={fill} />
+      {itemCount > 0 && (
+        <foreignObject x={stackX} y={stackY} width={iconSize} height={stackHeight} style={{ overflow: "visible", pointerEvents: "none" }}>
+          <div className="flex flex-col items-center gap-[3px]">
+            {visibleServices.map((service) => (
+              <SubscriptionIcon
+                key={service.id}
+                name={service.name}
+                websiteUrl={service.websiteUrl}
+                iconUrl={service.iconUrl}
+                size="sm"
+                bare
+                title={service.name}
+                className="h-6 w-6 shrink-0 shadow-sm"
+              />
+            ))}
+            {hiddenServiceCount > 0 && (
+              <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background text-[9px] font-bold text-foreground shadow-sm">
+                +{hiddenServiceCount}
+              </span>
+            )}
+          </div>
+        </foreignObject>
+      )}
+    </g>
+  );
+}
+
+function PaymentBarWithServices(props: any) {
+  const { x, y, width, height, fill, payload } = props;
+  const services: CategoryChartService[] = payload?.services || [];
+  const visibleServices = services.slice(0, 3);
+  const hiddenServiceCount = Math.max(0, services.length - visibleServices.length);
+  const itemCount = visibleServices.length + (hiddenServiceCount > 0 ? 1 : 0);
+
+  if (![x, y, width, height].every((value) => Number.isFinite(Number(value)))) return null;
+
+  const iconSize = 24;
+  const overlap = 5;
+  const rowWidth = itemCount ? iconSize + (itemCount - 1) * (iconSize - overlap) : 0;
+  const rowFitsInsideBar = width >= rowWidth + 18;
+  const rowX = rowFitsInsideBar ? x + 9 : x + width + 7;
+  const rowY = y + height / 2 - iconSize / 2;
+
+  return (
+    <g>
+      <rect x={x} y={y} width={width} height={height} rx={6} ry={6} fill={fill} />
+      {itemCount > 0 && (
+        <foreignObject x={rowX} y={rowY} width={rowWidth} height={iconSize} style={{ overflow: "visible", pointerEvents: "none" }}>
+          <div className="flex items-center">
+            {visibleServices.map((service, index) => (
+              <SubscriptionIcon
+                key={service.id}
+                name={service.name}
+                websiteUrl={service.websiteUrl}
+                iconUrl={service.iconUrl}
+                size="sm"
+                bare
+                title={service.name}
+                className={`h-6 w-6 shrink-0 shadow-sm ${index > 0 ? "-ml-[5px]" : ""}`}
+              />
+            ))}
+            {hiddenServiceCount > 0 && (
+              <span className="-ml-[5px] flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-background text-[9px] font-bold text-foreground shadow-sm">
+                +{hiddenServiceCount}
+              </span>
+            )}
+          </div>
+        </foreignObject>
+      )}
+    </g>
+  );
 }
 
 export function SubscriptionCharts() {
@@ -76,7 +228,7 @@ export function SubscriptionCharts() {
     try {
       setLoading(true);
       const [subsData, catsData, paymentData] = await Promise.all([
-        subscriptionService.getAll(),
+        subscriptionService.getUserSubscriptions(),
         subscriptionService.getCategories(),
         subscriptionService.getPaymentMethods()
       ]);
@@ -157,6 +309,8 @@ export function SubscriptionCharts() {
         // 1. Initialize maps
         const catMap: { [key: string]: number } = {};
         const payMap: { [key: string]: number } = {};
+        const categoryServices: { [key: string]: Map<string, CategoryChartService> } = {};
+        const paymentServices: { [key: string]: Map<string, CategoryChartService> } = {};
 
         // 2. Process each subscription sequentially
         for (const sub of filteredSubscriptions) {
@@ -168,10 +322,26 @@ export function SubscriptionCharts() {
             // Aggregate Category
             const catId = sub.category_id || "unknown";
             catMap[catId] = (catMap[catId] || 0) + convertedAmount;
+            if (!categoryServices[catId]) categoryServices[catId] = new Map();
+            categoryServices[catId].set(sub.id, {
+              id: sub.id,
+              name: sub.name,
+              websiteUrl: sub.website_url,
+              iconUrl: sub.icon_url || sub.logo_url,
+              monthlyAmount: convertedAmount,
+            });
 
             // Aggregate Payment Method
             const payId = sub.payment_method_id || "unknown";
             payMap[payId] = (payMap[payId] || 0) + convertedAmount;
+            if (!paymentServices[payId]) paymentServices[payId] = new Map();
+            paymentServices[payId].set(sub.id, {
+              id: sub.id,
+              name: sub.name,
+              websiteUrl: sub.website_url,
+              iconUrl: sub.icon_url || sub.logo_url,
+              monthlyAmount: convertedAmount,
+            });
           } catch (error) {
             console.error(`Error processing subscription ${sub.id}:`, error);
             // Continue with next subscription if one fails
@@ -186,8 +356,9 @@ export function SubscriptionCharts() {
             name: categoryLabels[id]?.label || t("common.unknown"),
             amount: amount,
             icon: categoryLabels[id]?.icon || "📦",
-            color: categoryLabels[id]?.color || "#94a3b8",
-            percentage: totalCatAmount > 0 ? ((amount / totalCatAmount) * 100).toFixed(0) : "0"
+            color: chartColor(categoryLabels[id]?.color, "#6366f1"),
+            percentage: totalCatAmount > 0 ? ((amount / totalCatAmount) * 100).toFixed(0) : "0",
+            services: Array.from(categoryServices[id]?.values() || []).sort((a, b) => b.monthlyAmount - a.monthlyAmount),
           }))
           .sort((a, b) => b.amount - a.amount);
 
@@ -199,8 +370,9 @@ export function SubscriptionCharts() {
             name: paymentMethodLabels[id]?.label || t("common.unknown"),
             amount: amount,
             icon: paymentMethodLabels[id]?.icon || "💳",
-            color: paymentMethodLabels[id]?.color || "#94a3b8",
-            percentage: totalPayAmount > 0 ? ((amount / totalPayAmount) * 100).toFixed(0) : "0"
+            color: chartColor(paymentMethodLabels[id]?.color, "#64748b"),
+            percentage: totalPayAmount > 0 ? ((amount / totalPayAmount) * 100).toFixed(0) : "0",
+            services: Array.from(paymentServices[id]?.values() || []).sort((a, b) => b.monthlyAmount - a.monthlyAmount),
           }))
           .sort((a, b) => b.amount - a.amount);
 
@@ -287,11 +459,8 @@ export function SubscriptionCharts() {
                           interval={0}
                         />
                         <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                        <Tooltip 
-                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), t("dashboard.totalCost")]}
-                          contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderRadius: "12px", border: "1px solid hsl(var(--border))", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
-                        />
-                        <Bar dataKey="amount" fill="#6366f1" radius={[6, 6, 0, 0]}>
+                        <Tooltip content={<ServicesTooltip preferredCurrency={preferredCurrency} formatCurrency={formatCurrency} totalLabel={t("dashboard.totalCost")} />} />
+                        <Bar dataKey="amount" fill="#6366f1" shape={CategoryBarWithServices}>
                           {categoryChartData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color || "#6366f1"} />
                           ))}
@@ -318,14 +487,8 @@ export function SubscriptionCharts() {
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis type="category" dataKey="name" width={105} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                      <Tooltip
-                        formatter={(value: number, _name, item) => [
-                          `${formatCurrency(value, preferredCurrency)} (${item.payload.percentage}%)`,
-                          t("dashboard.totalCost"),
-                        ]}
-                        contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderRadius: "12px", border: "1px solid hsl(var(--border))" }}
-                      />
-                      <Bar dataKey="amount" radius={[0, 6, 6, 0]}>
+                      <Tooltip content={<ServicesTooltip preferredCurrency={preferredCurrency} formatCurrency={formatCurrency} totalLabel={t("dashboard.totalCost")} />} />
+                      <Bar dataKey="amount" shape={PaymentBarWithServices}>
                         {paymentChartData.map((entry, index) => (
                           <Cell key={`payment-cell-${index}`} fill={entry.color || "#2563eb"} />
                         ))}

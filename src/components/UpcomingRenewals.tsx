@@ -89,6 +89,8 @@ export function UpcomingRenewals({ subscriptions }: UpcomingRenewalsProps) {
               iconUrl={sub.icon_url || sub.logo_url}
               websiteUrl={sub.website_url}
               size="sm"
+              bare
+              className="h-10 w-10 shrink-0"
             />
             
             <div className="flex-1 min-w-0">
