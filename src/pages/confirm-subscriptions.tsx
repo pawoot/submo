@@ -9,6 +9,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { supabase } from "@/integrations/supabase/client";
 import { subscriptionService } from "@/services/subscriptionService";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
+import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
+import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
 
 const RAW_DRAFT_KEY = "submo-onboarding-draft";
 const CONFIRMED_DRAFT_KEY = "submo-onboarding-confirmed";
@@ -20,6 +23,8 @@ type DraftSubscription = {
   currency: string;
   billingCycle: "monthly" | "yearly";
   nextBillingDate: string;
+  websiteUrl?: string | null;
+  categoryLabel?: string;
 };
 
 const SERVICE_DEFAULTS: Array<Omit<DraftSubscription, "id" | "nextBillingDate"> & { keywords: string[] }> = [
@@ -43,6 +48,17 @@ const createDraft = (name: string, defaults?: Omit<DraftSubscription, "id" | "ne
   currency: defaults?.currency ?? "THB",
   billingCycle: defaults?.billingCycle ?? "monthly",
   nextBillingDate: nextMonthDate(),
+});
+
+const createDraftFromTemplate = (template: SubscriptionTemplate): DraftSubscription => ({
+  id: `${template.id}-${Math.random().toString(36).slice(2)}`,
+  name: template.name,
+  amount: String(template.amount),
+  currency: template.currency,
+  billingCycle: template.billing_cycle === "yearly" ? "yearly" : "monthly",
+  nextBillingDate: nextMonthDate(),
+  websiteUrl: template.website_url,
+  categoryLabel: template.categories?.name_th || template.categories?.name_en || "บริการออนไลน์",
 });
 
 const extractServices = (raw: string) => {
@@ -75,6 +91,9 @@ export default function ConfirmSubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
+  const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [templateQuery, setTemplateQuery] = useState("");
+  const [addServiceOpen, setAddServiceOpen] = useState(false);
 
   useEffect(() => {
     const savedDetails = localStorage.getItem(CONFIRMED_DRAFT_KEY);
@@ -88,6 +107,12 @@ export default function ConfirmSubscriptionsPage() {
     } finally {
       setLoading(false);
     }
+  }, []);
+
+  useEffect(() => {
+    subscriptionTemplateService.getAllTemplates()
+      .then((data) => setTemplates(data.filter((template) => template.is_active)))
+      .catch((error) => console.error("Unable to load service templates:", error));
   }, []);
 
   const monthlyTotals = useMemo(() => items.reduce<Record<string, number>>((totals, item) => {
@@ -105,6 +130,16 @@ export default function ConfirmSubscriptionsPage() {
   const updateItem = (id: string, field: keyof DraftSubscription, value: string) => {
     setItems((current) => current.map((item) => item.id === id ? { ...item, [field]: value } : item));
   };
+
+  const addTemplate = (template: SubscriptionTemplate) => {
+    setItems((current) => current.some((item) => item.name.toLowerCase() === template.name.toLowerCase())
+      ? current
+      : [...current, createDraftFromTemplate(template)]);
+    setTemplateQuery("");
+    setAddServiceOpen(false);
+  };
+
+  const filteredTemplates = templates.filter((template) => template.name.toLowerCase().includes(templateQuery.toLowerCase()));
 
   const saveDraft = (nextItems = items) => {
     localStorage.setItem(CONFIRMED_DRAFT_KEY, JSON.stringify(nextItems));
@@ -186,7 +221,7 @@ export default function ConfirmSubscriptionsPage() {
         <section className="mt-5 space-y-3">
           {items.map((item) => (
             <article key={item.id} className="grid gap-4 rounded-3xl border border-blue-200/20 bg-[#0d1c37] p-5 shadow-lg shadow-black/10 lg:grid-cols-[minmax(220px,1fr)_105px_110px_150px_200px_32px] lg:items-center lg:gap-3">
-              <div className="flex min-w-0 items-center gap-4"><SubscriptionIcon name={item.name} size="md" className="shrink-0 border-0" /><div className="min-w-0"><Input aria-label="ชื่อบริการ" value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} className="h-8 border-0 bg-transparent px-0 text-lg font-semibold text-white shadow-none focus-visible:ring-0" /><p className="mt-1 text-sm text-slate-400">{getServiceCategory(item.name)}</p></div></div>
+              <div className="flex min-w-0 items-center gap-4"><SubscriptionIcon name={item.name} websiteUrl={item.websiteUrl} size="md" className="shrink-0 border-0" /><div className="min-w-0"><p className="truncate text-lg font-semibold text-white">{item.name}</p><p className="mt-1 text-sm text-slate-400">{item.categoryLabel || getServiceCategory(item.name)}</p></div></div>
               <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">ราคา</Label><Input aria-label="ราคา" inputMode="decimal" value={item.amount} onChange={(event) => updateItem(item.id, "amount", event.target.value)} placeholder="0" className="border-blue-200/20 bg-[#172a4b] text-white" /></div>
               <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">สกุลเงิน</Label><Select value={item.currency} onValueChange={(value) => updateItem(item.id, "currency", value)}><SelectTrigger className="border-blue-200/20 bg-[#172a4b] text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="THB">THB</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem><SelectItem value="GBP">GBP</SelectItem></SelectContent></Select></div>
               <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">รอบการจ่าย</Label><Select value={item.billingCycle} onValueChange={(value) => updateItem(item.id, "billingCycle", value)}><SelectTrigger className="border-blue-200/20 bg-[#172a4b] text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="monthly">รายเดือน</SelectItem><SelectItem value="yearly">รายปี</SelectItem></SelectContent></Select></div>
@@ -196,7 +231,25 @@ export default function ConfirmSubscriptionsPage() {
           ))}
         </section>
 
-        <button type="button" onClick={() => setItems((current) => [...current, createDraft("")])} className="mt-5 flex h-16 w-full items-center justify-center gap-3 rounded-xl border border-dashed border-violet-300/45 bg-[#0d1c37]/50 font-semibold text-slate-100 transition hover:border-violet-200 hover:bg-violet-500/10"><Plus className="h-5 w-5" />เพิ่มบริการอีกรายการ</button>
+        <Popover open={addServiceOpen} onOpenChange={setAddServiceOpen}>
+          <PopoverTrigger asChild>
+            <button type="button" className="mt-5 flex h-16 w-full items-center justify-center gap-3 rounded-xl border border-dashed border-violet-300/45 bg-[#0d1c37]/50 font-semibold text-slate-100 transition hover:border-violet-200 hover:bg-violet-500/10"><Plus className="h-5 w-5" />เพิ่มบริการอีกรายการ</button>
+          </PopoverTrigger>
+          <PopoverContent className="w-[min(680px,calc(100vw-2.5rem))] border-blue-200/20 bg-[#0d1c37] p-0 text-white" align="center">
+            <Command shouldFilter={false} className="bg-transparent text-white">
+              <div className="border-b border-white/10 px-3"><CommandInput value={templateQuery} onValueChange={setTemplateQuery} placeholder="ค้นหาบริการ เช่น Canva, iCloud, Adobe…" className="h-12 text-white placeholder:text-slate-400" /></div>
+              <CommandList className="max-h-72">
+                <CommandEmpty><div className="px-4 py-8 text-center text-sm text-slate-400">ไม่พบบริการในคลัง ลองค้นหาชื่ออื่น</div></CommandEmpty>
+                <CommandGroup heading="เลือกจากบริการที่มีอยู่" className="text-slate-400">
+                  {filteredTemplates.slice(0, 12).map((template) => {
+                    const alreadyAdded = items.some((item) => item.name.toLowerCase() === template.name.toLowerCase());
+                    return <CommandItem key={template.id} value={template.name} disabled={alreadyAdded} onSelect={() => addTemplate(template)} className="cursor-pointer text-slate-100 aria-selected:bg-blue-400/15 data-[disabled]:opacity-40"><SubscriptionIcon name={template.name} websiteUrl={template.website_url} size="sm" className="mr-3" /><div className="min-w-0 flex-1"><p className="truncate font-medium">{template.name}</p><p className="text-xs text-slate-400">{template.categories?.name_th || template.categories?.name_en || "บริการออนไลน์"}</p></div>{alreadyAdded ? <span className="text-xs text-slate-400">เพิ่มแล้ว</span> : <Plus className="h-4 w-4 text-violet-200" />}</CommandItem>;
+                  })}
+                </CommandGroup>
+              </CommandList>
+            </Command>
+          </PopoverContent>
+        </Popover>
 
         <section className="mt-7 flex flex-col gap-4 rounded-3xl border border-blue-300/25 bg-gradient-to-r from-[#142a50] to-[#202354] px-6 py-6 sm:flex-row sm:items-center sm:justify-between"><div><p className="flex items-center gap-3 text-xl font-bold"><CircleDollarSign className="h-6 w-6 text-blue-300" />ยอดประมาณการต่อเดือน</p><p className="mt-1 text-slate-300">รวมตามสกุลเงินที่คุณเลือกไว้</p></div><p className="text-3xl font-black text-blue-200 sm:text-4xl">{formattedTotals.length ? formattedTotals.join(" · ") : "—"}</p></section>
 
