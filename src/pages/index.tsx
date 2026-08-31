@@ -15,7 +15,12 @@ import {
   ArrowRight,
   Menu,
   X,
-  Globe
+  Globe,
+  Mic,
+  CheckCircle2,
+  WalletCards,
+  LockKeyhole,
+  Sparkles
 } from "lucide-react";
 import { useRouter } from "next/router";
 import { useEffect } from "react";
@@ -29,6 +34,7 @@ export default function LandingPage() {
   const { language, setLanguage, t } = useLanguage();
   const [detectingLanguage, setDetectingLanguage] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [serviceDraft, setServiceDraft] = useState("");
 
   // Check if user is already logged in
   useEffect(() => {
@@ -101,6 +107,18 @@ export default function LandingPage() {
   // Close mobile menu when clicking outside or on a link
   const closeMobileMenu = () => {
     setMobileMenuOpen(false);
+  };
+
+  const addServiceExample = (service: string) => {
+    setServiceDraft((current) => current ? `${current}, ${service}` : service);
+  };
+
+  const startQuickSetup = () => {
+    const draft = serviceDraft.trim();
+    if (draft) {
+      localStorage.setItem("submo-onboarding-draft", draft);
+    }
+    router.push("/auth/signup");
   };
 
   const features = [
@@ -326,8 +344,70 @@ export default function LandingPage() {
           </div>
         </nav>
 
-        {/* Hero Section */}
-        <section className="relative overflow-hidden pt-32 pb-20 px-4 sm:px-6 lg:px-8">
+        {/* Quick-start hero */}
+        <section className="relative overflow-hidden px-4 pb-14 pt-28 sm:px-6 lg:px-8 lg:pb-20">
+          <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_35%,rgba(115,76,255,0.3),transparent_28%),radial-gradient(circle_at_75%_45%,rgba(44,113,255,0.18),transparent_30%)]" />
+          <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.85fr_1.25fr] lg:gap-16">
+            <div className="relative mx-auto w-full max-w-md lg:mx-0">
+              <div className="absolute -inset-8 rounded-full bg-violet-600/25 blur-3xl" />
+              <div className="relative overflow-hidden rounded-3xl border border-violet-300/20 bg-gradient-to-br from-violet-400/20 via-slate-900/90 to-slate-950 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-6">
+                <div className="mb-5 flex items-center gap-3">
+                  <div className="grid h-10 w-10 place-items-center rounded-xl bg-violet-500/20 text-violet-200"><WalletCards className="h-5 w-5" /></div>
+                  <div><p className="font-semibold text-white">{language === "th" ? "บริการที่คุณใช้" : "Your subscriptions"}</p><p className="text-xs text-slate-400">{language === "th" ? "เห็นภาพรวมก่อนจ่ายจริง" : "See the bigger picture"}</p></div>
+                </div>
+                <div className="space-y-2.5">
+                  {[
+                    ["N", "Netflix", "฿4,800/ปี", "bg-red-600"],
+                    ["▶", "YouTube Premium", "฿2,390/ปี", "bg-red-500"],
+                    ["♫", "Spotify Premium", "฿1,188/ปี", "bg-emerald-500"],
+                    ["✦", "Google One", "฿1,500/ปี", "bg-blue-500"],
+                  ].map(([icon, name, price, tone]) => (
+                    <div key={name} className="flex items-center gap-3 rounded-2xl border border-white/10 bg-slate-950/50 px-3 py-3">
+                      <span className={`grid h-9 w-9 place-items-center rounded-lg font-bold text-white ${tone}`}>{icon}</span>
+                      <span className="flex-1 text-sm font-medium text-white">{name}</span>
+                      <span className="text-xs font-semibold text-slate-300">{price}</span>
+                    </div>
+                  ))}
+                </div>
+                <div className="mt-5 flex items-end justify-between border-t border-white/10 pt-5">
+                  <span className="text-sm text-slate-300">{language === "th" ? "ยอดรวมต่อปี" : "Yearly total"}</span>
+                  <span className="text-3xl font-bold tracking-tight text-violet-300">฿9,878</span>
+                </div>
+              </div>
+              <div className="absolute -bottom-8 -right-3 hidden rotate-[-8deg] rounded-2xl border border-violet-300/30 bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-xl sm:block">{language === "th" ? "เห็นยอดรวมก่อนจ่ายจริง" : "Know before you pay"}</div>
+            </div>
+
+            <div className="text-center lg:text-left">
+              <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-400/10 px-4 py-2 text-sm text-violet-100"><Sparkles className="h-4 w-4" />{language === "th" ? "ใช้ฟรี · ใช้เวลาไม่ถึง 2 นาที" : "Free · takes less than 2 minutes"}</div>
+              <h1 className="text-4xl font-black leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-6xl">
+                {language === "th" ? <>คุณจ่ายค่าบริการออนไลน์<br /><span className="bg-gradient-to-r from-violet-300 via-blue-300 to-sky-200 bg-clip-text text-transparent">ปีละเท่าไร?</span></> : <>How much do online services<br /><span className="bg-gradient-to-r from-violet-300 via-blue-300 to-sky-200 bg-clip-text text-transparent">cost you each year?</span></>}
+              </h1>
+              <p className="mx-auto mt-5 max-w-2xl text-lg leading-relaxed text-slate-300 lg:mx-0">{language === "th" ? "บอกชื่อบริการที่คุณใช้ ที่เหลือให้ Submo ช่วยจัดรายการ คำนวณยอด และเตือนวันต่ออายุให้" : "Tell Submo what you use. We organize it, calculate the total, and remember renewal dates."}</p>
+
+              <div className="mt-8 overflow-hidden rounded-3xl border border-blue-300/40 bg-gradient-to-br from-blue-400/15 to-slate-900/90 p-2 shadow-2xl shadow-blue-950/50 backdrop-blur-xl">
+                <div className="rounded-2xl bg-slate-950/50 p-3">
+                  <textarea
+                    value={serviceDraft}
+                    onChange={(event) => setServiceDraft(event.target.value)}
+                    placeholder={language === "th" ? "เช่น ใช้ Netflix, ChatGPT, Google One, Spotify ..." : "For example: Netflix, ChatGPT, Google One, Spotify ..."}
+                    className="min-h-24 w-full resize-none bg-transparent px-3 py-2 text-base text-white outline-none placeholder:text-slate-500"
+                    aria-label={language === "th" ? "รายชื่อบริการที่ใช้" : "Services you use"}
+                  />
+                  <div className="flex flex-wrap items-center gap-2 border-t border-white/10 px-2 pt-3">
+                    <button type="button" className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20" aria-label={language === "th" ? "พูดรายชื่อบริการ" : "Speak your services"}><Mic className="h-5 w-5" /></button>
+                    <span className="mr-auto text-xs text-slate-400">{language === "th" ? "พิมพ์ได้หลายบริการพร้อมกัน" : "Add multiple services at once"}</span>
+                    <Button onClick={startQuickSetup} className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 px-5 text-white hover:from-blue-400 hover:to-violet-500">{language === "th" ? "เริ่มเช็กค่าใช้จ่าย" : "Check my spending"}<ArrowRight className="ml-2 h-4 w-4" /></Button>
+                  </div>
+                </div>
+                <div className="flex flex-wrap items-center gap-2 px-3 pb-2 pt-3 text-sm text-slate-300"><span className="text-slate-500">{language === "th" ? "ตัวอย่าง" : "Examples"}</span>{["Netflix", "ChatGPT", "Google One"].map((service) => <button key={service} type="button" onClick={() => addServiceExample(service)} className="rounded-full border border-blue-300/20 bg-blue-400/10 px-3 py-1 text-blue-100 transition hover:bg-blue-400/20">{service}</button>)}</div>
+              </div>
+              <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-slate-300 lg:justify-start"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />{language === "th" ? "เห็นภาพรวมค่าใช้จ่าย" : "See your total"}</span><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />{language === "th" ? "ไม่พลาดวันต่ออายุ" : "Never miss renewals"}</span><span className="flex items-center gap-2"><LockKeyhole className="h-4 w-4 text-blue-300" />{language === "th" ? "ไม่ต้องเชื่อมบัญชีธนาคาร" : "No bank connection"}</span></div>
+            </div>
+          </div>
+        </section>
+
+        {/* Legacy hero kept out of the rendered landing page while the sections below remain available. */}
+        <section className="hidden relative overflow-hidden pt-32 pb-20 px-4 sm:px-6 lg:px-8">
           {/* Animated Background Elements with Parallax */}
           <div className="absolute inset-0 overflow-hidden pointer-events-none">
             <div 
