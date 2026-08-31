@@ -12,9 +12,33 @@ import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { Command, CommandEmpty, CommandGroup, CommandInput, CommandItem, CommandList } from "@/components/ui/command";
 import { subscriptionTemplateService, type SubscriptionTemplate } from "@/services/subscriptionTemplateService";
+import { currencyService } from "@/services/currencyService";
 
 const RAW_DRAFT_KEY = "submo-onboarding-draft";
 const CONFIRMED_DRAFT_KEY = "submo-onboarding-confirmed";
+const USD_FALLBACK_RATES = currencyService.getFallbackRates("USD");
+
+const formatThaiBaht = (amount: number) => new Intl.NumberFormat("th-TH", {
+  style: "currency",
+  currency: "THB",
+  minimumFractionDigits: 0,
+  maximumFractionDigits: 0,
+}).format(amount);
+
+const formatSourceAmount = (amount: number, currency: string) => {
+  const number = new Intl.NumberFormat("en-US", {
+    minimumFractionDigits: currency === "THB" ? 0 : 2,
+    maximumFractionDigits: currency === "THB" ? 0 : 2,
+  }).format(amount);
+  const symbols: Record<string, string> = { USD: "US$", EUR: "€", GBP: "£", THB: "฿" };
+  return `${symbols[currency] || `${currency} `}${number}`;
+};
+
+const convertToThaiBaht = (amount: number, currency: string) => {
+  if (currency === "THB") return amount;
+  const sourceRate = USD_FALLBACK_RATES[currency];
+  return sourceRate ? amount * (USD_FALLBACK_RATES.THB / sourceRate) : amount;
+};
 
 type DraftSubscription = {
   id: string;
@@ -34,6 +58,44 @@ const SERVICE_DEFAULTS: Array<Omit<DraftSubscription, "id" | "nextBillingDate"> 
   { name: "Spotify", amount: "139", currency: "THB", billingCycle: "monthly", keywords: ["spotify"] },
   { name: "YouTube Premium", amount: "179", currency: "THB", billingCycle: "monthly", keywords: ["youtube", "youtube premium"] },
 ];
+
+// Keep quick setup useful before a visitor signs in. The database catalogue is
+// merged in when available, but onboarding must not depend on an authenticated
+// request or an RLS policy in order to offer common services.
+const LOCAL_SERVICE_CATALOG: SubscriptionTemplate[] = [
+  ["ChatGPT Plus", "AI และเครื่องมือทำงาน", 20, "USD", "https://chatgpt.com"],
+  ["Netflix", "Streaming", 499, "THB", "https://netflix.com"],
+  ["Google One", "Cloud storage", 125, "THB", "https://one.google.com"],
+  ["Spotify", "Music", 139, "THB", "https://spotify.com"],
+  ["YouTube Premium", "Streaming", 179, "THB", "https://youtube.com/premium"],
+  ["Canva Pro", "ออกแบบและงานสร้างสรรค์", 12.99, "USD", "https://canva.com"],
+  ["iCloud+", "Cloud storage", 35, "THB", "https://icloud.com"],
+  ["Adobe Creative Cloud", "ออกแบบและงานสร้างสรรค์", 54.99, "USD", "https://adobe.com/creativecloud"],
+  ["Disney+", "Streaming", 219, "THB", "https://disneyplus.com"],
+  ["Notion Plus", "เครื่องมือทำงาน", 10, "USD", "https://notion.so"],
+  ["Microsoft 365", "เครื่องมือทำงาน", 229, "THB", "https://microsoft.com/microsoft-365"],
+  ["Claude Pro", "AI และเครื่องมือทำงาน", 20, "USD", "https://claude.ai"],
+].map(([name, category, amount, currency, websiteUrl], index) => ({
+  id: `quick-catalog-${index}`,
+  name: String(name),
+  category_id: "quick-setup",
+  amount: Number(amount),
+  currency: String(currency),
+  billing_cycle: "monthly" as const,
+  website_url: String(websiteUrl),
+  description: null,
+  usage_count: 0,
+  is_active: true,
+  categories: { id: "quick-setup", slug: "quick-setup", name_en: String(category), name_th: String(category) },
+}));
+
+const mergeTemplateCatalog = (databaseTemplates: SubscriptionTemplate[]) => {
+  const templatesByName = new Map(databaseTemplates.map((template) => [template.name.toLowerCase(), template]));
+  LOCAL_SERVICE_CATALOG.forEach((template) => {
+    if (!templatesByName.has(template.name.toLowerCase())) templatesByName.set(template.name.toLowerCase(), template);
+  });
+  return Array.from(templatesByName.values());
+};
 
 const nextMonthDate = () => {
   const date = new Date();
@@ -91,7 +153,7 @@ export default function ConfirmSubscriptionsPage() {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
-  const [templates, setTemplates] = useState<SubscriptionTemplate[]>([]);
+  const [templates, setTemplates] = useState<SubscriptionTemplate[]>(LOCAL_SERVICE_CATALOG);
   const [templateQuery, setTemplateQuery] = useState("");
   const [addServiceOpen, setAddServiceOpen] = useState(false);
 
@@ -111,21 +173,34 @@ export default function ConfirmSubscriptionsPage() {
 
   useEffect(() => {
     subscriptionTemplateService.getAllTemplates()
-      .then((data) => setTemplates(data.filter((template) => template.is_active)))
-      .catch((error) => console.error("Unable to load service templates:", error));
+      .then((data) => setTemplates(mergeTemplateCatalog(data.filter((template) => template.is_active))))
+      .catch((error) => {
+        // The local catalogue remains available for guests when the remote
+        // template request is unavailable.
+        console.error("Unable to load service templates:", error);
+      });
   }, []);
 
-  const monthlyTotals = useMemo(() => items.reduce<Record<string, number>>((totals, item) => {
-    const amount = Number(item.amount) || 0;
-    totals[item.currency] = (totals[item.currency] || 0) + (item.billingCycle === "yearly" ? amount / 12 : amount);
-    return totals;
-  }, {}), [items]);
+  const totals = useMemo(() => {
+    const sourceMonthlyTotals = items.reduce<Record<string, number>>((result, item) => {
+      const monthlyAmount = (Number(item.amount) || 0) / (item.billingCycle === "yearly" ? 12 : 1);
+      result[item.currency] = (result[item.currency] || 0) + monthlyAmount;
+      return result;
+    }, {});
+    const monthlyThaiBaht = Object.entries(sourceMonthlyTotals).reduce((total, [currency, amount]) => total + convertToThaiBaht(amount, currency), 0);
+    const foreignMonthly = Object.entries(sourceMonthlyTotals)
+      .filter(([currency]) => currency !== "THB")
+      .map(([currency, amount]) => formatSourceAmount(amount, currency));
 
-  const formattedTotals = Object.entries(monthlyTotals).map(([currency, amount]) => new Intl.NumberFormat("th-TH", {
-    style: "currency",
-    currency,
-    maximumFractionDigits: currency === "THB" ? 0 : 2,
-  }).format(amount));
+    return {
+      monthlyThaiBaht,
+      yearlyThaiBaht: monthlyThaiBaht * 12,
+      foreignMonthly,
+      foreignYearly: Object.entries(sourceMonthlyTotals)
+        .filter(([currency]) => currency !== "THB")
+        .map(([currency, amount]) => formatSourceAmount(amount * 12, currency)),
+    };
+  }, [items]);
 
   const updateItem = (id: string, field: keyof DraftSubscription, value: string) => {
     setItems((current) => current.map((item) => item.id === id ? { ...item, [field]: value } : item));
@@ -251,7 +326,24 @@ export default function ConfirmSubscriptionsPage() {
           </PopoverContent>
         </Popover>
 
-        <section className="mt-7 flex flex-col gap-4 rounded-3xl border border-blue-300/25 bg-gradient-to-r from-[#142a50] to-[#202354] px-6 py-6 sm:flex-row sm:items-center sm:justify-between"><div><p className="flex items-center gap-3 text-xl font-bold"><CircleDollarSign className="h-6 w-6 text-blue-300" />ยอดประมาณการต่อเดือน</p><p className="mt-1 text-slate-300">รวมตามสกุลเงินที่คุณเลือกไว้</p></div><p className="text-3xl font-black text-blue-200 sm:text-4xl">{formattedTotals.length ? formattedTotals.join(" · ") : "—"}</p></section>
+        <section className="mt-7 flex flex-col gap-5 rounded-3xl border border-blue-300/25 bg-gradient-to-r from-[#142a50] to-[#202354] px-6 py-6 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <p className="flex items-center gap-3 text-xl font-bold"><CircleDollarSign className="h-6 w-6 text-blue-300" />ยอดประมาณการ</p>
+            <p className="mt-1 text-sm text-slate-300">คำนวณรวมเป็นเงินบาทแล้ว โดยใช้อัตราแลกเปลี่ยนโดยประมาณ</p>
+          </div>
+          <div className="grid grid-cols-2 gap-5 text-right sm:gap-8">
+            <div>
+              <p className="text-xs font-medium text-slate-300">รวมต่อเดือน</p>
+              <p className="mt-1 text-2xl font-black text-blue-100 sm:text-3xl">{formatThaiBaht(totals.monthlyThaiBaht)}</p>
+              {totals.foreignMonthly.length > 0 && <p className="mt-1 text-xs text-slate-300">({totals.foreignMonthly.join(" · ")})</p>}
+            </div>
+            <div className="border-l border-white/15 pl-5 sm:pl-8">
+              <p className="text-xs font-medium text-slate-300">รวมต่อปี</p>
+              <p className="mt-1 text-2xl font-black text-blue-100 sm:text-3xl">{formatThaiBaht(totals.yearlyThaiBaht)}</p>
+              {totals.foreignYearly.length > 0 && <p className="mt-1 text-xs text-slate-300">({totals.foreignYearly.join(" · ")})</p>}
+            </div>
+          </div>
+        </section>
 
         {message && <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">{message}</p>}
         <div className="mt-8 flex flex-col-reverse items-center justify-between gap-4 sm:flex-row"><p className="text-sm text-slate-400">บันทึกทีเดียว แล้วค่อยเติมรายละเอียดอื่นภายหลังได้</p><Button onClick={continueToSave} disabled={saving} className="h-14 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-7 text-base font-bold text-white hover:from-blue-400 hover:to-indigo-400">{saving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />กำลังบันทึก…</> : <>บันทึก {items.length} รายการ<ArrowRight className="ml-2 h-5 w-5" /></>}</Button></div>

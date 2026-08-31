@@ -3,6 +3,7 @@ import { useRouter } from "next/router";
 import { SEO } from "@/components/SEO";
 import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
+import { CustomerHeader } from "@/components/CustomerHeader";
 import { Badge } from "@/components/ui/badge";
 import { 
   Bell, 
@@ -188,6 +189,7 @@ export default function NotificationsPage() {
         description="จัดการการแจ้งเตือนของคุณ"
       />
       <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+        <CustomerHeader user={user} unreadCount={unreadCount} />
         <main className="container mx-auto px-4 py-8 max-w-4xl">
           {/* Header */}
           <div className="flex items-center justify-between mb-8">

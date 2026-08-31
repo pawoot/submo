@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 import { useSubscriptionCosts } from "@/hooks/useSubscriptionCosts";
+import { useLanguage } from "@/contexts/LanguageContext";
 import type { Database } from "@/integrations/supabase/types";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
@@ -17,6 +18,7 @@ interface DashboardActionCenterProps {
 const daysUntil = (date: string) => Math.ceil((new Date(date).getTime() - Date.now()) / 86_400_000);
 
 export function DashboardActionCenter({ subscriptions, onToggleReminder }: DashboardActionCenterProps) {
+  const { t } = useLanguage();
   const { costs, isLoading } = useSubscriptionCosts(subscriptions);
   const urgent = costs
     .filter(({ subscription }) => subscription.next_billing_date && daysUntil(subscription.next_billing_date) >= 0 && daysUntil(subscription.next_billing_date) <= 7)
@@ -31,15 +33,15 @@ export function DashboardActionCenter({ subscriptions, onToggleReminder }: Dashb
         <div className="flex items-center justify-between gap-3">
           <CardTitle className="flex items-center gap-2 text-lg">
             <CalendarClock className="h-5 w-5 text-orange-500" />
-            ต้องจัดการเร็ว ๆ นี้
+            {t("dashboard.actionRequired")}
           </CardTitle>
-          <Badge variant="secondary">ภายใน 7 วัน</Badge>
+          <Badge variant="secondary">{t("dashboard.within7Days")}</Badge>
         </div>
       </CardHeader>
       <CardContent className="space-y-2">
         {urgent.map(({ subscription }) => {
           const days = daysUntil(subscription.next_billing_date!);
-          const dayLabel = days === 0 ? "วันนี้" : days === 1 ? "พรุ่งนี้" : `อีก ${days} วัน`;
+          const dayLabel = days === 0 ? t("dashboard.renewsToday") : days === 1 ? t("dashboard.renewsTomorrow") : t("dashboard.renewsInDays").replace("{days}", String(days));
           return (
             <div key={subscription.id} className="flex items-center gap-3 rounded-lg border bg-card p-3">
               <SubscriptionIcon
@@ -50,15 +52,15 @@ export function DashboardActionCenter({ subscriptions, onToggleReminder }: Dashb
               />
               <Link href={`/edit-subscription/${subscription.id}`} className="min-w-0 flex-1 rounded-sm focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring">
                 <p className="truncate font-medium hover:text-primary">{subscription.name}</p>
-                <p className="text-xs text-orange-600 dark:text-orange-400">ต่ออายุ{dayLabel}</p>
+                <p className="text-xs text-orange-600 dark:text-orange-400">{dayLabel}</p>
               </Link>
               {!subscription.reminder_enabled && (
                 <Button
                   variant="outline"
                   size="icon"
                   className="h-8 w-8 flex-shrink-0"
-                  aria-label={`เปิดการแจ้งเตือน ${subscription.name}`}
-                  title="เปิดการแจ้งเตือน"
+                  aria-label={`${t("dashboard.enableReminder")} ${subscription.name}`}
+                  title={t("dashboard.enableReminder")}
                   onClick={() => onToggleReminder(subscription.id, false)}
                 >
                   <Bell className="h-4 w-4" />

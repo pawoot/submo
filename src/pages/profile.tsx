@@ -349,45 +349,6 @@ export default function ProfilePage() {
         user={user}
         isAdmin={isAdmin}
         unreadCount={unreadCount}
-        desktopHeader={
-          <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-4">
-                <Link href="/dashboard">
-                  <Button variant="ghost" size="sm">
-                    <ArrowLeft className="h-4 w-4 mr-2" />
-                    {t("common.back")}
-                  </Button>
-                </Link>
-                <div>
-                  <h1 className="text-2xl font-bold text-gray-900 dark:text-slate-100">{t("profile.myProfile")}</h1>
-                  <p className="text-sm text-gray-600 dark:text-slate-400">{t("profile.manageAccount")}</p>
-                </div>
-              </div>
-
-              <Button variant="outline" onClick={() => {
-                try {
-                  authService.signOut();
-                  router.push("/auth/login");
-                  toast({
-                    title: t("nav.logout"),
-                    description: t("toast.logoutSuccess"),
-                  });
-                } catch (error) {
-                  console.error("Error signing out:", error);
-                  toast({
-                    title: t("common.error"),
-                    description: t("toast.logoutError"),
-                    variant: "destructive",
-                  });
-                }
-              }}>
-                <LogOut className="h-4 w-4 mr-2" />
-                {t("nav.logout")}
-              </Button>
-            </div>
-          </div>
-        }
       >
 
         {/* Main Content */}

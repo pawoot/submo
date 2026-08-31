@@ -26,6 +26,7 @@ import { useRouter } from "next/router";
 import { subscriptionService } from "@/services/subscriptionService";
 import { AuthGuard } from "@/components/AuthGuard";
 import { SubscriptionNameAutocomplete } from "@/components/SubscriptionNameAutocomplete";
+import { CustomerHeader } from "@/components/CustomerHeader";
 import { SubscriptionSummary } from "@/components/SubscriptionSummary";
 import { SubscriptionIntelligence } from "@/components/SubscriptionIntelligence";
 import { SubscriptionIcon } from "@/components/SubscriptionIcon";
@@ -423,23 +424,10 @@ export default function EditSubscription() {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
-        <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("editSub.title")}</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{subscription?.name}</p>
-              </div>
-            </div>
-          </div>
-        </header>
+        <CustomerHeader />
 
         <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="mb-6"><h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100">{t("editSub.title")}</h1><p className="text-sm text-slate-600 dark:text-slate-400">{subscription?.name}</p></div>
           <div className="grid gap-8 lg:grid-cols-3">
             <div className="lg:col-span-2">
               <Card className="mb-8 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">

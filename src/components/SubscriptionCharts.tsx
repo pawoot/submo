@@ -273,7 +273,7 @@ export function SubscriptionCharts() {
               <CardContent className="pt-6">
                 <div className="h-[300px] w-full">
                   {calculating ? (
-                    <div className="flex h-full items-center justify-center text-gray-400">Loading...</div>
+                    <div className="flex h-full items-center justify-center text-gray-400">{t("common.loading")}</div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
                       <BarChart data={categoryChartData}>
@@ -288,7 +288,7 @@ export function SubscriptionCharts() {
                         />
                         <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                         <Tooltip 
-                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), 'Cost']}
+                          formatter={(value: number) => [new Intl.NumberFormat(undefined, { style: 'currency', currency: preferredCurrency }).format(value), t("dashboard.totalCost")]}
                           contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderRadius: "12px", border: "1px solid hsl(var(--border))", boxShadow: "0 4px 6px -1px rgb(0 0 0 / 0.1)" }}
                         />
                         <Bar dataKey="amount" fill="#6366f1" radius={[6, 6, 0, 0]}>
@@ -321,7 +321,7 @@ export function SubscriptionCharts() {
                       <Tooltip
                         formatter={(value: number, _name, item) => [
                           `${formatCurrency(value, preferredCurrency)} (${item.payload.percentage}%)`,
-                          "ค่าใช้จ่าย",
+                          t("dashboard.totalCost"),
                         ]}
                         contentStyle={{ backgroundColor: "hsl(var(--card))", color: "hsl(var(--card-foreground))", borderRadius: "12px", border: "1px solid hsl(var(--border))" }}
                       />

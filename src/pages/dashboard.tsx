@@ -250,49 +250,6 @@ export default function Dashboard() {
         user={user}
         isAdmin={isAdmin}
         unreadCount={unreadCount}
-        desktopHeader={
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <Link href="/" className="flex items-center gap-2.5" aria-label="Submo home">
-                  <span className="flex h-9 w-9 items-center justify-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg font-black text-white shadow-sm">
-                    S
-                  </span>
-                  <span className="text-2xl font-bold tracking-tight bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">
-                    Submo<span className="text-base">.ai</span>
-                  </span>
-                </Link>
-                <LanguageSwitcher />
-              </div>
-              <div className="flex items-center gap-3">
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push("/notifications")}
-                >
-                  <Bell className="h-4 w-4 mr-2" />
-                  {t("nav.notifications")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={() => router.push("/profile")}
-                >
-                  <User className="h-4 w-4 mr-2" />
-                  {t("nav.profile")}
-                </Button>
-                <Button
-                  variant="outline"
-                  size="sm"
-                  onClick={handleLogout}
-                >
-                  <LogOut className="h-4 w-4 mr-2" />
-                  {t("auth.signOut")}
-                </Button>
-              </div>
-            </div>
-          </div>
-        }
       >
 
         {/* Main Content */}
@@ -389,31 +346,31 @@ export default function Dashboard() {
                     <Input
                       value={searchQuery}
                       onChange={(event) => setSearchQuery(event.target.value)}
-                      placeholder="ค้นหาบริการ"
+                      placeholder={t("dashboard.searchServices")}
                       className="pl-9"
                     />
                   </div>
                   <Select value={categoryFilter} onValueChange={setCategoryFilter}>
-                    <SelectTrigger><SelectValue placeholder="ทุกหมวดหมู่" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("dashboard.allCategories")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">ทุกหมวดหมู่</SelectItem>
+                      <SelectItem value="all">{t("dashboard.allCategories")}</SelectItem>
                       {categoryOptions.map((category) => <SelectItem key={category} value={category}>{category}</SelectItem>)}
                     </SelectContent>
                   </Select>
                   <Select value={renewalFilter} onValueChange={setRenewalFilter}>
-                    <SelectTrigger><SelectValue placeholder="วันต่ออายุ" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("dashboard.renewalDate")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">ทุกวันต่ออายุ</SelectItem>
-                      <SelectItem value="7-days">ต่ออายุภายใน 7 วัน</SelectItem>
-                      <SelectItem value="30-days">ต่ออายุภายใน 30 วัน</SelectItem>
+                      <SelectItem value="all">{t("dashboard.allRenewals")}</SelectItem>
+                      <SelectItem value="7-days">{t("dashboard.renewWithin7Days")}</SelectItem>
+                      <SelectItem value="30-days">{t("dashboard.renewWithin30Days")}</SelectItem>
                     </SelectContent>
                   </Select>
                   <Select value={reminderFilter} onValueChange={setReminderFilter}>
-                    <SelectTrigger><SelectValue placeholder="สถานะแจ้งเตือน" /></SelectTrigger>
+                    <SelectTrigger><SelectValue placeholder={t("dashboard.reminderStatus")} /></SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="all">สถานะแจ้งเตือนทั้งหมด</SelectItem>
-                      <SelectItem value="missing">ยังไม่เปิดแจ้งเตือน</SelectItem>
-                      <SelectItem value="enabled">เปิดแจ้งเตือนแล้ว</SelectItem>
+                      <SelectItem value="all">{t("dashboard.allReminderStatuses")}</SelectItem>
+                      <SelectItem value="missing">{t("dashboard.remindersDisabled")}</SelectItem>
+                      <SelectItem value="enabled">{t("dashboard.remindersEnabled")}</SelectItem>
                     </SelectContent>
                   </Select>
                 </div>

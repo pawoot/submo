@@ -16,6 +16,7 @@ import { subscriptionTemplateService } from "@/services/subscriptionTemplateServ
 import { getAllCategories } from "@/services/adminCategoryService";
 import { getAllPaymentMethods } from "@/services/adminPaymentMethodService";
 import { ImportSubscriptionDialog } from "@/components/ImportSubscriptionDialog";
+import { CustomerHeader } from "@/components/CustomerHeader";
 import { FileUp } from "lucide-react";
 
 type Category = Database["public"]["Tables"]["categories"]["Row"];
@@ -123,50 +124,13 @@ export default function AddSubscription() {
       />
       
       <div className="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50 to-indigo-50 dark:from-slate-950 dark:via-slate-900 dark:to-indigo-950">
-        <header className="border-b bg-white/80 dark:bg-slate-900/80 backdrop-blur-sm sticky top-0 z-50">
-          <div className="container mx-auto px-4 py-4">
-            <div className="flex items-center gap-4">
-              <Link href="/dashboard">
-                <Button variant="ghost" size="icon">
-                  <ArrowLeft className="w-5 h-5" />
-                </Button>
-              </Link>
-              <div>
-                <h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("addSub.title")}</h1>
-                <p className="text-sm text-slate-600 dark:text-slate-400">{t("addSub.subtitle")}</p>
-              </div>
-              <div className="ml-auto">
-                <ImportSubscriptionDialog 
-                  trigger={
-                    <Button variant="outline" size="sm" className="hidden sm:flex gap-2">
-                      <FileUp className="w-4 h-4" />
-                      Import Statement
-                    </Button>
-                  }
-                  onSuccess={() => {
-                    // Refresh data if needed, or redirect
-                    toast({
-                      title: "Import Complete",
-                      description: "Your subscriptions have been added to the dashboard.",
-                    });
-                    router.push("/dashboard");
-                  }}
-                />
-                {/* Mobile version of the button (Icon only) */}
-                <ImportSubscriptionDialog 
-                  trigger={
-                    <Button variant="outline" size="icon" className="sm:hidden flex ml-2">
-                      <FileUp className="w-4 h-4" />
-                    </Button>
-                  }
-                  onSuccess={() => router.push("/dashboard")}
-                />
-              </div>
-            </div>
-          </div>
-        </header>
+        <CustomerHeader />
 
         <main className="container mx-auto px-4 py-8 max-w-7xl">
+          <div className="mb-6 flex items-center justify-between gap-4">
+            <div><h1 className="text-2xl font-bold text-slate-900 dark:text-white">{t("addSub.title")}</h1><p className="text-sm text-slate-600 dark:text-slate-400">{t("addSub.subtitle")}</p></div>
+            <ImportSubscriptionDialog trigger={<Button variant="outline" size="sm" className="gap-2"><FileUp className="w-4 h-4" /><span className="hidden sm:inline">Import Statement</span></Button>} onSuccess={() => router.push("/dashboard")} />
+          </div>
           <AddSubscriptionWizard
             categories={categories}
             paymentMethods={paymentMethods}
