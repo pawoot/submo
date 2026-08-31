@@ -309,9 +309,6 @@ export default function LandingPage() {
                 <a href="#features" className="text-white hover:text-blue-300 transition-colors">
                   {t("landing.footer.features")}
                 </a>
-                <a href="#pricing" className="text-white hover:text-blue-300 transition-colors">
-                  {t("landing.footer.pricing")}
-                </a>
                 <a href="#testimonials" className="text-white hover:text-blue-300 transition-colors">
                   {t("landing.testimonials.title")}
                 </a>
@@ -374,13 +371,6 @@ export default function LandingPage() {
                 className="text-white hover:text-blue-300 transition-colors text-lg font-medium"
               >
                 {t("landing.footer.features")}
-              </a>
-              <a
-                href="#pricing"
-                onClick={closeMobileMenu}
-                className="text-white hover:text-blue-300 transition-colors text-lg font-medium"
-              >
-                {t("landing.footer.pricing")}
               </a>
               <a
                 href="#testimonials"
