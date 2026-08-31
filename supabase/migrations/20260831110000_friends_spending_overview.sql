@@ -2,7 +2,7 @@
 -- Friend data is available only through the RPCs below; subscriptions remain private.
 
 CREATE TABLE IF NOT EXISTS public.friendships (
-  id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   requester_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   recipient_id UUID NOT NULL REFERENCES public.profiles(id) ON DELETE CASCADE,
   status TEXT NOT NULL DEFAULT 'pending' CHECK (status IN ('pending', 'accepted', 'declined', 'blocked')),
@@ -150,11 +150,11 @@ LANGUAGE sql STABLE SECURITY DEFINER SET search_path = public AS $$
     ) s ON s.user_id = r.peer_id
     GROUP BY r.id
   ), category_rows AS (
-    SELECT s.user_id, COALESCE(c.name_en, s.category, 'Other') AS category_name, s.currency,
+    SELECT s.user_id, COALESCE(c.name_en, 'Other') AS category_name, s.currency,
       SUM(s.amount / CASE s.billing_cycle WHEN 'yearly' THEN 12 WHEN '3months' THEN 3 WHEN '6months' THEN 6 ELSE 1 END) AS amount
     FROM subscriptions s LEFT JOIN categories c ON c.id = s.category_id
     WHERE s.is_template = false AND s.is_active = true
-    GROUP BY s.user_id, COALESCE(c.name_en, s.category, 'Other'), s.currency
+    GROUP BY s.user_id, COALESCE(c.name_en, 'Other'), s.currency
   ), category_by_currency AS (
     SELECT r.id, c.category_name, jsonb_object_agg(c.currency, c.amount) AS totals
     FROM relationships r LEFT JOIN category_rows c ON c.user_id = r.peer_id

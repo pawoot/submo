@@ -45,8 +45,11 @@ export default function FriendsPage() {
     setSending(true);
     try {
       await friendService.inviteByEmail(email);
+      const deliveryEmail = email;
       setEmail("");
-      toast({ title: language === "th" ? "ส่งคำเชิญแล้ว" : "Invite sent", description: language === "th" ? "หากอีเมลนี้มีบัญชี Submo เจ้าของบัญชีจะได้รับคำเชิญ" : "If this email has a Submo account, its owner will receive an invite." });
+      try { await friendService.sendInviteEmail(deliveryEmail); }
+      catch { toast({ title: language === "th" ? "บันทึกคำเชิญแล้ว แต่ส่งอีเมลไม่สำเร็จ" : "Invite saved, but email delivery failed", variant: "destructive" }); }
+      toast({ title: language === "th" ? "ส่งคำเชิญแล้ว" : "Invite sent", description: language === "th" ? "ส่งอีเมลพร้อมลิงก์ดูคำเชิญแล้ว" : "An email with the invite link was sent." });
       await loadFriends();
     } catch { toast({ title: language === "th" ? "ส่งคำเชิญไม่สำเร็จ" : "Could not send invite", variant: "destructive" }); }
     finally { setSending(false); }

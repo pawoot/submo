@@ -28,6 +28,16 @@ export const friendService = {
     const { error } = await rpc().rpc("request_friend_by_email", { p_email: email });
     if (error) throw error;
   },
+  async sendInviteEmail(email: string) {
+    const { data: { session } } = await supabase.auth.getSession();
+    const { data: { user } } = await supabase.auth.getUser();
+    const response = await fetch("/api/friends/invite-email", {
+      method: "POST",
+      headers: { "Content-Type": "application/json", ...(session?.access_token ? { Authorization: `Bearer ${session.access_token}` } : {}) },
+      body: JSON.stringify({ email, inviterName: user?.user_metadata?.full_name || user?.email?.split("@")[0] || "เพื่อนของคุณ" }),
+    });
+    if (!response.ok) throw new Error("Email delivery failed");
+  },
   async respond(id: string, accept: boolean) {
     const { error } = await rpc().rpc("respond_to_friend_request", { p_friendship_id: id, p_accept: accept });
     if (error) throw error;
