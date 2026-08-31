@@ -420,10 +420,10 @@ export default function LandingPage() {
         </nav>
 
         {/* Quick-start hero */}
-        <section className="relative overflow-hidden px-4 pb-14 pt-28 sm:px-6 lg:px-8 lg:pb-20">
+        <section className="relative overflow-hidden px-4 pb-14 pt-12 sm:px-6 sm:pt-28 lg:px-8 lg:pb-20">
           <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_20%_35%,rgba(115,76,255,0.3),transparent_28%),radial-gradient(circle_at_75%_45%,rgba(44,113,255,0.18),transparent_30%)]" />
           <div className="relative mx-auto grid max-w-7xl items-center gap-10 lg:grid-cols-[0.85fr_1.25fr] lg:gap-16">
-            <div className="relative mx-auto w-full max-w-md lg:mx-0">
+            <div className="order-2 relative mx-auto w-full max-w-md lg:order-1 lg:mx-0">
               <div className="absolute -inset-8 rounded-full bg-violet-600/25 blur-3xl" />
               <div className="relative overflow-hidden rounded-3xl border border-violet-300/20 bg-gradient-to-br from-violet-400/20 via-slate-900/90 to-slate-950 p-5 shadow-2xl shadow-black/40 backdrop-blur-xl sm:p-6">
                 <div className="mb-5 flex items-center gap-3">
@@ -452,7 +452,7 @@ export default function LandingPage() {
               <div className="absolute -bottom-8 -right-3 hidden rotate-[-8deg] rounded-2xl border border-violet-300/30 bg-violet-600 px-4 py-3 text-sm font-bold text-white shadow-xl sm:block">{language === "th" ? "เห็นยอดรวมก่อนจ่ายจริง" : "Know before you pay"}</div>
             </div>
 
-            <div className="text-center lg:text-left">
+            <div className="order-1 text-center lg:order-2 lg:text-left">
               <div className="mb-5 inline-flex items-center gap-2 rounded-full border border-violet-300/20 bg-violet-400/10 px-4 py-2 text-sm text-violet-100"><Sparkles className="h-4 w-4" />{language === "th" ? "ใช้ฟรี · ใช้เวลาไม่ถึง 2 นาที" : "Free · takes less than 2 minutes"}</div>
               <h1 className="text-4xl font-black leading-[1.12] tracking-tight text-white sm:text-5xl lg:text-6xl">
                 {language === "th" ? <>คุณจ่ายค่าบริการออนไลน์<br /><span className="bg-gradient-to-r from-violet-300 via-blue-300 to-sky-200 bg-clip-text text-transparent">ปีละเท่าไร?</span></> : <>How much do online services<br /><span className="bg-gradient-to-r from-violet-300 via-blue-300 to-sky-200 bg-clip-text text-transparent">cost you each year?</span></>}
