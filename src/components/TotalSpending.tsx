@@ -4,6 +4,7 @@ import { useCurrency } from "@/contexts/CurrencyContext";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign } from "lucide-react";
 import { useSubscriptionCosts } from "@/hooks/useSubscriptionCosts";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 type Subscription = Database["public"]["Tables"]["subscriptions"]["Row"];
 
@@ -19,6 +20,9 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
   const yearlyTotal = costs.reduce((sum, subscription) => sum + subscription.yearlyCost, 0);
 
   const highestCostSubscription = [...costs].sort((a, b) => b.monthlyCost - a.monthlyCost)[0];
+  const topServices = [...costs]
+    .sort((a, b) => b.monthlyCost - a.monthlyCost)
+    .slice(0, 8);
 
   return (
     <Card className="border-primary/20">
@@ -45,9 +49,28 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
 
           {/* Stats Row */}
           <div className="flex items-center justify-between pt-3 border-t">
-            <div>
+            <div className="min-w-0">
               <p className="text-xs text-muted-foreground">{t("dashboard.activeSubscriptionsLabel")}</p>
-              <p className="text-lg font-semibold text-foreground">{costs.length}</p>
+              <div className="mt-1 flex items-center gap-3">
+                <p className="text-2xl font-bold leading-none text-foreground">{costs.length}</p>
+                {topServices.length > 0 && (
+                  <div className="flex items-center" aria-label={t("dashboard.activeSubscriptionsLabel")}>
+                    {topServices.map((cost, index) => (
+                      <SubscriptionIcon
+                        key={cost.subscription.id}
+                        name={cost.subscription.name}
+                        websiteUrl={cost.subscription.website_url}
+                        iconUrl={cost.subscription.logo_url}
+                        size="sm"
+                        bare
+                        title={cost.subscription.name}
+                        className="-ml-1 first:ml-0 h-6 w-6 ring-2 ring-background transition-opacity"
+                        style={{ opacity: Math.max(0.35, 1 - index * 0.09) }}
+                      />
+                    ))}
+                  </div>
+                )}
+              </div>
             </div>
 
             {highestCostSubscription && (
@@ -55,6 +78,9 @@ export function TotalSpending({ subscriptions }: TotalSpendingProps) {
                 <p className="text-xs text-muted-foreground">{t("dashboard.primaryExpense")}</p>
                 <p className="max-w-36 truncate text-sm font-semibold text-foreground">
                   {highestCostSubscription.subscription.name}
+                </p>
+                <p className="mt-0.5 text-xs text-muted-foreground">
+                  {formatCurrency(highestCostSubscription.monthlyCost, preferredCurrency)}/{t("dashboard.monthly")}
                 </p>
               </div>
             )}

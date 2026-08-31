@@ -68,7 +68,7 @@ export const translations = {
   "dashboard.renewsToday": { th: "ต่ออายุวันนี้", en: "Renews today" },
   "dashboard.renewsTomorrow": { th: "ต่ออายุพรุ่งนี้", en: "Renews tomorrow" },
   "dashboard.renewsInDays": { th: "ต่ออายุอีก {days} วัน", en: "Renews in {days} days" },
-  "dashboard.primaryExpense": { th: "ค่าใช้จ่ายหลัก", en: "Largest expense" },
+  "dashboard.primaryExpense": { th: "ค่าใช้จ่ายสูงสุด", en: "Highest expense" },
   "dashboard.monthlyTotal": { th: "รวมต่อเดือน", en: "Monthly total" },
   "dashboard.yearlyTotal": { th: "รวมต่อปี", en: "Yearly total" },
   "dashboard.searchServices": { th: "ค้นหาบริการ", en: "Search services" },

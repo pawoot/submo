@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import type { CSSProperties } from "react";
 import { cn } from "@/lib/utils";
 
 interface SubscriptionIconProps {
@@ -7,6 +8,9 @@ interface SubscriptionIconProps {
   iconUrl?: string | null; // Keep for backward compatibility or direct URLs
   className?: string;
   size?: "sm" | "md" | "lg";
+  title?: string;
+  style?: CSSProperties;
+  bare?: boolean;
 }
 
 // Known domains map to ensure correct favicons
@@ -65,7 +69,7 @@ const KNOWN_ICON_URLS: Record<string, string> = {
   myxd: "https://is1-ssl.mzstatic.com/image/thumb/Purple126/v4/dc/d5/6e/dcd56e24-a411-0f7e-d52e-346cb84c1275/AppIcon-0-1x_U007emarketing-0-7-0-sRGB-85-220.png/1200x630wa.jpg",
 };
 
-export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", className }: SubscriptionIconProps) {
+export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", className, title, style, bare = false }: SubscriptionIconProps) {
   const [imageError, setImageError] = useState(false);
   const lowerName = name.toLowerCase().trim();
   
@@ -107,14 +111,15 @@ export function SubscriptionIcon({ name, websiteUrl, iconUrl, size = "md", class
     <div className={cn(
       "relative rounded-full flex items-center justify-center overflow-hidden",
       "bg-white border border-slate-200 dark:border-slate-700 shadow-sm",
+      bare && "border-0 shadow-none",
       sizeClasses[size],
       className
-    )}>
+    )} title={title} style={style}>
       {showFavicon ? (
         <img 
           src={faviconUrl}
           alt={name}
-          className="w-full h-full object-cover p-2"
+          className={cn("w-full h-full object-cover", bare ? "p-0.5" : "p-2")}
           onError={() => setImageError(true)}
         />
       ) : (
