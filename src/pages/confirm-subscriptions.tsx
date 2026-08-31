@@ -1,14 +1,14 @@
 import { useEffect, useMemo, useState } from "react";
 import { useRouter } from "next/router";
-import { ArrowLeft, CalendarDays, CheckCircle2, CircleDollarSign, Loader2, Plus, Trash2 } from "lucide-react";
+import { ArrowLeft, ArrowRight, CalendarDays, CheckCircle2, CircleDollarSign, Loader2, Plus, Trash2 } from "lucide-react";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Card, CardContent } from "@/components/ui/card";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { supabase } from "@/integrations/supabase/client";
 import { subscriptionService } from "@/services/subscriptionService";
+import { SubscriptionIcon } from "@/components/SubscriptionIcon";
 
 const RAW_DRAFT_KEY = "submo-onboarding-draft";
 const CONFIRMED_DRAFT_KEY = "submo-onboarding-confirmed";
@@ -60,6 +60,15 @@ const extractServices = (raw: string) => {
     .map((name) => createDraft(name));
 };
 
+const getServiceCategory = (name: string) => {
+  const normalized = name.toLowerCase();
+  if (normalized.includes("netflix") || normalized.includes("youtube")) return "Streaming";
+  if (normalized.includes("spotify")) return "Music";
+  if (normalized.includes("google one")) return "Cloud storage";
+  if (normalized.includes("chatgpt") || normalized.includes("claude")) return "AI และเครื่องมือทำงาน";
+  return "บริการออนไลน์";
+};
+
 export default function ConfirmSubscriptionsPage() {
   const router = useRouter();
   const [items, setItems] = useState<DraftSubscription[]>([]);
@@ -81,10 +90,17 @@ export default function ConfirmSubscriptionsPage() {
     }
   }, []);
 
-  const monthlyEstimate = useMemo(() => items.reduce((total, item) => {
+  const monthlyTotals = useMemo(() => items.reduce<Record<string, number>>((totals, item) => {
     const amount = Number(item.amount) || 0;
-    return total + (item.billingCycle === "yearly" ? amount / 12 : amount);
-  }, 0), [items]);
+    totals[item.currency] = (totals[item.currency] || 0) + (item.billingCycle === "yearly" ? amount / 12 : amount);
+    return totals;
+  }, {}), [items]);
+
+  const formattedTotals = Object.entries(monthlyTotals).map(([currency, amount]) => new Intl.NumberFormat("th-TH", {
+    style: "currency",
+    currency,
+    maximumFractionDigits: currency === "THB" ? 0 : 2,
+  }).format(amount));
 
   const updateItem = (id: string, field: keyof DraftSubscription, value: string) => {
     setItems((current) => current.map((item) => item.id === id ? { ...item, [field]: value } : item));
@@ -151,41 +167,41 @@ export default function ConfirmSubscriptionsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_20%_10%,rgba(112,68,255,0.28),transparent_35%),linear-gradient(135deg,#020617,#0f172a_55%,#1e1b4b)] px-4 py-8 text-white sm:py-12">
+    <div className="min-h-screen bg-[#050b1b] text-white">
       <SEO title="ยืนยันรายละเอียดบริการ - Submo.ai" description="ตรวจสอบราคาและวันต่ออายุของบริการที่คุณใช้" />
-      <main className="mx-auto max-w-4xl">
-        <button type="button" onClick={() => router.push("/")} className="mb-7 inline-flex items-center gap-2 text-sm text-slate-300 hover:text-white"><ArrowLeft className="h-4 w-4" />กลับหน้าแรก</button>
-        <div className="mb-8 text-center">
-          <p className="mb-3 inline-flex rounded-full border border-violet-300/25 bg-violet-400/10 px-4 py-2 text-sm text-violet-100">ขั้นตอน 1 จาก 2 · ยืนยันรายละเอียด</p>
-          <h1 className="text-3xl font-black tracking-tight sm:text-4xl">ตรวจสอบบริการของคุณก่อนบันทึก</h1>
-          <p className="mx-auto mt-3 max-w-2xl text-slate-300">เราแยกรายชื่อที่คุณบอกไว้ให้แล้ว เติมราคา สกุลเงิน รอบจ่าย และวันต่ออายุได้เลย</p>
+      <header className="border-b border-white/10 bg-[#0c1a35]">
+        <div className="mx-auto flex h-24 max-w-7xl items-center justify-between px-5 sm:px-8">
+          <button type="button" onClick={() => router.push("/")} className="flex items-center gap-3 text-left"><span className="grid h-11 w-11 place-items-center rounded-xl bg-gradient-to-br from-blue-500 to-violet-600 text-xl font-black">S</span><span className="text-2xl font-bold tracking-tight text-blue-300">Submo.ai</span></button>
+          <ol className="hidden items-center gap-3 text-sm text-slate-400 sm:flex"><li className="grid h-9 w-9 place-items-center rounded-full bg-indigo-500 font-semibold text-white">1</li><span className="h-px w-10 bg-slate-600" /><li className="grid h-9 w-9 place-items-center rounded-full bg-slate-800">2</li><span className="h-px w-10 bg-slate-600" /><li className="grid h-9 w-9 place-items-center rounded-full bg-slate-800">3</li></ol>
         </div>
+      </header>
 
-        <Card className="border-white/10 bg-slate-950/70 shadow-2xl shadow-black/30 backdrop-blur-xl">
-          <CardContent className="space-y-5 p-5 sm:p-7">
-            {items.map((item, index) => (
-              <div key={item.id} className="rounded-2xl border border-white/10 bg-slate-900/70 p-4 sm:p-5">
-                <div className="mb-4 flex items-center justify-between gap-3"><span className="text-sm font-semibold text-violet-200">บริการ {index + 1}</span><button type="button" onClick={() => setItems((current) => current.filter((currentItem) => currentItem.id !== item.id))} className="rounded-lg p-2 text-slate-400 transition hover:bg-red-500/15 hover:text-red-300" aria-label={`ลบ ${item.name}`}><Trash2 className="h-4 w-4" /></button></div>
-                <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-4">
-                  <div className="space-y-2 sm:col-span-2"><Label htmlFor={`name-${item.id}`} className="text-slate-200">ชื่อบริการ</Label><Input id={`name-${item.id}`} value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} className="border-white/10 bg-slate-950/70 text-white" /></div>
-                  <div className="space-y-2"><Label htmlFor={`amount-${item.id}`} className="text-slate-200">ราคา</Label><Input id={`amount-${item.id}`} inputMode="decimal" value={item.amount} onChange={(event) => updateItem(item.id, "amount", event.target.value)} placeholder="เช่น 499" className="border-white/10 bg-slate-950/70 text-white" /></div>
-                  <div className="space-y-2"><Label className="text-slate-200">สกุลเงิน</Label><Select value={item.currency} onValueChange={(value) => updateItem(item.id, "currency", value)}><SelectTrigger className="border-white/10 bg-slate-950/70 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="THB">THB (฿)</SelectItem><SelectItem value="USD">USD ($)</SelectItem><SelectItem value="EUR">EUR (€)</SelectItem><SelectItem value="GBP">GBP (£)</SelectItem></SelectContent></Select></div>
-                  <div className="space-y-2"><Label className="text-slate-200">รอบการจ่าย</Label><Select value={item.billingCycle} onValueChange={(value) => updateItem(item.id, "billingCycle", value)}><SelectTrigger className="border-white/10 bg-slate-950/70 text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="monthly">ต่อเดือน</SelectItem><SelectItem value="yearly">ต่อปี</SelectItem></SelectContent></Select></div>
-                  <div className="space-y-2 sm:col-span-2"><Label htmlFor={`date-${item.id}`} className="text-slate-200">วันต่ออายุครั้งถัดไป</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" /><Input id={`date-${item.id}`} type="date" value={item.nextBillingDate} onChange={(event) => updateItem(item.id, "nextBillingDate", event.target.value)} className="border-white/10 bg-slate-950/70 pl-9 text-white" /></div></div>
-                </div>
-              </div>
-            ))}
-            <Button type="button" variant="outline" onClick={() => setItems((current) => [...current, createDraft("")])} className="w-full border-dashed border-violet-300/40 bg-transparent text-violet-100 hover:bg-violet-500/10"><Plus className="mr-2 h-4 w-4" />เพิ่มบริการอีกรายการ</Button>
-          </CardContent>
-        </Card>
+      <main className="mx-auto max-w-7xl px-5 py-12 sm:px-8 lg:py-16">
+        <button type="button" onClick={() => router.push("/")} className="mb-6 inline-flex items-center gap-2 text-sm text-slate-400 transition hover:text-white"><ArrowLeft className="h-4 w-4" />กลับไปแก้รายชื่อ</button>
+        <h1 className="text-3xl font-black tracking-tight sm:text-4xl">เราเจอ {items.length} บริการของคุณ</h1>
+        <p className="mt-3 text-lg text-slate-300">ยืนยันเฉพาะราคาและวันต่ออายุ ระบบใส่ชื่อ หมวดหมู่ และไอคอนให้แล้ว</p>
 
-        <div className="mt-5 flex flex-col gap-4 rounded-2xl border border-blue-300/20 bg-blue-500/10 p-5 sm:flex-row sm:items-center sm:justify-between">
-          <div><p className="flex items-center gap-2 font-semibold"><CircleDollarSign className="h-5 w-5 text-blue-300" />ยอดประมาณการต่อเดือน</p><p className="mt-1 text-sm text-slate-300">คิดเฉพาะรายการที่ใช้สกุลเงินเดียวกันเพื่อเป็นภาพรวมเบื้องต้น</p></div>
-          <p className="text-3xl font-black text-blue-200">{monthlyEstimate.toLocaleString("th-TH", { maximumFractionDigits: 2 })}</p>
-        </div>
+        <div className="mt-8 flex items-center gap-3 rounded-2xl border border-emerald-300/10 bg-emerald-400/15 px-5 py-4 text-emerald-100"><CheckCircle2 className="h-5 w-5 shrink-0" /><span>เลือกค่าเริ่มต้นให้แล้ว — แก้ไขหรือลบรายการออกได้ก่อนบันทึก</span></div>
+
+        <section className="mt-5 space-y-3">
+          {items.map((item) => (
+            <article key={item.id} className="grid gap-4 rounded-3xl border border-blue-200/20 bg-[#0d1c37] p-5 shadow-lg shadow-black/10 lg:grid-cols-[minmax(220px,1fr)_105px_110px_150px_200px_32px] lg:items-center lg:gap-3">
+              <div className="flex min-w-0 items-center gap-4"><SubscriptionIcon name={item.name} size="md" className="shrink-0 border-0" /><div className="min-w-0"><Input aria-label="ชื่อบริการ" value={item.name} onChange={(event) => updateItem(item.id, "name", event.target.value)} className="h-8 border-0 bg-transparent px-0 text-lg font-semibold text-white shadow-none focus-visible:ring-0" /><p className="mt-1 text-sm text-slate-400">{getServiceCategory(item.name)}</p></div></div>
+              <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">ราคา</Label><Input aria-label="ราคา" inputMode="decimal" value={item.amount} onChange={(event) => updateItem(item.id, "amount", event.target.value)} placeholder="0" className="border-blue-200/20 bg-[#172a4b] text-white" /></div>
+              <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">สกุลเงิน</Label><Select value={item.currency} onValueChange={(value) => updateItem(item.id, "currency", value)}><SelectTrigger className="border-blue-200/20 bg-[#172a4b] text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="THB">THB</SelectItem><SelectItem value="USD">USD</SelectItem><SelectItem value="EUR">EUR</SelectItem><SelectItem value="GBP">GBP</SelectItem></SelectContent></Select></div>
+              <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">รอบการจ่าย</Label><Select value={item.billingCycle} onValueChange={(value) => updateItem(item.id, "billingCycle", value)}><SelectTrigger className="border-blue-200/20 bg-[#172a4b] text-white"><SelectValue /></SelectTrigger><SelectContent><SelectItem value="monthly">รายเดือน</SelectItem><SelectItem value="yearly">รายปี</SelectItem></SelectContent></Select></div>
+              <div><Label className="mb-2 block text-xs text-slate-400 lg:hidden">วันต่ออายุ</Label><div className="relative"><CalendarDays className="pointer-events-none absolute left-3 top-2.5 h-4 w-4 text-slate-400" /><Input aria-label="วันต่ออายุ" type="date" value={item.nextBillingDate} onChange={(event) => updateItem(item.id, "nextBillingDate", event.target.value)} className="border-blue-200/20 bg-[#172a4b] pl-9 text-white" /></div></div>
+              <button type="button" onClick={() => setItems((current) => current.filter((currentItem) => currentItem.id !== item.id))} className="justify-self-end rounded-lg p-2 text-slate-500 transition hover:bg-red-500/15 hover:text-red-300" aria-label={`ลบ ${item.name}`}><Trash2 className="h-4 w-4" /></button>
+            </article>
+          ))}
+        </section>
+
+        <button type="button" onClick={() => setItems((current) => [...current, createDraft("")])} className="mt-5 flex h-16 w-full items-center justify-center gap-3 rounded-xl border border-dashed border-violet-300/45 bg-[#0d1c37]/50 font-semibold text-slate-100 transition hover:border-violet-200 hover:bg-violet-500/10"><Plus className="h-5 w-5" />เพิ่มบริการอีกรายการ</button>
+
+        <section className="mt-7 flex flex-col gap-4 rounded-3xl border border-blue-300/25 bg-gradient-to-r from-[#142a50] to-[#202354] px-6 py-6 sm:flex-row sm:items-center sm:justify-between"><div><p className="flex items-center gap-3 text-xl font-bold"><CircleDollarSign className="h-6 w-6 text-blue-300" />ยอดประมาณการต่อเดือน</p><p className="mt-1 text-slate-300">รวมตามสกุลเงินที่คุณเลือกไว้</p></div><p className="text-3xl font-black text-blue-200 sm:text-4xl">{formattedTotals.length ? formattedTotals.join(" · ") : "—"}</p></section>
+
         {message && <p className="mt-4 rounded-xl border border-amber-300/25 bg-amber-300/10 px-4 py-3 text-sm text-amber-100">{message}</p>}
-        <Button onClick={continueToSave} disabled={saving} className="mt-6 h-13 w-full rounded-2xl bg-gradient-to-r from-blue-500 to-violet-600 text-base font-bold text-white hover:from-blue-400 hover:to-violet-500">{saving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />กำลังบันทึก…</> : <><CheckCircle2 className="mr-2 h-5 w-5" />ยืนยันและบันทึกรายการ</>}</Button>
-        <p className="mt-3 text-center text-xs text-slate-400">ยังไม่เข้าสู่ระบบ? เราจะให้คุณเข้าสู่ระบบหลังจากตรวจสอบรายละเอียดเสร็จแล้ว</p>
+        <div className="mt-8 flex flex-col-reverse items-center justify-between gap-4 sm:flex-row"><p className="text-sm text-slate-400">บันทึกทีเดียว แล้วค่อยเติมรายละเอียดอื่นภายหลังได้</p><Button onClick={continueToSave} disabled={saving} className="h-14 rounded-2xl bg-gradient-to-r from-blue-500 to-indigo-500 px-7 text-base font-bold text-white hover:from-blue-400 hover:to-indigo-400">{saving ? <><Loader2 className="mr-2 h-5 w-5 animate-spin" />กำลังบันทึก…</> : <>บันทึก {items.length} รายการ<ArrowRight className="ml-2 h-5 w-5" /></>}</Button></div>
       </main>
     </div>
   );
