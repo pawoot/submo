@@ -48,7 +48,7 @@ export function CustomerHeader({ user: suppliedUser, unreadCount: suppliedUnread
         <div className="flex min-w-0 items-center">
           <Link href="/dashboard" className="flex shrink-0 items-center gap-2.5" aria-label="Submo dashboard">
             <span className="grid h-10 w-10 place-items-center rounded-xl bg-gradient-to-br from-blue-600 to-indigo-600 text-lg font-black text-white shadow-sm">S</span>
-            <span className="hidden text-2xl font-bold tracking-tight sm:inline bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Submo<span className="text-base">.ai</span></span>
+            <span className="hidden min-[360px]:inline text-xl font-bold tracking-tight sm:text-2xl bg-gradient-to-r from-blue-600 to-indigo-600 bg-clip-text text-transparent">Submo<span className="text-sm sm:text-base">.ai</span></span>
           </Link>
         </div>
 
