@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useRef, useState } from "react";
 import Link from "next/link";
 import { SEO } from "@/components/SEO";
 import { Button } from "@/components/ui/button";
@@ -27,6 +27,28 @@ import { useEffect } from "react";
 import { LANGUAGE_STORAGE_KEY, useLanguage } from "@/contexts/LanguageContext";
 import { supabase } from "@/integrations/supabase/client";
 
+type VoiceRecognitionResultEvent = {
+  results: ArrayLike<ArrayLike<{ transcript: string }>>;
+};
+
+type VoiceRecognition = {
+  lang: string;
+  continuous: boolean;
+  interimResults: boolean;
+  start: () => void;
+  stop: () => void;
+  onresult: ((event: VoiceRecognitionResultEvent) => void) | null;
+  onerror: ((event: { error: string }) => void) | null;
+  onend: (() => void) | null;
+};
+
+declare global {
+  interface Window {
+    SpeechRecognition?: new () => VoiceRecognition;
+    webkitSpeechRecognition?: new () => VoiceRecognition;
+  }
+}
+
 export default function LandingPage() {
   const router = useRouter();
   const [scrollY, setScrollY] = useState(0);
@@ -35,6 +57,9 @@ export default function LandingPage() {
   const [detectingLanguage, setDetectingLanguage] = useState(true);
   const [checkingAuth, setCheckingAuth] = useState(true);
   const [serviceDraft, setServiceDraft] = useState("");
+  const [isListening, setIsListening] = useState(false);
+  const [voiceMessage, setVoiceMessage] = useState("");
+  const recognitionRef = useRef<VoiceRecognition | null>(null);
 
   // Check if user is already logged in
   useEffect(() => {
@@ -119,6 +144,56 @@ export default function LandingPage() {
       localStorage.setItem("submo-onboarding-draft", draft);
     }
     router.push("/auth/signup");
+  };
+
+  const toggleVoiceCapture = () => {
+    if (typeof window === "undefined") return;
+
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
+      return;
+    }
+
+    const Recognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!Recognition) {
+      setVoiceMessage(language === "th" ? "เบราว์เซอร์นี้ยังไม่รองรับการพิมพ์ด้วยเสียง ลองใช้ Chrome หรือ Safari เวอร์ชันล่าสุด" : "Voice input is not supported in this browser. Try the latest Chrome or Safari.");
+      return;
+    }
+
+    const recognition = new Recognition();
+    recognition.lang = language === "th" ? "th-TH" : "en-US";
+    recognition.continuous = false;
+    recognition.interimResults = false;
+    recognition.onresult = (event) => {
+      const transcript = Array.from(event.results)
+        .map((result) => result[0]?.transcript ?? "")
+        .join(" ")
+        .trim();
+
+      if (transcript) {
+        setServiceDraft((current) => current.trim() ? `${current.trim()}, ${transcript}` : transcript);
+      }
+    };
+    recognition.onerror = (event) => {
+      setVoiceMessage(event.error === "not-allowed"
+        ? (language === "th" ? "กรุณาอนุญาตให้เว็บไซต์ใช้ไมโครโฟน แล้วลองอีกครั้ง" : "Please allow microphone access and try again.")
+        : (language === "th" ? "ฟังเสียงไม่สำเร็จ ลองพูดอีกครั้ง" : "We couldn't hear that. Please try again."));
+    };
+    recognition.onend = () => {
+      recognitionRef.current = null;
+      setIsListening(false);
+    };
+
+    recognitionRef.current = recognition;
+    setVoiceMessage("");
+    setIsListening(true);
+    try {
+      recognition.start();
+    } catch {
+      recognitionRef.current = null;
+      setIsListening(false);
+      setVoiceMessage(language === "th" ? "เริ่มอัดเสียงไม่สำเร็จ ลองกดไมค์อีกครั้ง" : "Voice input could not start. Please try the microphone again.");
+    }
   };
 
   const features = [
@@ -394,11 +469,18 @@ export default function LandingPage() {
                     aria-label={language === "th" ? "รายชื่อบริการที่ใช้" : "Services you use"}
                   />
                   <div className="flex flex-wrap items-center gap-2 border-t border-white/10 px-2 pt-3">
-                    <button type="button" className="grid h-10 w-10 place-items-center rounded-full border border-white/15 bg-white/10 text-white transition hover:bg-white/20" aria-label={language === "th" ? "พูดรายชื่อบริการ" : "Speak your services"}><Mic className="h-5 w-5" /></button>
-                    <span className="mr-auto text-xs text-slate-400">{language === "th" ? "พิมพ์ได้หลายบริการพร้อมกัน" : "Add multiple services at once"}</span>
+                    <button
+                      type="button"
+                      onClick={toggleVoiceCapture}
+                      className={`grid h-10 w-10 place-items-center rounded-full border text-white transition ${isListening ? "animate-pulse border-red-300/70 bg-red-500 shadow-lg shadow-red-500/30" : "border-white/15 bg-white/10 hover:bg-white/20"}`}
+                      aria-label={isListening ? (language === "th" ? "หยุดอัดเสียง" : "Stop recording") : (language === "th" ? "พูดรายชื่อบริการ" : "Speak your services")}
+                      aria-pressed={isListening}
+                    ><Mic className="h-5 w-5" /></button>
+                    <span className={`mr-auto text-xs ${isListening ? "text-red-200" : "text-slate-400"}`}>{isListening ? (language === "th" ? "กำลังฟัง… กดไมค์อีกครั้งเพื่อหยุด" : "Listening… click the mic to stop") : (language === "th" ? "พิมพ์หรือพูดได้หลายบริการพร้อมกัน" : "Type or say multiple services at once")}</span>
                     <Button onClick={startQuickSetup} className="rounded-xl bg-gradient-to-r from-blue-500 to-violet-600 px-5 text-white hover:from-blue-400 hover:to-violet-500">{language === "th" ? "เริ่มเช็กค่าใช้จ่าย" : "Check my spending"}<ArrowRight className="ml-2 h-4 w-4" /></Button>
                   </div>
                 </div>
+                {voiceMessage && <p className="px-4 pb-1 pt-2 text-xs text-amber-200" role="status">{voiceMessage}</p>}
                 <div className="flex flex-wrap items-center gap-2 px-3 pb-2 pt-3 text-sm text-slate-300"><span className="text-slate-500">{language === "th" ? "ตัวอย่าง" : "Examples"}</span>{["Netflix", "ChatGPT", "Google One"].map((service) => <button key={service} type="button" onClick={() => addServiceExample(service)} className="rounded-full border border-blue-300/20 bg-blue-400/10 px-3 py-1 text-blue-100 transition hover:bg-blue-400/20">{service}</button>)}</div>
               </div>
               <div className="mt-6 flex flex-wrap justify-center gap-x-6 gap-y-3 text-sm text-slate-300 lg:justify-start"><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />{language === "th" ? "เห็นภาพรวมค่าใช้จ่าย" : "See your total"}</span><span className="flex items-center gap-2"><CheckCircle2 className="h-4 w-4 text-emerald-400" />{language === "th" ? "ไม่พลาดวันต่ออายุ" : "Never miss renewals"}</span><span className="flex items-center gap-2"><LockKeyhole className="h-4 w-4 text-blue-300" />{language === "th" ? "ไม่ต้องเชื่อมบัญชีธนาคาร" : "No bank connection"}</span></div>
