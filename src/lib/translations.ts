@@ -279,8 +279,10 @@ export const translations = {
   "charts.emptyDesc": { th: "เพิ่ม Subscription เพื่อดูสถิติ", en: "Add subscriptions to see charts" },
   "charts.addFirst": { th: "เพิ่มรายการแรก", en: "Add First Subscription" },
   "charts.monthlyByCategory": { th: "ค่าใช้จ่ายรายเดือนตามหมวดหมู่", en: "Monthly Cost by Category" },
+  "charts.yearlyByCategory": { th: "ค่าใช้จ่ายรายปีตามหมวดหมู่", en: "Yearly Cost by Category" },
   "charts.categoryDistribution": { th: "สัดส่วนค่าใช้จ่ายตามหมวดหมู่", en: "Cost Distribution by Category" },
   "charts.paymentMethodCost": { th: "ค่าใช้จ่ายตามวิธีชำระเงิน", en: "Cost by Payment Method" },
+  "charts.yearlyPaymentMethodCost": { th: "ค่าใช้จ่ายรายปีตามวิธีชำระเงิน", en: "Yearly Cost by Payment Method" },
   "charts.paymentMethodDistribution": { th: "สัดส่วนวิธีชำระเงิน", en: "Payment Method Distribution" },
 
   // Profile

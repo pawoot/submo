@@ -40,6 +40,8 @@ type PaymentMethod = Database["public"]["Tables"]["payment_methods"]["Row"];
 interface ChartDataPoint {
   name: string;
   amount: number;
+  monthlyAmount: number;
+  yearlyAmount: number;
   icon: string;
   color: string;
   percentage?: string;
@@ -53,7 +55,10 @@ interface CategoryChartService {
   websiteUrl: string | null;
   iconUrl: string | null;
   monthlyAmount: number;
+  yearlyAmount: number;
 }
+
+type ChartPeriod = "monthly" | "yearly";
 
 function chartColor(color: string | null | undefined, fallback: string) {
   const hex = color?.trim().replace("#", "");
@@ -68,7 +73,7 @@ function chartColor(color: string | null | undefined, fallback: string) {
   return luminance < 0.18 ? fallback : `#${expanded}`;
 }
 
-function ServicesTooltip({ active, payload, preferredCurrency, formatCurrency, totalLabel }: any) {
+function ServicesTooltip({ active, payload, preferredCurrency, formatCurrency, totalLabel, period }: any) {
   if (!active || !payload?.length) return null;
 
   const point = payload[0]?.payload as ChartDataPoint | undefined;
@@ -94,11 +99,20 @@ function ServicesTooltip({ active, payload, preferredCurrency, formatCurrency, t
                 className="h-5 w-5 shrink-0"
               />
               <span className="min-w-0 flex-1 truncate text-xs font-medium">{service.name}</span>
-              <span className="text-xs text-muted-foreground">{formatCurrency(service.monthlyAmount, preferredCurrency)}</span>
+              <span className="text-xs text-muted-foreground">{formatCurrency(period === "yearly" ? service.yearlyAmount : service.monthlyAmount, preferredCurrency)}</span>
             </div>
           ))}
         </div>
       ) : null}
+    </div>
+  );
+}
+
+function ChartPeriodToggle({ value, onChange, monthlyLabel, yearlyLabel }: { value: ChartPeriod; onChange: (period: ChartPeriod) => void; monthlyLabel: string; yearlyLabel: string }) {
+  return (
+    <div className="flex shrink-0 rounded-lg border bg-muted/50 p-0.5">
+      <Button type="button" size="sm" variant={value === "monthly" ? "secondary" : "ghost"} className="h-7 px-2 text-xs" onClick={() => onChange("monthly")}>{monthlyLabel}</Button>
+      <Button type="button" size="sm" variant={value === "yearly" ? "secondary" : "ghost"} className="h-7 px-2 text-xs" onClick={() => onChange("yearly")}>{yearlyLabel}</Button>
     </div>
   );
 }
@@ -208,6 +222,8 @@ export function SubscriptionCharts() {
   const [categoryChartData, setCategoryChartData] = useState<ChartDataPoint[]>([]);
   const [paymentChartData, setPaymentChartData] = useState<ChartDataPoint[]>([]);
   const [calculating, setCalculating] = useState(false);
+  const [categoryPeriod, setCategoryPeriod] = useState<ChartPeriod>("monthly");
+  const [paymentPeriod, setPaymentPeriod] = useState<ChartPeriod>("monthly");
   
   // Context
   const { preferredCurrency, convertAmount } = useCurrency();
@@ -301,6 +317,15 @@ export function SubscriptionCharts() {
     });
   }, [subscriptions, searchQuery, selectedCategory, selectedBilling, timeRange]);
 
+  const categoryDisplayData = useMemo(() => categoryChartData.map((point) => ({
+    ...point,
+    amount: categoryPeriod === "yearly" ? point.yearlyAmount : point.monthlyAmount,
+  })), [categoryChartData, categoryPeriod]);
+  const paymentDisplayData = useMemo(() => paymentChartData.map((point) => ({
+    ...point,
+    amount: paymentPeriod === "yearly" ? point.yearlyAmount : point.monthlyAmount,
+  })), [paymentChartData, paymentPeriod]);
+
   // Calculate Chart Data (Async)
   useEffect(() => {
     const calculateData = async () => {
@@ -329,6 +354,7 @@ export function SubscriptionCharts() {
               websiteUrl: sub.website_url,
               iconUrl: sub.icon_url || sub.logo_url,
               monthlyAmount: convertedAmount,
+              yearlyAmount: convertedAmount * 12,
             });
 
             // Aggregate Payment Method
@@ -341,6 +367,7 @@ export function SubscriptionCharts() {
               websiteUrl: sub.website_url,
               iconUrl: sub.icon_url || sub.logo_url,
               monthlyAmount: convertedAmount,
+              yearlyAmount: convertedAmount * 12,
             });
           } catch (error) {
             console.error(`Error processing subscription ${sub.id}:`, error);
@@ -355,6 +382,8 @@ export function SubscriptionCharts() {
           .map(([id, amount]) => ({
             name: categoryLabels[id]?.label || t("common.unknown"),
             amount: amount,
+            monthlyAmount: amount,
+            yearlyAmount: amount * 12,
             icon: categoryLabels[id]?.icon || "📦",
             color: chartColor(categoryLabels[id]?.color, "#6366f1"),
             percentage: totalCatAmount > 0 ? ((amount / totalCatAmount) * 100).toFixed(0) : "0",
@@ -369,6 +398,8 @@ export function SubscriptionCharts() {
           .map(([id, amount]) => ({
             name: paymentMethodLabels[id]?.label || t("common.unknown"),
             amount: amount,
+            monthlyAmount: amount,
+            yearlyAmount: amount * 12,
             icon: paymentMethodLabels[id]?.icon || "💳",
             color: chartColor(paymentMethodLabels[id]?.color, "#64748b"),
             percentage: totalPayAmount > 0 ? ((amount / totalPayAmount) * 100).toFixed(0) : "0",
@@ -436,11 +467,12 @@ export function SubscriptionCharts() {
           {/* Charts Grid */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <Card className="shadow-lg border-2 border-gray-100 bg-card dark:border-slate-800">
-              <CardHeader className="bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-slate-100">
-                  <BarChart3 className="w-6 h-6 text-indigo-600" />
-                  {t("charts.monthlyByCategory")}
+              <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950">
+                <CardTitle className="flex min-w-0 items-center gap-2 text-base font-bold text-gray-800 dark:text-slate-100 sm:text-lg">
+                  <BarChart3 className="h-5 w-5 shrink-0 text-indigo-600 sm:h-6 sm:w-6" />
+                  <span className="truncate">{categoryPeriod === "yearly" ? t("charts.yearlyByCategory") : t("charts.monthlyByCategory")}</span>
                 </CardTitle>
+                <ChartPeriodToggle value={categoryPeriod} onChange={setCategoryPeriod} monthlyLabel={t("dashboard.monthly")} yearlyLabel={t("dashboard.yearly")} />
               </CardHeader>
               <CardContent className="pt-6">
                 <div className="h-[300px] w-full">
@@ -448,7 +480,7 @@ export function SubscriptionCharts() {
                     <div className="flex h-full items-center justify-center text-gray-400">{t("common.loading")}</div>
                   ) : (
                     <ResponsiveContainer width="100%" height="100%">
-                      <BarChart data={categoryChartData}>
+                      <BarChart data={categoryDisplayData}>
                         <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" vertical={false} />
                         <XAxis 
                           dataKey="name" 
@@ -459,9 +491,9 @@ export function SubscriptionCharts() {
                           interval={0}
                         />
                         <YAxis tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
-                        <Tooltip content={<ServicesTooltip preferredCurrency={preferredCurrency} formatCurrency={formatCurrency} totalLabel={t("dashboard.totalCost")} />} />
+                        <Tooltip content={<ServicesTooltip preferredCurrency={preferredCurrency} formatCurrency={formatCurrency} totalLabel={t("dashboard.totalCost")} period={categoryPeriod} />} />
                         <Bar dataKey="amount" fill="#6366f1" shape={CategoryBarWithServices}>
-                          {categoryChartData.map((entry, index) => (
+                          {categoryDisplayData.map((entry, index) => (
                             <Cell key={`cell-${index}`} fill={entry.color || "#6366f1"} />
                           ))}
                         </Bar>
@@ -474,22 +506,23 @@ export function SubscriptionCharts() {
 
             {/* Payment Method Cost */}
             <Card className="shadow-lg border-2 border-gray-100 bg-card dark:border-slate-800">
-              <CardHeader className="bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950">
-                <CardTitle className="flex items-center gap-2 text-lg font-bold text-gray-800 dark:text-slate-100">
-                  <CreditCard className="w-6 h-6 text-indigo-600" />
-                  {t("charts.paymentMethodCost")}
+              <CardHeader className="flex-row items-center justify-between gap-2 space-y-0 bg-gradient-to-r from-indigo-50 to-white dark:from-slate-900 dark:to-slate-950">
+                <CardTitle className="flex min-w-0 items-center gap-2 text-base font-bold text-gray-800 dark:text-slate-100 sm:text-lg">
+                  <CreditCard className="h-5 w-5 shrink-0 text-indigo-600 sm:h-6 sm:w-6" />
+                  <span className="truncate">{paymentPeriod === "yearly" ? t("charts.yearlyPaymentMethodCost") : t("charts.paymentMethodCost")}</span>
                 </CardTitle>
+                <ChartPeriodToggle value={paymentPeriod} onChange={setPaymentPeriod} monthlyLabel={t("dashboard.monthly")} yearlyLabel={t("dashboard.yearly")} />
               </CardHeader>
               <CardContent>
                 <div className="h-[300px] w-full">
                   <ResponsiveContainer width="100%" height="100%">
-                    <BarChart data={paymentChartData} layout="vertical" margin={{ top: 4, right: 20, bottom: 4, left: 16 }}>
+                    <BarChart data={paymentDisplayData} layout="vertical" margin={{ top: 4, right: 20, bottom: 4, left: 16 }}>
                       <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" horizontal={false} />
                       <XAxis type="number" tick={{ fontSize: 11, fill: "hsl(var(--muted-foreground))" }} />
                       <YAxis type="category" dataKey="name" width={105} tick={{ fontSize: 12, fill: "hsl(var(--muted-foreground))" }} />
-                      <Tooltip content={<ServicesTooltip preferredCurrency={preferredCurrency} formatCurrency={formatCurrency} totalLabel={t("dashboard.totalCost")} />} />
+                      <Tooltip content={<ServicesTooltip preferredCurrency={preferredCurrency} formatCurrency={formatCurrency} totalLabel={t("dashboard.totalCost")} period={paymentPeriod} />} />
                       <Bar dataKey="amount" shape={PaymentBarWithServices}>
-                        {paymentChartData.map((entry, index) => (
+                        {paymentDisplayData.map((entry, index) => (
                           <Cell key={`payment-cell-${index}`} fill={entry.color || "#2563eb"} />
                         ))}
                       </Bar>
